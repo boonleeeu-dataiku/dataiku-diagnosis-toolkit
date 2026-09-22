@@ -1,0 +1,8 @@
+{
+  "name": "dataiku-diagnosis-toolkit",
+  "version": "0.1.0",
+  "description": "Review a Dataiku DSS diagnosis bundle against a checklist spreadsheet, using a bundled MCP server to safely read large bundle files.",
+  "author": {
+    "name": "Boon Lee Eu"
+  }
+}

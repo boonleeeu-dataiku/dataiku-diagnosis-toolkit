@@ -1,0 +1,123 @@
+---
+name: dataiku-diagnosis-reader
+description: Navigate and interpret an extracted Dataiku DSS "diagnosis.zip" support bundle (a.k.a. DSS diagnostic export, support bundle, instance diagnostic archive, or a folder named like "dku_diagnosis_*") to answer troubleshooting questions about instance configuration, crashes/OOMs, performance, resource usage, users, connections, projects, code environments, plugins, deployed bundles, and logs — without re-deriving the bundle's file layout from scratch. Use whenever the user provides, references, or asks about a Dataiku "diagnosis.zip", "dku diagnosis" bundle, DSS support bundle, or wants to diagnose/troubleshoot a Dataiku DSS instance using such a bundle.
+---
+
+# Dataiku DSS diagnosis.zip reader
+
+A `diagnosis.zip` is DSS's built-in self-diagnostic export (run via `dssadmin diagnosis` or the
+Administration UI). It is **not** a full backup — it's a curated mix of OS command captures, a
+partial copy of the DSS data directory (`DATA_DIR`), and metadata-only file listings of the rest.
+This skill tells you what's where, so you can route a question straight to the right file.
+
+## The 3-tier content model
+
+Every bundle mixes three kinds of content. Knowing which tier a file belongs to tells you whether
+you're looking at real content or just a path/size record:
+
+1. **OS/host diagnostic command outputs** — flat `.txt` files at the bundle root, each the
+   captured stdout of one shell command (`uname -a`, `ps auxf`, `free -m`, `sysctl -a`, ...).
+   `diag.txt` inlines only the *smaller* commands' output; big-output commands (package listings,
+   `dmesg`, `sysctl`, `ps auxf`, `find -ls` scans, the JVM stack dump) run but leave only a bare
+   timestamp placeholder in `diag.txt` — their real output is in their own dedicated file only.
+   `timings.txt` is the complete, authoritative ledger of every step (including the ones
+   `diag.txt` stubs out) with start/end times — see `references/root-files.md` before assuming
+   something is or isn't in `diag.txt`.
+2. **Real, fully-copied files** from a curated subset of `DATA_DIR` — under a "data-dir mirror"
+   directory (see below) — covering `install.ini`, `config/`, `code-envs/`, `run/` logs, etc.
+3. **Metadata-only manifests** (`find -ls` output — path/size/owner/mtime, **no content**) of the
+   rest of `DATA_DIR` and the install dir: `datadir_listing.txt`, `installdir_listing.txt`,
+   `config_listing.txt`, `lib_listing.txt`, `code_envs_desc_listing.txt`. **Job run history,
+   scenario run logs, dataset build timelines, and audit-log content are frequently *only*
+   present here** — you can confirm they exist/their size/when they last changed, but you cannot
+   read their content from the bundle. Say so plainly rather than guessing.
+
+How completely each tier is populated varies by DSS version, site, and size limits — treat this
+as a structural model, not a byte-identical layout guaranteed across every bundle.
+
+## Step-by-step investigation workflow
+
+1. **Confirm you're at the bundle root**: look for `diag.txt` + `timings.txt` + `*_listing.txt`
+   siblings.
+2. **Locate the data-dir mirror**: `find <bundle_root> -maxdepth 5 -name install.ini`. Its parent
+   directory is the mirror root. The path varies by site — observed examples include
+   `apps/dss/data_design/`, `data_dataiku/design/`, and `data_dataiku/automation/` — but it
+   commonly (not always) follows a `<something>/<nodetype>/` shape.
+3. **Identify the node**: read `install.ini` → `[general] nodetype` and the sibling
+   `dss-version.json` → `product_version`. `design` and `automation` node internals are verified
+   by this skill (see `references/node-types.md` for what differs between them). Any other
+   `nodetype` (e.g. `deployer`) is an **unverified gap** — apply the general 3-tier model, but
+   inspect its subtrees directly rather than assuming parity with the design/automation docs here.
+4. **Route the actual question** through `references/lookup-table.md` (or the condensed table
+   below for common cases).
+5. **Never load large manifest/log files whole.** `datadir_listing.txt` alone has been observed
+   from ~340MB to ~2.3GB; rotated `run/*.log.N` files can individually reach ~100MB. Always
+   `grep`/`awk`/`wc -l` first — see `references/listings-and-manifests.md` for safe patterns.
+6. **If asked about job/scenario run history, dataset build timelines, or audit content**, check
+   up front whether it's Tier-3 (listing-only) before promising an answer — see
+   `references/limitations.md`.
+7. Optionally run `scripts/orient.sh <bundle_root>` first for automated triage: node type,
+   version, mirror path, biggest files, and presence of key troubleshooting files.
+
+## Quick lookup (most common questions)
+
+| Question | Where |
+|---|---|
+| DSS version / node type | `<mirror>/dss-version.json`, `<mirror>/install.ini`, or `diag.txt` → `printenv`'s `DKU_NODE_TYPE` (fastest) |
+| Is DSS running? Which components? | `diag.txt` → the `dss status` section |
+| CPU/memory/disk/network/kernel/env vars — any general OS question | `diag.txt` — most small commands are inlined there; see the OS/system table in `references/root-files.md` and `references/lookup-table.md` before reaching for `sysctl.txt`/`ps.txt` |
+| JVM heap size or listening port for a specific DSS component | `diag.txt` → `printenv` (`DKU_*_JAVA_OPTS`, `DKU_*_PORT`) |
+| Backend crash / OOM | `dmesg.txt` + `<mirror>/run/hs_err_pid*.log` + `cgroups_usage.txt` |
+| Thread hang / deadlock | `stacks.txt` (JVM thread dump) |
+| Which diagnosis step was slow/huge | `timings.txt` |
+| Instance config (LDAP/SSO/proxy/job concurrency) | `<mirror>/config/general-settings.json` |
+| How resources are restricted/requested (cgroups, container/K8s, Spark) | `<mirror>/config/general-settings.json` → `cgroupSettings`/`containerSettings`/`sparkSettings` (+ `<mirror>/config/clusters/*.json` overrides) — read together, see `references/data-dir-config.md` |
+| Is the internal DB H2 or external PostgreSQL | `<mirror>/config/general-settings.json` → `internalDatabase.connection` (present with a `type` = external; absent = default embedded H2) |
+| Users / groups | `<mirror>/config/users.json` |
+| Data connections | `<mirror>/config/connections.json` |
+| Code-env package versions (resolved) | `<mirror>/code-envs/desc/python/<env>/actual/requirements.txt` |
+| A project's recipes/datasets/scenarios/notebooks | `<mirror>/config/projects/<KEY>/...` |
+| Backend/API/job execution trace | `<mirror>/run/backend.log*` |
+| DSS's own self-diagnostic warnings | `<mirror>/run/sanity-check.json` |
+| Which bundle is activated for a project (mainly automation, rarely design) | `<mirror>/config/projects/<KEY>/active-bundle.json` |
+| Bundle activation history (automation) | `<mirror>/caches/reflected-events-v.json` |
+| Is this node a deployment target or a deployer host | `<mirror>/config/general-settings.json` → `deployerClientSettings.mode` |
+| Job/scenario run history, audit content | Usually **not in the bundle** — check `datadir_listing.txt` for existence/size only |
+
+See `references/lookup-table.md` for the full index.
+
+## Reference index
+
+- `references/root-files.md` — the full command sequence (via `timings.txt`), which parts of it
+  `diag.txt` actually inlines vs. stubs out, a detailed OS/system/environment table (CPU, memory,
+  disk, network, ulimits, the `printenv` treasure trove, etc.), and a per-file deep dive on every
+  standalone root `.txt` file (`sockets.txt`, `sysctl.txt`, `stacks.txt`, `cgroups_usage.txt`,
+  `dmesg.txt`, `syspackages.txt`, `ps.txt`, `r.txt`, `pip.txt`, `bin_listing.txt`,
+  `docker_images_listing.txt`) with ready-to-run grep patterns and real examples.
+- `references/listings-and-manifests.md` — how to safely query the `find -ls` manifest files
+  without loading them whole.
+- `references/data-dir-identity.md` — how to find the data-dir mirror, `install.ini` and
+  `dss-version.json` field reference.
+- `references/node-types.md` — what's identical vs. different between `design` and `automation`
+  node bundles (verified), and what's unverified (`deployer`, others).
+- `references/data-dir-config.md` — the `config/` metastore, including the full
+  `config/projects/<KEY>/` subtree, a dedicated resource-governance subsection tying together
+  `cgroupSettings`/`containerSettings`/`sparkSettings`/`clusters/*.json` for cgroups/container/K8s/
+  Spark resource questions, and a subsection on identifying the internal database (H2 vs.
+  PostgreSQL) via `internalDatabase`.
+- `references/data-dir-runtime-and-codeenvs.md` — `run/` logs, `code-envs/`/`acode-envs/`,
+  `install-support/`, `plugins/dev/`.
+- `references/lookup-table.md` — the full "where do I find X" index.
+- `references/limitations.md` — verified scope, known content gaps, large-file hazards.
+
+## Known limitations
+
+- Verified against 2 real design-node bundles + 1 real automation-node bundle. `deployer`-node
+  (and any other) internals are unverified — don't fabricate specifics for them.
+- Job run history, scenario run logs, dataset build timelines, and audit-log content are commonly
+  listing-only (Tier 3) — this is the #1 thing to check before promising an answer.
+- Capture completeness varies bundle-to-bundle (e.g. one automation sample mirrored only the
+  *logs* for `acode-envs/`, not the underlying `desc/{spec,actual}` files).
+- `license.json` may be a signed/opaque blob, not fully human-readable.
+
+See `references/limitations.md` for the complete list.

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "dataiku-diagnosis-reader": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp-server/dist/index.js"],
+      "env": {
+        "DATAIKU_SKILL_DIR": "${CLAUDE_PLUGIN_ROOT}/skills/dataiku-diagnosis-reader"
+      }
+    }
+  }
+}
