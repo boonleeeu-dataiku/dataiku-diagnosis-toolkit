@@ -2,4 +2,9 @@
 mcp-server/node_modules/
 mcp-server/dist/
 
+# Extracted/zipped diagnosis bundles, wherever they might land - never distribute
+dku_diagnosis_*/
+diagnosis*.zip
+*.diagnosis.zip
+
 .DS_Store
