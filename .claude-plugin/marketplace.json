@@ -1,0 +1,12 @@
+{
+  "name": "dataiku-local",
+  "displayName": "Dataiku Diagnosis Toolkit",
+  "plugins": {
+    "dataiku-diagnosis-toolkit": {
+      "source": {
+        "type": "relative-path",
+        "path": "."
+      }
+    }
+  }
+}
