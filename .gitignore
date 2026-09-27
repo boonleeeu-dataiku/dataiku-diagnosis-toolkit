@@ -10,6 +10,9 @@ mcp-server-review-generator/**/__pycache__/
 # 134MB, user-supplied branding asset -- see README's One-time setup
 mcp-server-review-generator/resources/Dataiku Branding Template 2026.pptx
 
+# Sample completed checklist, not needed at runtime
+mcp-server-review-generator/resources/dku_diagnosis_2026-07-22_checklist_review.xlsx
+
 # Generated decks, if ever written under the vendored copy's own output/
 mcp-server-review-generator/output/*.pptx
 
