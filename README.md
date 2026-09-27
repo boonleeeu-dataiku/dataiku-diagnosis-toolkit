@@ -32,33 +32,31 @@ checklist spreadsheet.
 
 ## One-time setup
 
-The MCP server ships as TypeScript source only (no `node_modules/`, no build output) to keep
-the plugin small and avoid shipping a build that can drift from source. After installing this
-plugin, build it once:
+Both MCP servers ship as source only — no `node_modules/`, no build output, no committed
+virtualenv — to keep the plugin small and avoid shipping a build that can drift from source.
+`.mcp.json` doesn't invoke them directly; it runs `scripts/start-reader.sh` /
+`scripts/start-review-generator.sh`, which lazily build/install on first launch (comparing a
+stamp file against `package-lock.json` / `requirements.txt` to skip that step on later launches,
+and rebuilding automatically after a dependency change) and then exec the real server. Build/
+install output goes to stderr, since MCP talks JSON-RPC over stdout.
+
+Practically: the first time either server starts after installing or updating the plugin, expect
+a delay of up to a minute or so while it builds; after that it starts instantly. Requires
+Node.js >= 18.17 and Python 3 to be on `PATH` (or under `/opt/homebrew/bin` or `/usr/local/bin`),
+and `bash` on `PATH` (macOS/Linux native; Windows needs WSL or Git Bash, since `orient.sh` is also
+a shell script). If a server fails to start, check the plugin's MCP server logs for the
+underlying `npm`/`pip` error.
+
+If you'd rather not wait on the lazy build, you can still run the setup manually up front:
 
 ```sh
-cd mcp-server-diagnosis-reader
-npm install
-npm run build
+cd mcp-server-diagnosis-reader && npm install && npm run build
+cd ../mcp-server-review-generator && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 ```
 
-This produces `mcp-server-diagnosis-reader/dist/index.js`, which `.mcp.json` points to. Requires
-Node.js >= 18.17 and `bash` on `PATH` (macOS/Linux native; Windows needs WSL or Git Bash, since
-`orient.sh` is a shell script).
-
-`mcp-server-review-generator/` ships as Python source only (no committed virtualenv), for the same
-reason. After installing this plugin, set it up once:
-
-```sh
-cd mcp-server-review-generator
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-```
-
-This produces `mcp-server-review-generator/.venv/`, whose interpreter `.mcp.json` points to
-directly. You'll also need the Dataiku branding template — an internal Dataiku brand asset, not
-committed here (134MB, and not customer data — see "Security / privacy" below for why that's a
-different concern from diagnosis-bundle data). Obtain it separately and place it at
+You'll also need the Dataiku branding template — an internal Dataiku brand asset, not committed
+here (134MB, and not customer data — see "Security / privacy" below for why that's a different
+concern from diagnosis-bundle data). Obtain it separately and place it at
 `mcp-server-review-generator/resources/Dataiku Branding Template 2026.pptx`. Until that's done,
 deck generation still works if you pass an explicit path to your own copy (the
 `dataiku-review-deck-builder` skill will ask for one if the default path is missing).
