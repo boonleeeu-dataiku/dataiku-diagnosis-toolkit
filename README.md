@@ -32,6 +32,10 @@ checklist spreadsheet.
 
 ## Installation
 
+> **Note:** full deck-generation functionality needs one manual step first — the Dataiku
+> branding template can't be committed to git (140MB, over GitHub's 100MB limit). See
+> [One-time setup](#one-time-setup) below.
+
 This repo is both a plugin (`.claude-plugin/plugin.json`) and its own marketplace
 (`.claude-plugin/marketplace.json`), so it can be installed directly without a separate
 marketplace repo.
@@ -85,7 +89,7 @@ cd mcp-server-diagnosis-reader && npm install && npm run build
 cd ../mcp-server-review-generator && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 ```
 
-You'll also need the Dataiku branding template — an internal Dataiku brand asset, not committed
+**Required for deck generation:** the Dataiku branding template — an internal Dataiku brand asset, not committed
 here (134MB, and not customer data — see "Security / privacy" below for why that's a different
 concern from diagnosis-bundle data). Obtain it separately and place it at
 `mcp-server-review-generator/resources/Dataiku Branding Template 2026.pptx`. Until that's done,
