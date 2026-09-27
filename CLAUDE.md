@@ -10,6 +10,11 @@ what each piece does. The plugin as a whole is versioned via `.claude-plugin/plu
 top-level `version` field, bumped independently of the versions carried by the individual pieces
 below.
 
+The repo also carries `.claude-plugin/marketplace.json`, making it self-hostable as its own
+single-plugin marketplace (`dataiku-local`) — see README's [Installation](README.md#installation)
+section for the `/plugin marketplace add` / `/plugin install` flow this enables, both locally and
+from GitHub.
+
 ## Vendored vs. authored-here components
 
 - **`skills/dataiku-diagnosis-reader/` + `mcp-server-diagnosis-reader/`** are **vendored** from a

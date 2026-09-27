@@ -30,6 +30,37 @@ checklist spreadsheet.
   `build_platform_review_deck` and `validate_deck` tools that generate/validate the deck. Vendored
   from a separate upstream repo — see [Versioning & maintenance](#versioning--maintenance) below.
 
+## Installation
+
+This repo is both a plugin (`.claude-plugin/plugin.json`) and its own marketplace
+(`.claude-plugin/marketplace.json`), so it can be installed directly without a separate
+marketplace repo.
+
+**From a local clone** (recommended while developing this repo itself — see caveat below):
+
+```
+/plugin marketplace add /path/to/this/repo
+/plugin install dataiku-diagnosis-toolkit@dataiku-local
+```
+
+**From GitHub**, once changes are pushed:
+
+```
+/plugin marketplace add boonleeeu-dataiku/dataiku-diagnosis-toolkit
+/plugin install dataiku-diagnosis-toolkit@dataiku-local
+```
+
+The Claude desktop app has the same flow under its Claude Code panel: **+** → **Plugins** →
+**Marketplaces** tab → **Add marketplace** (same path/repo as above), then **Add plugin** to
+install.
+
+Caveat: a local-path install loads live from that directory (no separate cache copy), so the
+built `dist/`/`.venv/` from [One-time setup](#one-time-setup) below persist indefinitely and
+`/plugin marketplace update` is a no-op. A GitHub-sourced install instead caches each commit
+under `~/.claude/plugins/cache/...`; every time it's updated to a new commit, that's a **new**
+cache directory with no prior build, so the lazy-bootstrap in `.mcp.json` reruns the full
+build/install once. Expected and harmless, just not instant like the local case.
+
 ## One-time setup
 
 Both MCP servers ship as source only — no `node_modules/`, no build output, no committed
