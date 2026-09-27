@@ -1,12 +1,14 @@
 {
   "name": "dataiku-local",
-  "displayName": "Dataiku Diagnosis Toolkit",
-  "plugins": {
-    "dataiku-diagnosis-toolkit": {
-      "source": {
-        "type": "relative-path",
-        "path": "."
-      }
+  "owner": {
+    "name": "Boon Lee Eu"
+  },
+  "plugins": [
+    {
+      "name": "dataiku-diagnosis-toolkit",
+      "source": "./",
+      "description": "Review a Dataiku DSS diagnosis bundle against a checklist spreadsheet, then generate a branded customer-facing Platform Review deck.",
+      "version": "0.2.0"
     }
-  }
+  ]
 }
