@@ -2,6 +2,17 @@
 mcp-server/node_modules/
 mcp-server/dist/
 
+# mcp-server-review-generator build/runtime artifacts
+mcp-server-review-generator/.venv/
+mcp-server-review-generator/**/__pycache__/
+*.pyc
+
+# 134MB, user-supplied branding asset -- see README's One-time setup
+mcp-server-review-generator/resources/Dataiku Branding Template 2026.pptx
+
+# Generated decks, if ever written under the vendored copy's own output/
+mcp-server-review-generator/output/*.pptx
+
 # Extracted/zipped diagnosis bundles, wherever they might land - never distribute
 dku_diagnosis_*/
 diagnosis*.zip

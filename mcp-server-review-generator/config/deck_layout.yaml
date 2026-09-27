@@ -1,0 +1,43 @@
+# Tunables for deck generation. Overridable per-run via build_deck.py CLI
+# flags where noted.
+base_deck: "resources/Dataiku Branding Template 2026.pptx"
+
+# Max data rows per cloned table slide (overridable: --rows-per-slide).
+# Sized to fit the branding master's table-slide row height used for
+# prose-heavy rows (see build_deck.py's ROW_HEIGHT_* constants).
+table_rows_per_slide: 4
+
+# Max critical-finding cards per slide (stacked full-width rows -- fixed
+# card height, sized to fit the branding master's usable content area; see
+# build_deck.py's CARD_HEIGHT_CRITICAL/CARD_GAP).
+critical_findings_per_slide: 5
+
+# Max recommendation cards per slide (same stacked-row layout as critical
+# findings, but shorter cards since there's no ID/status pill column).
+recommendations_per_slide: 6
+
+# A checklist section's flagged (Fail/Partial/Needs Review) item count at or
+# below which its Section Detail slide uses a card-list layout; above it,
+# falls back to the denser native-table layout (see
+# build_deck.py's build_section_detail_slides).
+section_card_table_threshold: 5
+
+# By default every item (Pass included) appears in per-section findings
+# tables/cards, not just Fail/Partial/Needs Review. --include-pass-items is
+# a one-way (store_true) CLI flag, so it can't force this back off for a
+# single run -- flip this to false here to go back to flagged-only.
+include_pass_items: true
+
+# Per-column character budgets for table-cell / narrative text (long
+# checklist prose is truncated with a trailing ellipsis beyond this).
+#
+# Findings table's Statement/Evidence & Notes columns are NOT in this list --
+# they're never truncated; build_deck.py's make_table_slides() shrinks their
+# font per-cell to fit instead (see FINDINGS_FONT_FIT_COLS/_fitted_font_size
+# there). critical_finding_card/recommendation_card cards still truncate
+# (fixed-height cards have no per-cell font-metrics-based fit), but each
+# truncated slide's speaker notes carry the full untruncated text.
+cell_char_limits:
+  description: 260
+  critical_finding_card: 150
+  recommendation_card: 120

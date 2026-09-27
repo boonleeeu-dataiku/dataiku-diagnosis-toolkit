@@ -1,0 +1,6 @@
+openpyxl
+PyYAML
+Pillow
+# Only pin here: the mcp SDK moves fast and 2.x introduced breaking changes
+# over 1.x. Needed only for scripts/mcp_server.py.
+mcp>=2.0.0

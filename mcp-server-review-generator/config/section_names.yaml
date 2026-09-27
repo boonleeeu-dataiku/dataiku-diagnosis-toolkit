@@ -1,0 +1,40 @@
+# Canonical display names for checklist section sheets, keyed by a
+# normalized (lowercased, whitespace-collapsed) form of the sheet's tab
+# name. Excel truncates tab names to 31 characters, so keys are typically
+# truncated fragments -- that's expected and fine.
+#
+# A checklist sheet with no matching key here still works (section_names.py
+# falls back to title-casing the raw tab name and logs a warning) -- add an
+# entry here to give a future section a nicer display name.
+sections:
+  "architecture, compute & infrast":
+    display: "Architecture, Compute & Infrastructure"
+    order: 1
+  "enterprise-grade security, perm":
+    display: "Enterprise-grade Security, Permissions"
+    order: 2
+  "generative ai acceleration & in":
+    display: "Generative AI Acceleration & Innovation"
+    order: 3
+  "scalable performance, stability":
+    display: "Scalable Performance, Stability"
+    order: 4
+
+# Case-insensitive substring aliases for locating the Summary sheet's
+# narrative blocks (see read_checklist.py:find_section_blocks). Only needed
+# when a future checklist's block wording drifts from these defaults.
+narrative_block_aliases:
+  overall_status_counts:
+    - "overall status counts"
+  per_section_breakdown:
+    - "per-section breakdown"
+    - "per section breakdown"
+  critical_findings:
+    - "critical findings"
+  other_must_have:
+    - "other must-have items"
+    - "other must have items"
+  recommendations:
+    - "priority-ordered recommendations"
+    - "priority ordered recommendations"
+    - "recommendations"

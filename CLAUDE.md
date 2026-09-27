@@ -24,9 +24,21 @@ below.
   hand-edit content in these two directories here expecting it to persist — fix it upstream and
   re-sync, or the next sync will silently overwrite the fix.
 
-- **`skills/dataiku-diagnosis-checklist-review/`** is authored directly in this repo. It has no
-  upstream and currently carries no independent `version`/`CHANGELOG.md` — don't add versioning
-  to it speculatively; that decision is deferred until it needs to be shared/versioned on its own.
+- **`skills/dataiku-diagnosis-checklist-review/`** and **`skills/dataiku-review-deck-builder/`**
+  are authored directly in this repo. Neither has an upstream, and neither currently carries an
+  independent `version`/`CHANGELOG.md` — don't add versioning to either speculatively; that
+  decision is deferred until one needs to be shared/versioned on its own.
+
+- **`mcp-server-review-generator/`** is **vendored** from a separate upstream repo,
+  `github.com/boonleeeu-dataiku/dataiku-review-generator`, which is its actual source of truth.
+  That repo versions itself independently (SemVer in its own `VERSION` file, `CHANGELOG.md`, git
+  tags) per its own `CLAUDE.md`.
+
+  To re-sync after upstream changes: diff the upstream repo's `scripts/`, `config/`, `VERSION`,
+  `requirements.txt`, and non-branding `resources/` contents (the sample checklist only — never
+  the 134MB branding template, see below) against this repo's `mcp-server-review-generator/`
+  copy, and port over whatever differs. Don't hand-edit content here expecting it to persist —
+  fix it upstream and re-sync, or the next sync will silently overwrite the fix.
 
 ## Security / privacy
 
@@ -35,7 +47,16 @@ Never commit real Dataiku diagnosis bundle data (or copy any into this repo) —
 (`dku_diagnosis_*/`, `diagnosis*.zip`) as defense-in-depth, but the rule is: this toolkit ships
 code and docs only, never bundle data.
 
-## Working on the MCP server
+Separately, `mcp-server-review-generator/resources/Dataiku Branding Template 2026.pptx` (134MB) is
+gitignored for a different reason — it's an internal brand asset over GitHub's 100MB file limit,
+not customer data — and is never vendored in from upstream either; it's a manual, one-time,
+user-supplied placement step (see README's "One-time setup").
+
+## Working on the MCP servers
 
 Edits to `mcp-server/src/**/*.ts` require `npm run build` (see README's one-time setup) before
 they take effect — the plugin ships TypeScript source only, no build output, no `node_modules/`.
+
+Edits to `mcp-server-review-generator/scripts/**/*.py` take effect immediately (no build step),
+but require the one-time `.venv` setup (see README) to exist before the server can launch at all
+— the plugin ships Python source only, no committed virtualenv.
