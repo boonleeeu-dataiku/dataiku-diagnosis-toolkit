@@ -15,9 +15,9 @@ checklist spreadsheet.
   checklist spreadsheet (columns like `id`, `priority`, `check_type`, `statement`,
   `expected_value`, etc.), filling in validation results and a summary tab. Authored directly in
   this repo.
-- **`mcp-server/`** — a local MCP server exposing `dataiku-diagnosis-reader`'s docs as
-  resources and `run_orient` / `safe_read` as tools, for MCP-compatible agents that can't load
-  Claude Skills directly (Cursor, other Claude Desktop installs, etc.). It contains no
+- **`mcp-server-diagnosis-reader/`** — a local MCP server exposing `dataiku-diagnosis-reader`'s
+  docs as resources and `run_orient` / `safe_read` as tools, for MCP-compatible agents that can't
+  load Claude Skills directly (Cursor, other Claude Desktop installs, etc.). It contains no
   diagnostic logic of its own — it reads `skills/dataiku-diagnosis-reader/` from disk at
   request time via the `DATAIKU_SKILL_DIR` env var set in `.mcp.json`, and shells out to
   `orient.sh` — so the skill stays the single source of truth. Vendored alongside the reader
@@ -26,9 +26,9 @@ checklist spreadsheet.
   (produced by `dataiku-diagnosis-checklist-review`) into a branded, customer-facing Platform
   Review `.pptx` deck, via the `mcp-server-review-generator` tools below. Authored directly in
   this repo.
-- **`mcp-server-review-generator/`** — a local Python MCP server exposing `build_platform_review_deck`
-  and `validate_deck` tools that generate/validate the deck. Vendored from a separate upstream repo
-  — see [Versioning & maintenance](#versioning--maintenance) below.
+- **`mcp-server-review-generator/`** — a local Python MCP server exposing
+  `build_platform_review_deck` and `validate_deck` tools that generate/validate the deck. Vendored
+  from a separate upstream repo — see [Versioning & maintenance](#versioning--maintenance) below.
 
 ## One-time setup
 
@@ -37,14 +37,14 @@ the plugin small and avoid shipping a build that can drift from source. After in
 plugin, build it once:
 
 ```sh
-cd mcp-server
+cd mcp-server-diagnosis-reader
 npm install
 npm run build
 ```
 
-This produces `mcp-server/dist/index.js`, which `.mcp.json` points to. Requires Node.js >= 18.17
-and `bash` on `PATH` (macOS/Linux native; Windows needs WSL or Git Bash, since `orient.sh` is a
-shell script).
+This produces `mcp-server-diagnosis-reader/dist/index.js`, which `.mcp.json` points to. Requires
+Node.js >= 18.17 and `bash` on `PATH` (macOS/Linux native; Windows needs WSL or Git Bash, since
+`orient.sh` is a shell script).
 
 `mcp-server-review-generator/` ships as Python source only (no committed virtualenv), for the same
 reason. After installing this plugin, set it up once:
@@ -65,11 +65,11 @@ deck generation still works if you pass an explicit path to your own copy (the
 
 ## Using it elsewhere (Cursor, another Claude Desktop, etc.)
 
-`mcp-server/` speaks plain MCP over stdio, so any MCP-compatible client can use it — not just
-Claude. Point that client's MCP config at `mcp-server/dist/index.js` the same way `.mcp.json`
-does here, setting `DATAIKU_SKILL_DIR` to this plugin's `skills/dataiku-diagnosis-reader`
-folder (or copy that skill folder alongside the server and let it fall back to the
-sibling-directory default — see `mcp-server/README.md`).
+`mcp-server-diagnosis-reader/` speaks plain MCP over stdio, so any MCP-compatible client can use
+it — not just Claude. Point that client's MCP config at `mcp-server-diagnosis-reader/dist/index.js`
+the same way `.mcp.json` does here, setting `DATAIKU_SKILL_DIR` to this plugin's
+`skills/dataiku-diagnosis-reader` folder (or copy that skill folder alongside the server and let
+it fall back to the sibling-directory default — see `mcp-server-diagnosis-reader/README.md`).
 
 ## Security / privacy
 
@@ -87,11 +87,11 @@ the same reason its own upstream repo doesn't commit it either.
 
 This plugin's own release is versioned via `.claude-plugin/plugin.json`'s top-level `version`.
 
-`skills/dataiku-diagnosis-reader/` and `mcp-server/` are vendored from a separate upstream repo
-(`dataiku-diagnosis-reader`), which is their actual source of truth and versions each
-independently (see their own `CHANGELOG.md` files and `SKILL.md`'s `version` frontmatter /
-`mcp-server/package.json`). `mcp-server-review-generator/` is likewise vendored, from
-`dataiku-review-generator`, versioned independently via its own `VERSION`/`CHANGELOG.md`.
+`skills/dataiku-diagnosis-reader/` and `mcp-server-diagnosis-reader/` are vendored from a separate
+upstream repo (`dataiku-diagnosis-reader`), which is their actual source of truth and versions
+each independently (see their own `CHANGELOG.md` files and `SKILL.md`'s `version` frontmatter /
+`mcp-server-diagnosis-reader/package.json`). `mcp-server-review-generator/` is likewise vendored,
+from `dataiku-review-generator`, versioned independently via its own `VERSION`/`CHANGELOG.md`.
 `skills/dataiku-diagnosis-checklist-review/` and `skills/dataiku-review-deck-builder/` are
 authored directly here and have no separate version. See `CLAUDE.md` for how to re-sync this
 plugin with upstream changes.

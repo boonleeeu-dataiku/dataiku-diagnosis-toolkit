@@ -8,7 +8,7 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo. See
-`../CLAUDE.md` for how this relates to `mcp-server/`'s own versioning.
+`../CLAUDE.md` for how this relates to `mcp-server-diagnosis-reader/`'s own versioning.
 
 ## [Unreleased]
 

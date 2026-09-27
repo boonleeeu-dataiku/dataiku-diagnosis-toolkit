@@ -12,17 +12,20 @@ below.
 
 ## Vendored vs. authored-here components
 
-- **`skills/dataiku-diagnosis-reader/` + `mcp-server/`** are **vendored** from a separate upstream
-  repo, `github.com/boonleeeu-dataiku/dataiku-diagnosis-reader`, which is their actual source of
-  truth. That repo versions the two independently (SemVer in `SKILL.md`'s `version` frontmatter
-  / `mcp-server/package.json`, each with its own `CHANGELOG.md`) per its own `CLAUDE.md`.
+- **`skills/dataiku-diagnosis-reader/` + `mcp-server-diagnosis-reader/`** are **vendored** from a
+  separate upstream repo, `github.com/boonleeeu-dataiku/dataiku-diagnosis-reader`, which is their
+  actual source of truth. That repo versions the two independently (SemVer in `SKILL.md`'s
+  `version` frontmatter / `mcp-server-diagnosis-reader/package.json`, each with its own
+  `CHANGELOG.md`) per its own `CLAUDE.md`. Note: upstream's directory is also named
+  `mcp-server-diagnosis-reader/` as of its rename from `mcp-server/` — both repos stay in sync on
+  the name, so re-syncing needs no path mapping.
 
   To re-sync after upstream changes: diff the upstream repo's `dataiku-diagnosis-reader/` and
-  `mcp-server/` directories against this repo's `skills/dataiku-diagnosis-reader/` and
-  `mcp-server/` copies (content, `references/*.md`, `scripts/orient.sh`, `src/**`,
-  `package.json`, version frontmatter, `CHANGELOG.md`), and port over whatever differs. Don't
-  hand-edit content in these two directories here expecting it to persist — fix it upstream and
-  re-sync, or the next sync will silently overwrite the fix.
+  `mcp-server-diagnosis-reader/` directories against this repo's `skills/dataiku-diagnosis-reader/`
+  and `mcp-server-diagnosis-reader/` copies (content, `references/*.md`, `scripts/orient.sh`,
+  `src/**`, `package.json`, version frontmatter, `CHANGELOG.md`), and port over whatever differs.
+  Don't hand-edit content in these two directories here expecting it to persist — fix it upstream
+  and re-sync, or the next sync will silently overwrite the fix.
 
 - **`skills/dataiku-diagnosis-checklist-review/`** and **`skills/dataiku-review-deck-builder/`**
   are authored directly in this repo. Neither has an upstream, and neither currently carries an
@@ -54,8 +57,9 @@ user-supplied placement step (see README's "One-time setup").
 
 ## Working on the MCP servers
 
-Edits to `mcp-server/src/**/*.ts` require `npm run build` (see README's one-time setup) before
-they take effect — the plugin ships TypeScript source only, no build output, no `node_modules/`.
+Edits to `mcp-server-diagnosis-reader/src/**/*.ts` require `npm run build` (see README's one-time
+setup) before they take effect — the plugin ships TypeScript source only, no build output, no
+`node_modules/`.
 
 Edits to `mcp-server-review-generator/scripts/**/*.py` take effect immediately (no build step),
 but require the one-time `.venv` setup (see README) to exist before the server can launch at all

@@ -81,7 +81,7 @@ export function registerResources(server: McpServer): void {
         const reason = err instanceof Error ? err.message : String(err);
         throw new Error(
           `Could not read ${r.file} at ${abs} (${reason}). Is dataiku-diagnosis-reader/ present ` +
-            "as a sibling of mcp-server/, or is DATAIKU_SKILL_DIR set correctly?",
+            "as a sibling of mcp-server-diagnosis-reader/, or is DATAIKU_SKILL_DIR set correctly?",
         );
       }
       return { contents: [{ uri: uri.href, mimeType: "text/markdown", text }] };

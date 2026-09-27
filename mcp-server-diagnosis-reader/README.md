@@ -19,7 +19,7 @@ this server's own TypeScript code.
 ## Build
 
 ```sh
-cd mcp-server
+cd mcp-server-diagnosis-reader
 npm install
 npm run build
 ```
@@ -95,7 +95,8 @@ Example call:
 
 - `DATAIKU_BUNDLE_ROOT` — default `bundle_root` for both tools when the caller omits it.
 - `DATAIKU_SKILL_DIR` — override for locating `dataiku-diagnosis-reader/`. Defaults to the sibling
-  directory of this package (`../dataiku-diagnosis-reader` relative to `mcp-server/`).
+  directory of this package (`../dataiku-diagnosis-reader` relative to
+  `mcp-server-diagnosis-reader/`).
 
 ## Client configuration
 
@@ -109,7 +110,7 @@ unquoted into a shell command elsewhere.
   "mcpServers": {
     "dataiku-diagnosis-reader": {
       "command": "node",
-      "args": ["/absolute/path/to/Diagnosis Reader/mcp-server/dist/index.js"]
+      "args": ["/absolute/path/to/Diagnosis Reader/mcp-server-diagnosis-reader/dist/index.js"]
     }
   }
 }
@@ -122,7 +123,7 @@ unquoted into a shell command elsewhere.
   "mcpServers": {
     "dataiku-diagnosis-reader": {
       "command": "node",
-      "args": ["/absolute/path/to/Diagnosis Reader/mcp-server/dist/index.js"]
+      "args": ["/absolute/path/to/Diagnosis Reader/mcp-server-diagnosis-reader/dist/index.js"]
     }
   }
 }
@@ -135,7 +136,7 @@ To set a default bundle so callers don't need to pass `bundle_root` every time, 
   "mcpServers": {
     "dataiku-diagnosis-reader": {
       "command": "node",
-      "args": ["/absolute/path/to/Diagnosis Reader/mcp-server/dist/index.js"],
+      "args": ["/absolute/path/to/Diagnosis Reader/mcp-server-diagnosis-reader/dist/index.js"],
       "env": { "DATAIKU_BUNDLE_ROOT": "/absolute/path/to/some/dku_diagnosis_bundle" }
     }
   }
@@ -167,4 +168,4 @@ specific bundle name in committed docs or tests).
   besides the SDK itself (e.g. a stray `console.log`). Check `src/**` and any dependency for
   non-stderr output.
 - **"Could not find SKILL.md" / "Could not find orient.sh"**: `dataiku-diagnosis-reader/` isn't
-  present as a sibling of `mcp-server/`, or `DATAIKU_SKILL_DIR` is set incorrectly.
+  present as a sibling of `mcp-server-diagnosis-reader/`, or `DATAIKU_SKILL_DIR` is set incorrectly.

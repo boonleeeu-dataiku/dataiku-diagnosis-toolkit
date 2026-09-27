@@ -56,7 +56,7 @@ export function registerRunOrientTool(server: McpServer): void {
               type: "text" as const,
               text:
                 `Could not find orient.sh at ${orientScript}. Is dataiku-diagnosis-reader/ ` +
-                "present as a sibling of mcp-server/, or is DATAIKU_SKILL_DIR set correctly?",
+                "present as a sibling of mcp-server-diagnosis-reader/, or is DATAIKU_SKILL_DIR set correctly?",
             },
           ],
           isError: true,
