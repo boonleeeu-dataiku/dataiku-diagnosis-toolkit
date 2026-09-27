@@ -38,10 +38,15 @@ below.
   tags) per its own `CLAUDE.md`.
 
   To re-sync after upstream changes: diff the upstream repo's `scripts/`, `config/`, `VERSION`,
-  `requirements.txt`, and non-branding `resources/` contents (the sample checklist only — never
-  the 134MB branding template, see below) against this repo's `mcp-server-review-generator/`
-  copy, and port over whatever differs. Don't hand-edit content here expecting it to persist —
-  fix it upstream and re-sync, or the next sync will silently overwrite the fix.
+  and `requirements.txt` against this repo's `mcp-server-review-generator/` copy, and port over
+  whatever differs. Don't hand-edit content here expecting it to persist — fix it upstream and
+  re-sync, or the next sync will silently overwrite the fix.
+
+  `resources/` is out of scope for this sync: the branding template is a manual, gitignored,
+  user-supplied asset (see below), and the sample completed checklist
+  (`dku_diagnosis_2026-07-22_checklist_review.xlsx`) is likewise gitignored here — it's a demo
+  artifact for the checklist-to-deck pipeline, not referenced by any code, docs, or config, so
+  there's nothing to keep in sync.
 
 ## Security / privacy
 
@@ -54,6 +59,11 @@ Separately, `mcp-server-review-generator/resources/Dataiku Branding Template 202
 gitignored for a different reason — it's an internal brand asset over GitHub's 100MB file limit,
 not customer data — and is never vendored in from upstream either; it's a manual, one-time,
 user-supplied placement step (see README's "One-time setup").
+
+`mcp-server-review-generator/resources/dku_diagnosis_2026-07-22_checklist_review.xlsx` is also
+gitignored, for a third reason: it's a sample completed checklist with no customer data and no
+runtime dependents (nothing passes it as a default `--checklist` path), so there's no reason to
+carry it in the repo. It still exists locally for anyone who has it; it's just untracked.
 
 ## Working on the MCP servers
 
