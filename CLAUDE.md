@@ -15,6 +15,20 @@ single-plugin marketplace (`dataiku-local`) — see README's [Installation](READ
 section for the `/plugin marketplace add` / `/plugin install` flow this enables, both locally and
 from GitHub.
 
+## Plugin-level version bumps
+
+Whenever the plugin's top-level version is bumped, update it in **all four** of these files
+together — they must always carry the same value:
+
+1. `.claude-plugin/plugin.json` — `version` (Claude plugin manifest)
+2. `.claude-plugin/marketplace.json` — `plugins[0].version` (mirrors the plugin manifest)
+3. `plugin.json` (repo root) — `version` (Codex's primary manifest)
+4. `.codex-plugin/plugin.json` — `version` (Codex plugin manifest)
+
+Also add a corresponding entry to the top-level `CHANGELOG.md`. This is independent of the
+versions carried by the vendored components (see below) and by the two authored-here skills,
+which have none.
+
 ## Vendored vs. authored-here components
 
 - **`skills/dataiku-diagnosis-reader/` + `mcp-server-diagnosis-reader/`** are **vendored** from a
