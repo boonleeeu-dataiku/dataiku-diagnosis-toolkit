@@ -6,7 +6,21 @@ This repository can be installed as a local Codex plugin while keeping its Claud
 
 From this repository, run `codex plugin marketplace list`. Codex may already discover the existing `dataiku-local` marketplace from `.claude-plugin/marketplace.json`. If it does not, run `codex plugin marketplace add /absolute/path/to/this/repo`. Then run `codex plugin add dataiku-diagnosis-toolkit@dataiku-local` and start a new Codex session.
 
-The plugin launches two local stdio MCP servers. It needs `bash`, Node.js 18.17 or newer with `npm`, and Python 3. The Codex launcher mirrors only the server source into Codex's writable `PLUGIN_DATA` directory and runs the existing launch scripts there. The first launch installs dependencies in that directory. The Dataiku branding template is not in Git; see the main README for its one-time placement or pass an explicit `base_deck_path`.
+The plugin launches two local stdio MCP servers. It needs `bash`, Node.js 18.17 or newer with `npm`, and Python 3. The Codex launcher mirrors only the server source into Codex's writable `PLUGIN_DATA` directory and runs the existing launch scripts there. The first launch installs dependencies in that directory.
+
+## Branding template
+
+Deck generation requires `Dataiku Branding Template 2026.pptx`. This 134 MB file is gitignored and is **not included in a fresh GitHub checkout or GitHub-sourced plugin install**. The Codex launcher links its runtime `resources/` directory to the installed plugin's `mcp-server-review-generator/resources/` directory, which is where the deck tool looks by default.
+
+For the default lookup, copy the template to:
+
+```text
+~/.codex/plugins/cache/<marketplace>/dataiku-diagnosis-toolkit/<version>/mcp-server-review-generator/resources/Dataiku Branding Template 2026.pptx
+```
+
+Use the marketplace and version shown by `codex plugin list` (for this repo's local marketplace, they are `dataiku-local` and `0.2.0` at the time of writing). If you install from a local clone that already contains the template, check this cache location first: the local install may already have copied it.
+
+The cache can be replaced when you reinstall or update the plugin. For a durable location, keep the template outside the plugin cache and provide its absolute path in the `base_deck_path` argument when asking Codex to build a deck. Do not place the template in `PLUGIN_DATA`; that directory holds the server runtime, and its `resources/` entry points back to the installed plugin.
 
 ## Verify
 

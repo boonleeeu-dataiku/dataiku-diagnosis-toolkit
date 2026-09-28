@@ -148,7 +148,11 @@ codex plugin add dataiku-diagnosis-toolkit@dataiku-local
 
 Start a new Codex session after installation. The Codex launcher prepares the local MCP servers
 in Codex's writable plugin-data directory on first use. It needs `bash`, Node.js 18.17 or newer
-with `npm`, and Python 3. Deck generation also needs the branding template described in
-[One-time setup](#one-time-setup), or an explicit `base_deck_path`.
+with `npm`, and Python 3. Deck generation needs the branding template described in
+[One-time setup](#one-time-setup). The template is gitignored, so a fresh GitHub install will not
+include it. Put it in the installed Codex plugin's
+`mcp-server-review-generator/resources/` directory for the default lookup, or keep it elsewhere
+and pass its absolute path as `base_deck_path`. See [CODEX_SETUP.md](CODEX_SETUP.md#branding-template)
+for the cache path and reinstall caveat.
 
 See [CODEX_SETUP.md](CODEX_SETUP.md) for verification and update instructions.
