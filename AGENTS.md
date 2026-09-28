@@ -19,6 +19,7 @@ This repository packages skills and two local MCP servers for reading Dataiku DS
 ## Privacy and local assets
 
 - Never commit or copy a real customer diagnosis bundle into this repository. The plugin ships code and documentation, not customer data. The `.gitignore` patterns are only a safeguard.
+- `skills/dataiku-diagnosis-checklist-review/resources/checklist_template.xlsx` is a tracked, bundled default checklist that must ship with the plugin; it is distinct from customer data and the gitignored sample completed checklist.
 - `mcp-server-review-generator/resources/Dataiku Branding Template 2026.pptx` is a manually supplied, gitignored internal brand asset because it exceeds GitHub's file size limit. A fresh install may need an explicit `base_deck_path`; see `CODEX_SETUP.md`.
 - The gitignored sample completed checklist under `mcp-server-review-generator/resources/` is a local demo artifact, not a runtime input or a file to sync from upstream.
 

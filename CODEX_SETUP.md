@@ -18,12 +18,12 @@ For the default lookup, copy the template to:
 ~/.codex/plugins/cache/<marketplace>/dataiku-diagnosis-toolkit/<version>/mcp-server-review-generator/resources/Dataiku Branding Template 2026.pptx
 ```
 
-Use the marketplace and version shown by `codex plugin list` (for this repo's local marketplace, they are `dataiku-local` and `0.2.0` at the time of writing). If you install from a local clone that already contains the template, check this cache location first: the local install may already have copied it.
+Use the marketplace and version shown by `codex plugin list` (the local marketplace in this repo is `dataiku-local`). If you install from a local clone that already contains the template, check this cache location first: the local install may already have copied it.
 
 The cache can be replaced when you reinstall or update the plugin. For a durable location, keep the template outside the plugin cache and provide its absolute path in the `base_deck_path` argument when asking Codex to build a deck. Do not place the template in `PLUGIN_DATA`; that directory holds the server runtime, and its `resources/` entry points back to the installed plugin.
 
 ## Verify
 
-In a new session, ask Codex to use `dataiku-diagnosis-reader` on an extracted test bundle. It should have the `run_orient` and `safe_read` tools. For a completed checklist and branding template, ask it to use `dataiku-review-deck-builder`; it should have `build_platform_review_deck` and `validate_deck`. The `dataiku-codex-workflow` companion explains Codex-specific tool and file-access differences without changing the original task skills.
+In a new session, ask Codex to use `dataiku-diagnosis-reader` on an extracted test bundle. It should have the `run_orient` and `safe_read` tools. To check the bundled checklist fallback, ask for a diagnosis review without supplying a checklist, then confirm that Codex offers the default template and saves a completed workbook outside the plugin directory. For a completed checklist and branding template, ask it to use `dataiku-review-deck-builder`; it should have `build_platform_review_deck` and `validate_deck`. The `dataiku-codex-workflow` companion explains Codex-specific tool and file-access differences without changing the original task skills.
 
 Local plugins install into a Codex cache. Refresh or reinstall the plugin after changing this repository, then use a new session to load the updated skills and tools.
