@@ -7,6 +7,25 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-09-28
+
+### Fixed
+
+- The Methodology slide's ("How this Dataiku Platform Review was conducted") divider line cut through
+  its intro sentence's text box. Root cause: that slide is cloned from the branding master's "Basic
+  slide – Full text" layout, whose intro text box, divider line, and body paragraph box all keep the
+  Google-Slides-authored geometry sized for the template's own short Lorem Ipsum placeholder text;
+  `build_methodology_slide()` only ever substituted the text runs, never the shape geometry, so the
+  real (longer) substituted sentence wrapped to more lines than the box was sized for and rendered
+  straight through the divider line below it.
+- The same slide's intro/divider/body content additionally sat visibly low in the slide, under a large
+  leftover gap below the subtitle inherited from the same template.
+
+  Both fixed together: `build_methodology_slide()` now grows the intro box to fit the real sentence's
+  wrap, then recenters the intro/divider/body block as one group within the slide (preserving the
+  template's own internal gaps between them), via a new reusable `office.text.set_shape_bounds()`
+  helper (id-scoped `<a:off>`/`<a:ext>` setter, mirroring `office.tables.set_graphic_frame_bounds()`).
+
 ## [0.1.2] - 2026-09-27
 
 ### Fixed

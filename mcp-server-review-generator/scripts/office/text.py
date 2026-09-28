@@ -11,6 +11,8 @@ PIC_RE = re.compile(r"<p:pic>.*?</p:pic>", re.DOTALL)
 SP_RE = re.compile(r"<p:sp>.*?</p:sp>", re.DOTALL)
 GRAPHIC_FRAME_RE = re.compile(r"<p:graphicFrame>.*?</p:graphicFrame>", re.DOTALL)
 SHAPE_BLOCK_RE = re.compile(r"<p:(sp|cxnSp|pic|graphicFrame)>.*?</p:\1>", re.DOTALL)
+OFF_RE = re.compile(r'<a:off x="(\d+)" y="(\d+)"/>')
+EXT_RE = re.compile(r'<a:ext cx="(\d+)" cy="(\d+)"/>')
 
 
 def replace_text_run(slide_xml: str, old_text: str, new_text: str, required: bool = True) -> str:
@@ -131,3 +133,41 @@ def placeholder_text_box(
         f'<a:rPr lang="en-US" sz="1400" i="1"><a:solidFill><a:srgbClr val="999999"/>'
         f"</a:solidFill></a:rPr><a:t>{escape(text)}</a:t></a:r></a:p></p:txBody></p:sp>"
     )
+
+
+def set_shape_bounds(
+    slide_xml: str,
+    shape_id: int,
+    *,
+    x: int | None = None,
+    y: int | None = None,
+    cx: int | None = None,
+    cy: int | None = None,
+) -> str:
+    """Reposition/resize one shape (<p:sp>, <p:cxnSp>, ...) by id, overriding
+    only the <a:off>/<a:ext> attributes given (others left untouched). Used
+    when a template shape's own geometry was sized for its original
+    placeholder text and needs adjusting after real, longer text is
+    substituted in (see build_deck.build_methodology_slide())."""
+    needle = f'<p:cNvPr id="{shape_id}"'
+    for m in SHAPE_BLOCK_RE.finditer(slide_xml):
+        block = m.group(0)
+        if needle not in block:
+            continue
+        new_block = block
+        if x is not None or y is not None:
+            off_m = OFF_RE.search(new_block)
+            if off_m is None:
+                raise ValueError(f"Shape id {shape_id} has no <a:off> to reposition")
+            cur_x, cur_y = int(off_m.group(1)), int(off_m.group(2))
+            new_off = f'<a:off x="{cur_x if x is None else x}" y="{cur_y if y is None else y}"/>'
+            new_block = OFF_RE.sub(lambda _: new_off, new_block, count=1)
+        if cx is not None or cy is not None:
+            ext_m = EXT_RE.search(new_block)
+            if ext_m is None:
+                raise ValueError(f"Shape id {shape_id} has no <a:ext> to resize")
+            cur_cx, cur_cy = int(ext_m.group(1)), int(ext_m.group(2))
+            new_ext = f'<a:ext cx="{cur_cx if cx is None else cx}" cy="{cur_cy if cy is None else cy}"/>'
+            new_block = EXT_RE.sub(lambda _: new_ext, new_block, count=1)
+        return slide_xml[: m.start()] + new_block + slide_xml[m.end() :]
+    raise ValueError(f"No shape with id {shape_id} found in slide XML")

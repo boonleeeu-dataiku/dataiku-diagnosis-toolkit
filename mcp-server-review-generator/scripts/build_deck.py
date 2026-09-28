@@ -173,6 +173,31 @@ TITLE_FOOTER_Y = 4500000
 TITLE_FOOTER_WIDTH = 6506100  # matches slide15's title/subtitle box width
 TITLE_FOOTER_HEIGHT = 550000
 
+# Methodology slide (slide27's clone): shape ids and geometry fixes below are
+# specific to that template's own Google-Slides-authored layout, sized for
+# its original Lorem Ipsum placeholder text. The intro sentence substituted
+# into shape 511 wraps to ~3 lines (vs. the ~2-line budget the placeholder
+# text needed), so its box is grown; the divider line (513) and body
+# paragraph box (512) below it keep the template's own original gaps to
+# whatever sits directly above them. The whole 3-shape block is then
+# recentered as a group within the slide (rather than left at the template's
+# own fixed position under the subtitle), so it doesn't visually sit in the
+# slide's lower half under a large leftover gap -- see
+# build_methodology_slide().
+METHODOLOGY_INTRO_BOX_ID = 511
+METHODOLOGY_DIVIDER_LINE_ID = 513
+METHODOLOGY_BODY_BOX_ID = 512
+METHODOLOGY_INTRO_BOX_CY = 900000        # grown from the template's own 554100
+METHODOLOGY_LINE_GAP = 184675            # template's own gap: intro box bottom -> divider line
+METHODOLOGY_BODY_GAP = 212100            # template's own gap: divider line -> body box
+METHODOLOGY_BODY_BOX_CY = 1591500        # template's own, unchanged
+METHODOLOGY_BLOCK_HEIGHT = (
+    METHODOLOGY_INTRO_BOX_CY + METHODOLOGY_LINE_GAP + METHODOLOGY_BODY_GAP + METHODOLOGY_BODY_BOX_CY
+)
+METHODOLOGY_INTRO_BOX_Y = (SLIDE_HEIGHT - METHODOLOGY_BLOCK_HEIGHT) // 2
+METHODOLOGY_DIVIDER_LINE_Y = METHODOLOGY_INTRO_BOX_Y + METHODOLOGY_INTRO_BOX_CY + METHODOLOGY_LINE_GAP
+METHODOLOGY_BODY_BOX_Y = METHODOLOGY_DIVIDER_LINE_Y + METHODOLOGY_BODY_GAP
+
 CHAPTER_NAMES = [
     "Executive Summary",
     "Findings & Risks",
@@ -758,6 +783,18 @@ def build_methodology_slide(work_dir: Path, template_xml: str, template_rels: st
         "Ipsum.≈",
         closing_sentence,
     )
+
+    # The real intro sentence above wraps to more lines than the template's
+    # own placeholder text did -- grow its box, then recenter the whole
+    # intro/divider/body block as a group so it isn't left sitting in the
+    # slide's lower half under the template's own oversized gap below the
+    # subtitle (see the METHODOLOGY_* constants' comment above).
+    slide_xml = text.set_shape_bounds(
+        slide_xml, METHODOLOGY_INTRO_BOX_ID, y=METHODOLOGY_INTRO_BOX_Y, cy=METHODOLOGY_INTRO_BOX_CY
+    )
+    slide_xml = text.set_shape_bounds(slide_xml, METHODOLOGY_DIVIDER_LINE_ID, y=METHODOLOGY_DIVIDER_LINE_Y)
+    slide_xml = text.set_shape_bounds(slide_xml, METHODOLOGY_BODY_BOX_ID, y=METHODOLOGY_BODY_BOX_Y)
+
     return slides.duplicate_slide_from_xml(work_dir, slide_xml, template_rels, after=after)
 
 
