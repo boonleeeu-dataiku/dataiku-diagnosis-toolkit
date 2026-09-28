@@ -1,0 +1,25 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "dataiku-diagnosis-toolkit",
+  "version": "0.2.0",
+  "description": "Review Dataiku DSS diagnosis bundles against checklists and generate Platform Review decks.",
+  "author": {
+    "name": "Boon Lee Eu"
+  },
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Dataiku Diagnosis Toolkit",
+        "shortDescription": "Review Dataiku diagnostics and build review decks",
+        "longDescription": "Read Dataiku DSS diagnosis bundles, validate checklist workbooks, and generate customer-facing Platform Review decks using local MCP tools.",
+        "developerName": "Boon Lee Eu",
+        "category": "Productivity",
+        "capabilities": ["Read", "Write"],
+        "defaultPrompt": [
+          "Review this Dataiku diagnosis bundle against my checklist.",
+          "Build a Platform Review deck from this completed checklist."
+        ]
+      }
+    }
+  }
+}

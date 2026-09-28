@@ -1,0 +1,17 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "dataiku-diagnosis-reader": {
+      "type": "stdio",
+      "command": "bash",
+      "args": ["${PLUGIN_ROOT}/scripts/codex-start.sh", "reader"],
+      "cwd": "${PLUGIN_ROOT}"
+    },
+    "dataiku-review-generator": {
+      "type": "stdio",
+      "command": "bash",
+      "args": ["${PLUGIN_ROOT}/scripts/codex-start.sh", "review-generator"],
+      "cwd": "${PLUGIN_ROOT}"
+    }
+  }
+}

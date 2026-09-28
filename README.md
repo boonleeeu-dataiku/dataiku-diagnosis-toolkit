@@ -128,3 +128,27 @@ from `dataiku-review-generator`, versioned independently via its own `VERSION`/`
 `skills/dataiku-diagnosis-checklist-review/` and `skills/dataiku-review-deck-builder/` are
 authored directly here and have no separate version. See `CLAUDE.md` for how to re-sync this
 plugin with upstream changes.
+
+## Codex plugin
+
+This same repository also supports local installation in Codex. The Codex manifests (`plugin.json`,
+`mcp.json`, and `.codex-plugin/plugin.json`) reuse the three task skills and both MCP servers. The
+additional `dataiku-codex-workflow` skill translates tool and file-access instructions for Codex.
+Claude's plugin manifests and launch scripts remain separate.
+
+Codex may already discover the `dataiku-local` marketplace from this repo's existing
+`.claude-plugin/marketplace.json`. Check, then install the plugin:
+
+```sh
+codex plugin marketplace list
+# If dataiku-local is absent:
+codex plugin marketplace add /absolute/path/to/this/repo
+codex plugin add dataiku-diagnosis-toolkit@dataiku-local
+```
+
+Start a new Codex session after installation. The Codex launcher prepares the local MCP servers
+in Codex's writable plugin-data directory on first use. It needs `bash`, Node.js 18.17 or newer
+with `npm`, and Python 3. Deck generation also needs the branding template described in
+[One-time setup](#one-time-setup), or an explicit `base_deck_path`.
+
+See [CODEX_SETUP.md](CODEX_SETUP.md) for verification and update instructions.
