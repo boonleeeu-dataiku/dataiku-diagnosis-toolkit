@@ -93,3 +93,7 @@ setup) before they take effect — the plugin ships TypeScript source only, no b
 Edits to `mcp-server-review-generator/scripts/**/*.py` take effect immediately (no build step),
 but require the one-time `.venv` setup (see README) to exist before the server can launch at all
 — the plugin ships Python source only, no committed virtualenv.
+
+Whenever Claude makes edits to `mcp-server-diagnosis-reader/` or `mcp-server-review-generator/`,
+remind the user afterward to also run Codex, so Codex can pick up the changes — Codex only
+adapts to Claude-side changes post-hoc (see `AGENTS.md`) and won't see these updates otherwise.
