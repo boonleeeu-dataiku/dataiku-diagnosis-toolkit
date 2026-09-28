@@ -5,7 +5,7 @@
   "author": {
     "name": "Boon Lee Eu"
   },
-  "skills": "./skills/",
+  "skills": ["./skills/", "./codex-skills/"],
   "mcpServers": {
     "dataiku-diagnosis-reader": {
       "type": "stdio",
