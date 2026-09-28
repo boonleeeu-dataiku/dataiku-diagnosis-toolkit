@@ -1,6 +1,6 @@
 ---
 name: "dataiku-diagnosis-checklist-review"
-description: "Evaluate a Dataiku DSS diagnosis bundle against a checklist spreadsheet using the dataiku-diagnosis-reader tool, filling in validation results and a summary tab. Use when the user asks to review/validate a Dataiku diagnosis against a checklist, or run a Dataiku instance health/compliance review."
+description: "Evaluate a Dataiku DSS diagnosis bundle against a checklist spreadsheet using the dataiku-diagnosis-reader tool, filling in validation results and a summary tab. Falls back to a bundled default checklist template if the user doesn't have one. Use when the user asks to review/validate a Dataiku diagnosis against a checklist, or run a Dataiku instance health/compliance review."
 ---
 
 # Dataiku diagnosis checklist review
@@ -16,6 +16,11 @@ spreadsheet, plus add/update a Summary tab.
 If the user invokes this without giving both paths, ask for: the diagnosis
 bundle path, and the checklist file path. Don't ask anything else up front —
 start working once you have both.
+
+If the user says they don't have a checklist file handy, offer to use the
+bundled default template at `resources/checklist_template.xlsx` (relative to
+this skill's own directory) instead, and say plainly once you proceed that
+you're using the default template rather than a user-supplied checklist.
 
 ## 0. Access and tools
 
@@ -229,6 +234,10 @@ fills) and freeze the header rows.
 
 Send the updated file to the conversation. If the source file came from the
 user's linked computer, write the result back to the same path via
-`device_commit_files` as well, and say so in one line. Give a short summary
-of headline results (counts + the 1-3 most important findings) rather than
-repeating the whole checklist back in chat.
+`device_commit_files` as well, and say so in one line. If you used the
+bundled default template instead of a user-supplied checklist, there is no
+original path to write back to — just name the output after the diagnosis
+bundle (e.g. `<bundle-name>_checklist_review.xlsx`) and send it back to the
+conversation. Give a short summary of headline results (counts + the 1-3
+most important findings) rather than repeating the whole checklist back in
+chat.

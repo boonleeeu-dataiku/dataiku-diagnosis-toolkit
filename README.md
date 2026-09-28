@@ -13,8 +13,9 @@ checklist spreadsheet.
   upstream repo — see [Versioning & maintenance](#versioning--maintenance) below.
 - **`skills/dataiku-diagnosis-checklist-review/`** — evaluates a diagnosis bundle against a
   checklist spreadsheet (columns like `id`, `priority`, `check_type`, `statement`,
-  `expected_value`, etc.), filling in validation results and a summary tab. Authored directly in
-  this repo.
+  `expected_value`, etc.), filling in validation results and a summary tab. Falls back to a
+  bundled default checklist template (`resources/checklist_template.xlsx` within this skill's
+  own directory) if the user doesn't have their own checklist. Authored directly in this repo.
 - **`mcp-server-diagnosis-reader/`** — a local MCP server exposing `dataiku-diagnosis-reader`'s
   docs as resources and `run_orient` / `safe_read` as tools, for MCP-compatible agents that can't
   load Claude Skills directly (Cursor, other Claude Desktop installs, etc.). It contains no

@@ -10,6 +10,15 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-28
+
+### Added
+
+- Bundled default checklist template for `dataiku-diagnosis-checklist-review`
+  (`skills/dataiku-diagnosis-checklist-review/resources/checklist_template.xlsx`). If the user
+  doesn't have their own checklist, the skill now offers to fall back to this bundled template
+  instead of hard-requiring a user-supplied file.
+
 ## [0.3.0] - 2026-09-28
 
 ### Added

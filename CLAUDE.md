@@ -51,6 +51,12 @@ which have none.
   independent `version`/`CHANGELOG.md` — don't add versioning to either speculatively; that
   decision is deferred until one needs to be shared/versioned on its own.
 
+  `skills/dataiku-diagnosis-checklist-review/resources/checklist_template.xlsx` is a bundled
+  default checklist the skill falls back to when the user has no checklist of their own — unlike
+  the gitignored, user-supplied/sample assets under `mcp-server-review-generator/resources/`
+  (see below), this one is **tracked in git**: it's not customer data, it's small, and it must
+  ship with the plugin for the default to work for anyone installing it via the marketplace.
+
 - **`mcp-server-review-generator/`** is **vendored** from a separate upstream repo,
   `github.com/boonleeeu-dataiku/dataiku-review-generator`, which is its actual source of truth.
   That repo versions itself independently (SemVer in its own `VERSION` file, `CHANGELOG.md`, git
