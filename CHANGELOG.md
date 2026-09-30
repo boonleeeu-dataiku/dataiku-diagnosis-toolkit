@@ -10,6 +10,30 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-30
+
+### Added
+
+- `build_platform_review_deck` now returns `data_warnings` — Summary vs. section-sheet
+  consistency checks (scorecard totals, missing sections, unknown or disagreeing IDs/statuses,
+  uncurated section names) that structural validation can't catch (via
+  `mcp-server-review-generator` re-sync to upstream v0.1.4).
+- `dataiku-review-deck-builder`: surfaces `data_warnings` to the user and directs fixing the
+  checklist and rebuilding, rather than hand-patching the generated deck.
+
+### Fixed
+
+Via `mcp-server-review-generator` re-sync to upstream v0.1.4:
+
+- Results by Section scorecard showed all zeros for a section whose tab name has stray
+  whitespace (e.g. the default template's `"Advanced Security Options (DSS "`).
+- Critical Findings / Other Must-Have Items showed blank titles and mislabeled items as
+  "Needs Review" when the Summary block lacked a `Title`/`Status` column; they now fall back to
+  the section sheet's values.
+- Long checklist IDs wrapping mid-code in narrow table ID columns.
+- "Advanced Security Options" section now has a curated display name instead of the title-cased
+  fallback "Advanced Security Options (Dss".
+
 ## [0.5.0] - 2026-09-30
 
 ### Added
