@@ -16,6 +16,12 @@ This repository packages skills and two local MCP servers for reading Dataiku DS
 - `skills/dataiku-diagnosis-checklist-review/` and `skills/dataiku-review-deck-builder/` are authored here. They have no separate release version or changelog; do not add either speculatively.
 - `codex-skills/dataiku-codex-workflow/`, root `plugin.json` and `mcp.json`, `.codex-plugin/plugin.json`, `scripts/codex-start.sh`, and `CODEX_SETUP.md` provide Codex integration. Make Codex changes within these files and `AGENTS.md` only.
 
+## Reviewing project updates for Codex
+
+- When asked to review project changes, assess whether Codex can load and use the updated shared skill or server through the existing plugin wiring. A shared task skill is already the source of its task rules; do not repeat those rules in Codex-only instructions.
+- Change Codex-only files only for a demonstrated Codex-specific gap, such as tool discovery, file access, launcher behavior, packaging, or installation guidance. If the existing integration already covers the update, report that no Codex file change is needed.
+- Distinguish source compatibility from installed behavior: an installed plugin is cached and may need refresh or reinstall plus a new session before it exposes the updated shared content.
+
 ## Privacy and local assets
 
 - Never commit or copy a real customer diagnosis bundle into this repository. The plugin ships code and documentation, not customer data. The `.gitignore` patterns are only a safeguard.
