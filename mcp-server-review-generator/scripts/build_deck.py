@@ -433,6 +433,18 @@ def _items_by_id(data: read_checklist.ChecklistData) -> dict:
     }
 
 
+def _section_display_by_id(data: read_checklist.ChecklistData, ordered_sections: list) -> dict:
+    """id -> the curated display name of the section sheet that item lives
+    on -- the fallback for a Critical Findings block laid out without a
+    Section column, so each card still says which area it belongs to."""
+    display_by_tab = {sec["sheet_tab_name"]: sec["display"] for sec in ordered_sections}
+    return {
+        str(it.id).strip(): display_by_tab.get(sheet, sheet)
+        for sheet, items in data.items_by_sheet.items()
+        for it in items
+    }
+
+
 def _summary_entry_field(entry: dict, field: str, item_attr: str, items_by_id: dict) -> str:
     """entry[field] if the Summary block has a column by that exact name,
     else the matching section-sheet item's own item_attr (looked up by ID).
@@ -475,14 +487,19 @@ def build_other_must_have_rows(data: read_checklist.ChecklistData, cell_limits) 
     return rows
 
 
-def _finding_title_and_section(entry: dict, items_by_id: dict) -> tuple[str, str]:
+def _finding_title_and_section(entry: dict, items_by_id: dict, section_by_id: dict) -> tuple[str, str]:
     """The Critical Findings/Other Must-Have blocks' own Title column (a
     short, human-readable check name -- e.g. "External PostgreSQL Runtime
     Database") is what actually tells a reader what failed; Section is
     supporting context, not a substitute for it. For a Summary sheet laid
     out without a Title column, falls back to the section sheet's own title
-    for that ID, then to whatever non-id/-section column exists."""
-    section = entry.get("section", "")
+    for that ID, then to whatever non-id/-section column exists. Section is
+    the curated display name of the ID's section sheet, even when the block
+    has its own Section column -- that column usually holds the Excel-
+    truncated tab name (e.g. "Advanced Security Options (DSS") -- and only
+    falls back to the block's own text for an ID no section sheet holds."""
+    section = (section_by_id.get(str(entry.get("id", "")).strip())
+               or str(entry.get("section") or "").strip())
     title = _summary_entry_field(entry, "title", "title", items_by_id)
     if title:
         return title, section
@@ -490,20 +507,21 @@ def _finding_title_and_section(entry: dict, items_by_id: dict) -> tuple[str, str
     return (entry.get(fallback_key, "") if fallback_key else ""), section
 
 
-def build_critical_finding_blocks(data: read_checklist.ChecklistData) -> list:
+def build_critical_finding_blocks(data: read_checklist.ChecklistData, ordered_sections: list) -> list:
     """Full, untruncated (id, title, section) triples -- build_critical_finding_card_slides()
     truncates the title for the visible card itself, and keeps a full copy for speaker
     notes."""
     items_by_id = _items_by_id(data)
-    _warn_missing_summary_columns("Critical Findings", data.critical_findings, ["title"])
+    section_by_id = _section_display_by_id(data, ordered_sections)
+    _warn_missing_summary_columns("Critical Findings", data.critical_findings, ["title", "section"])
     blocks = []
     for entry in data.critical_findings:
-        title, section = _finding_title_and_section(entry, items_by_id)
+        title, section = _finding_title_and_section(entry, items_by_id, section_by_id)
         blocks.append((entry.get("id", ""), title, section))
     return blocks
 
 
-def build_top_risk(data: read_checklist.ChecklistData, cell_limits):
+def build_top_risk(data: read_checklist.ChecklistData, cell_limits, ordered_sections: list):
     """The Executive Summary's single "Top risk" callout: the first critical
     finding, in list order. The checklist schema doesn't document this list
     as severity-ordered (only `recommendations` is documented as
@@ -513,7 +531,8 @@ def build_top_risk(data: read_checklist.ChecklistData, cell_limits):
         return None
     entry = data.critical_findings[0]
     limit = cell_limits.get("critical_finding_card", 150)
-    title, section = _finding_title_and_section(entry, _items_by_id(data))
+    title, section = _finding_title_and_section(
+        entry, _items_by_id(data), _section_display_by_id(data, ordered_sections))
     return entry.get("id", ""), truncate(title, limit), section
 
 
@@ -551,6 +570,14 @@ def check_data_consistency(data: read_checklist.ChecklistData, ordered_sections:
                     f"Results by Section total for {status} is {total_row[i]}, but Overall Status Counts "
                     f"says {overall}."
                 )
+
+    item_count = sum(len(v) for v in data.items_by_sheet.values())
+    summary_total = data.overall_counts.get("Total")
+    if summary_total not in (None, "") and int(summary_total) != item_count:
+        warnings.append(
+            f"Overall Status Counts says Total {int(summary_total)}, but the section sheets hold "
+            f"{item_count} items; the deck shows {item_count}."
+        )
 
     for sheet, items in data.items_by_sheet.items():
         unknown = sorted({it.validation_status for it in items
@@ -1118,7 +1145,7 @@ def build_deck(checklist_path: Path, customer: str, output_path: Path, base_deck
 
         counts = build_overall_status_counts(data)
         total_items = sum(len(v) for v in data.items_by_sheet.values())
-        top_risk = build_top_risk(data, cell_limits)
+        top_risk = build_top_risk(data, cell_limits, ordered_sections)
         last_inserted = build_exec_summary_kpi_slide(
             work_dir, kpi_tmpl_xml, kpi_tmpl_rels, after=last_inserted,
             counts=counts, total_items=total_items, section_count=len(ordered_sections), top_risk=top_risk,
@@ -1133,10 +1160,10 @@ def build_deck(checklist_path: Path, customer: str, output_path: Path, base_deck
         # --- Chapter 2: Findings & Risks ---
         last_inserted = make_divider_slide(
             work_dir, divider_tmpl_xml, divider_tmpl_rels, after=last_inserted,
-            number=2, title=CHAPTER_NAMES[1], subtitle=f"{data.overall_counts.get('Total', 0)} checklist items assessed",
+            number=2, title=CHAPTER_NAMES[1], subtitle=f"{total_items} checklist items assessed",
         )
 
-        critical_blocks = build_critical_finding_blocks(data)
+        critical_blocks = build_critical_finding_blocks(data, ordered_sections)
         if critical_blocks:
             new_slides = build_critical_finding_card_slides(
                 work_dir, table_tmpl_xml, table_tmpl_rels, after=last_inserted,

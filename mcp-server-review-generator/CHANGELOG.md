@@ -7,6 +7,21 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-09-30
+
+### Fixed
+
+- The Findings & Risks chapter divider said "0 checklist items assessed" when the Summary sheet's
+  Overall Status Counts block had no `Total` row. It now uses the section sheets' item count, the
+  same number the Executive Summary shows. A `Total` row that disagrees with that count is reported
+  in `data_warnings`.
+- Critical Findings cards and the Executive Summary's Top-risk callout showed no section when the
+  Summary sheet's Critical Findings block had no `Section` column. Section now falls back to the
+  display name of the ID's section sheet, with one warning per block.
+- Critical Findings cards showed Excel-truncated section names (e.g. "Advanced Security Options (DSS")
+  when the Summary block did have a `Section` column. The card now always shows the curated display
+  name of the ID's section sheet, using the block's own text only for an ID no section sheet holds.
+
 ## [0.1.4] - 2026-09-30
 
 ### Fixed
