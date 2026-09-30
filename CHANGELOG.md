@@ -10,6 +10,21 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-09-30
+
+### Fixed
+
+Via `mcp-server-review-generator` re-sync to upstream v0.1.5:
+
+- Findings & Risks chapter divider said "0 checklist items assessed" when the Summary sheet's
+  Overall Status Counts block had no `Total` row; it now uses the section sheets' item count
+  (matching the Executive Summary). A disagreeing `Total` row is reported in `data_warnings`.
+- Critical Findings cards and the Executive Summary's Top-risk callout showed no section when the
+  Critical Findings block had no `Section` column; section now falls back to the ID's section
+  sheet display name.
+- Critical Findings cards showed Excel-truncated section names (e.g.
+  "Advanced Security Options (DSS"); they now always use the curated section display name.
+
 ## [0.6.0] - 2026-09-30
 
 ### Added
