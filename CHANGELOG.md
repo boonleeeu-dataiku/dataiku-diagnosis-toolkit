@@ -10,6 +10,19 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-30
+
+### Added
+
+- `dataiku-diagnosis-checklist-review`: new calibration for automation-node existence /
+  Design–Automation separation checks (e.g. ARCH-001) on design-node bundles. Always marked
+  **Needs Review**, since a design bundle cannot confirm a separate automation node. The review
+  highlights a local deployer (`config/project-deployer/`, distinguishing populated from empty;
+  `config/api-deployer/` noted separately as an API-node indication) or a remote deployer
+  (`deployerClientSettings.mode = REMOTE`) as indications, and otherwise states that no
+  definitive configuration exists and customer verification is needed. The deployer directories
+  were also added to the skill's evidence-source list.
+
 ## [0.4.0] - 2026-09-28
 
 ### Added

@@ -79,6 +79,10 @@ Typical high-value sources in a DSS diagnosis bundle:
   reference in `general-settings.json`, means no Kubernetes cluster is
   attached to the instance at all — check this before evaluating any
   Kubernetes-conditional item (see calibration below).
+- `apps/dss/<node>/config/project-deployer/` and `config/api-deployer/` —
+  presence means a deployer is hosted locally on this node; together with
+  `deployerClientSettings` in `general-settings.json`, these are the
+  indicators for Design/Automation separation checks (see calibration below).
 - `dmesg.txt`, `sysctl.txt`, `syspackages.txt` — total RAM, kernel/OS version
 - `run/hs_err_pid*.log` — JVM crash dumps; grep the `^# ` header lines for
   the crash cause (OOM vs segfault etc.) rather than reading the full file
@@ -206,6 +210,38 @@ one — add each as its own bullet rather than overwriting prior ones.
   referenced in the bundle); only mark **Fail** if there is positive
   evidence no HTTPS exists anywhere (e.g. explicit customer confirmation on
   record, not just absence from the bundle).
+
+- **Automation-node existence / Design–Automation separation (e.g.
+  "ARCH-001"), when reviewing a design-node bundle** (`install.ini` →
+  `nodetype = design`): the automation node is a separate host with its own
+  bundle, so a design-node bundle can never definitively confirm one exists.
+  Always mark this **Needs Review**, never Pass or Fail from the design
+  bundle alone. Work through the indicators in this order and report what
+  you find:
+  1. **Local deployer on the design host:** if `<mirror>/config/project-deployer/`
+     and/or `<mirror>/config/api-deployer/` are present (also check
+     `datadir_listing.txt`, since the mirror may not copy these subtrees),
+     a deployer is configured locally. `project-deployer/` holds projects to
+     deploy onto an automation node — an indication an automation node is in
+     use. Enumerate its contents (`infras/*.json` and any automation node
+     URLs they point to, `deployments/*.json`, published projects) and
+     **highlight this indication prominently at the top of
+     `evidence_found`/`notes`**, citing counts/URLs. Distinguish a populated
+     deployer (infras + deployments present — strong indication) from one
+     that is present but empty (deployer enabled, no sign of actual use).
+     `api-deployer/` holds API services to deploy onto an API node — mention
+     it separately as an API-node indication, not as evidence of an
+     automation node.
+  2. **Remote deployer:** if `general-settings.json` →
+     `deployerClientSettings.mode` is `REMOTE` (pointing at an external
+     Deployer URL), highlight that the design node pushes to a separate
+     Deployer node — suggestive of a Design → Deployer → Automation setup,
+     but any automation infrastructure is defined on that node, not in this
+     bundle. Exported bundles under `DATA_DIR/bundles/<PROJECT>/` (via
+     `datadir_listing.txt`) are weak supporting evidence either way.
+  3. **Otherwise:** state in `notes` that there is no definitive
+     configuration in the bundle indicating whether an automation node is
+     deployed, and that this needs further verification with the customer.
 
 ## 5. Write results back with openpyxl
 
