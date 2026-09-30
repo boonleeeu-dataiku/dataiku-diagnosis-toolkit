@@ -139,6 +139,19 @@ FINDINGS_FONT_FIT_COLS = [4, 5]  # Statement, Evidence & Notes
 TABLE_FONT_FIT_SIZE_STEPS = [900, 800, 700]  # 9pt -> 8pt -> 7pt (floor)
 TABLE_FONT_FIT_MAX_LINES = 8  # hard cap on wrapped lines at the floor size
 
+# wrap="none" on a table cell's <a:bodyPr> isn't honored by every renderer
+# (LibreOffice ignores it, so a long ID wraps mid-code anyway), so the ID
+# column is also sized to its widest actual ID: widened (taking the
+# difference from a prose column -- *_ID_DONOR_COL) up to ID_COL_MAX_WIDTH,
+# and past that each over-long ID cell shrinks its own font instead (see
+# _fit_single_line_size()). IDs are uppercase/digits/hyphens, wider than
+# _fit_cell_text()'s ~0.5em prose average, hence the separate per-char width.
+ID_CHAR_WIDTH_EM = 0.62
+ID_COL_MAX_WIDTH = 1300000
+FINDINGS_ID_DONOR_COL = 4          # Statement
+OTHER_MUST_HAVE_ID_DONOR_COL = 1   # Title
+TABLE_CELL_SIDE_INSET = 91440
+
 # Usable content-area geometry shared by every hand-drawn (shapes-based)
 # slide, matching the branding master's own table-slide convention
 # (TABLE_TEMPLATE_SLIDE's graphicFrame sits at x=359970, y=899584).
@@ -252,6 +265,44 @@ def _fit_cell_text(text_value: str, col_width_emu: int, row_height_emu: int,
     return text_value[: max(0, max_chars - 1)].rstrip() + "…", floor_size
 
 
+def _single_line_width(text_value: str, size: int, side_inset_emu: int = TABLE_CELL_SIDE_INSET) -> int:
+    """Estimated EMU width of an ID-like value on one line at `size`
+    (hundredths of a point), cell side insets included."""
+    return int(len((text_value or "").strip()) * ID_CHAR_WIDTH_EM * (size / 100) * 12700) + 2 * side_inset_emu
+
+
+def _fit_single_line_size(text_value: str, col_width_emu: int, steps: list = TABLE_FONT_FIT_SIZE_STEPS,
+                           side_inset_emu: int = TABLE_CELL_SIDE_INSET) -> int:
+    """Largest size in `steps` at which text_value fits col_width_emu on one
+    line; the floor size if none does."""
+    for size in steps:
+        if _single_line_width(text_value, size, side_inset_emu) <= col_width_emu:
+            return size
+    return steps[-1]
+
+
+def _fit_id_column(widths: list, ids: list, donor_col: int, id_col: int = 0,
+                    size: int = TABLE_DATA_FONT_SIZE) -> list:
+    """Copy of `widths` with id_col widened to fit the longest of `ids` on
+    one line at `size` (capped at ID_COL_MAX_WIDTH), taking the difference
+    from donor_col so the table's total width is unchanged. Never narrows."""
+    widths = list(widths)
+    needed = max((_single_line_width(str(i), size) for i in ids), default=0)
+    new_width = min(max(widths[id_col], needed), ID_COL_MAX_WIDTH)
+    delta = new_width - widths[id_col]
+    if delta > 0:
+        widths[id_col] = new_width
+        widths[donor_col] -= delta
+    return widths
+
+
+def _card_id_size(id_text: str, id_col_width: int = shapes.ID_COL_WIDTH) -> int:
+    """Font size for a card_list_row ID: its default 12pt, stepped down for
+    an ID too long to fit the card's ID column on one line (a wrap="none"
+    shape box overflows into the card body rather than wrapping)."""
+    return _fit_single_line_size(id_text, id_col_width, steps=[1200, 1100, 1000, 900], side_inset_emu=0)
+
+
 def format_priority(priority: str) -> str:
     return "Must Have" if (priority or "").strip().lower() == "must_have" else "Nice to have"
 
@@ -313,11 +364,17 @@ def build_overall_status_counts(data: read_checklist.ChecklistData) -> dict:
 
 
 def build_scorecard_rows(data: read_checklist.ChecklistData, ordered_sections: list) -> list:
-    breakdown_by_section = {b["section"]: b["counts"] for b in data.per_section_breakdown}
+    # Keyed by normalized name on both sides: parse_section_breakdown()
+    # strips the Summary sheet's section names, but a raw sheet tab name can
+    # carry stray whitespace (e.g. a trailing space), which would otherwise
+    # silently miss the lookup and zero out that section's row.
+    breakdown_by_section = {
+        section_names._normalize_key(b["section"]): b["counts"] for b in data.per_section_breakdown
+    }
     rows = []
     totals = {status: 0 for status in STATUS_ORDER}
     for sec in ordered_sections:
-        counts = breakdown_by_section.get(sec["sheet_tab_name"], {})
+        counts = breakdown_by_section.get(section_names._normalize_key(sec["sheet_tab_name"]), {})
         row = [sec["display"]]
         for status in STATUS_ORDER:
             v = int(counts.get(status, 0))
@@ -365,28 +422,70 @@ def build_findings_rows(items: list) -> list:
     return rows
 
 
+def _items_by_id(data: read_checklist.ChecklistData) -> dict:
+    """id -> ChecklistItem across every section sheet -- the authoritative
+    source for an item's title/validation_status, which the Summary sheet's
+    Critical Findings/Other Must-Have blocks only restate."""
+    return {
+        str(it.id).strip(): it
+        for items in data.items_by_sheet.values()
+        for it in items
+    }
+
+
+def _summary_entry_field(entry: dict, field: str, item_attr: str, items_by_id: dict) -> str:
+    """entry[field] if the Summary block has a column by that exact name,
+    else the matching section-sheet item's own item_attr (looked up by ID).
+    A Summary block laid out with different column names (e.g. "Check Title"
+    or "Validation Status") would otherwise silently yield blanks/defaults
+    rather than the real values the section sheets already hold."""
+    value = entry.get(field)
+    if value not in (None, ""):
+        return str(value).strip()
+    item = items_by_id.get(str(entry.get("id", "")).strip())
+    return (getattr(item, item_attr) or "").strip() if item is not None else ""
+
+
+def _warn_missing_summary_columns(block_name: str, entries: list, fields: list) -> None:
+    """One warning per Summary block (not per row) naming which expected
+    columns it lacks, so a caller knows the section-sheet fallback in
+    _summary_entry_field() kicked in."""
+    if not entries:
+        return
+    found = sorted({k for e in entries for k in e})
+    missing = [f for f in fields if not any(f in e for e in entries)]
+    if missing:
+        logger.warning(
+            "Summary block %r has no %s column(s) (found: %s); using each ID's section-sheet values instead.",
+            block_name, "/".join(missing), ", ".join(found),
+        )
+
+
 def build_other_must_have_rows(data: read_checklist.ChecklistData, cell_limits) -> list:
+    items_by_id = _items_by_id(data)
+    _warn_missing_summary_columns("Other Must-Have Items", data.other_must_have, ["title", "status"])
     rows = []
     for entry in data.other_must_have:
         rows.append([
             entry.get("id", ""),
-            truncate(entry.get("title", ""), 90),
-            entry.get("status", "") or "Needs Review",
+            truncate(_summary_entry_field(entry, "title", "title", items_by_id), 90),
+            _summary_entry_field(entry, "status", "validation_status", items_by_id) or "—",
             "", "", "",
         ])
     return rows
 
 
-def _finding_title_and_section(entry: dict) -> tuple[str, str]:
+def _finding_title_and_section(entry: dict, items_by_id: dict) -> tuple[str, str]:
     """The Critical Findings/Other Must-Have blocks' own Title column (a
     short, human-readable check name -- e.g. "External PostgreSQL Runtime
     Database") is what actually tells a reader what failed; Section is
-    supporting context, not a substitute for it. Falls back to whatever
-    non-id/-section column exists, for a Summary sheet laid out without a
-    Title column."""
+    supporting context, not a substitute for it. For a Summary sheet laid
+    out without a Title column, falls back to the section sheet's own title
+    for that ID, then to whatever non-id/-section column exists."""
     section = entry.get("section", "")
-    if "title" in entry:
-        return entry["title"], section
+    title = _summary_entry_field(entry, "title", "title", items_by_id)
+    if title:
+        return title, section
     fallback_key = next((k for k in entry if k not in ("id", "section")), None)
     return (entry.get(fallback_key, "") if fallback_key else ""), section
 
@@ -395,9 +494,11 @@ def build_critical_finding_blocks(data: read_checklist.ChecklistData) -> list:
     """Full, untruncated (id, title, section) triples -- build_critical_finding_card_slides()
     truncates the title for the visible card itself, and keeps a full copy for speaker
     notes."""
+    items_by_id = _items_by_id(data)
+    _warn_missing_summary_columns("Critical Findings", data.critical_findings, ["title"])
     blocks = []
     for entry in data.critical_findings:
-        title, section = _finding_title_and_section(entry)
+        title, section = _finding_title_and_section(entry, items_by_id)
         blocks.append((entry.get("id", ""), title, section))
     return blocks
 
@@ -412,8 +513,75 @@ def build_top_risk(data: read_checklist.ChecklistData, cell_limits):
         return None
     entry = data.critical_findings[0]
     limit = cell_limits.get("critical_finding_card", 150)
-    title, section = _finding_title_and_section(entry)
+    title, section = _finding_title_and_section(entry, _items_by_id(data))
     return entry.get("id", ""), truncate(title, limit), section
+
+
+def check_data_consistency(data: read_checklist.ChecklistData, ordered_sections: list,
+                           section_config: dict) -> list:
+    """Cross-checks between the Summary sheet and the section sheets that
+    structural validation (validate_deck.py) can't see -- each one a case
+    where the deck would still build and look plausible, but show wrong or
+    missing numbers/labels. Returns human-readable warning strings (empty if
+    everything agrees); surfaced by main() and the MCP tool so a caller is
+    told directly rather than having to spot it by rendering the deck."""
+    warnings = []
+
+    configured = section_config.get("sections", {})
+    breakdown_keys = {section_names._normalize_key(b["section"]) for b in data.per_section_breakdown}
+    for sec in ordered_sections:
+        if sec["key"] not in configured:
+            warnings.append(
+                f"Section sheet {sec['sheet_tab_name']!r} has no curated entry in config/section_names.yaml; "
+                f"shown as {sec['display']!r}."
+            )
+        if data.per_section_breakdown and sec["key"] not in breakdown_keys:
+            warnings.append(
+                f"Section sheet {sec['sheet_tab_name']!r} has no row in the Summary sheet's Per-Section "
+                f"Breakdown; its scorecard row will show all zeros."
+            )
+
+    scorecard = build_scorecard_rows(data, ordered_sections)
+    if scorecard and data.overall_counts:
+        total_row = scorecard[-1]
+        for i, status in enumerate(STATUS_ORDER, start=1):
+            overall = int(data.overall_counts.get(status, 0))
+            if int(total_row[i]) != overall:
+                warnings.append(
+                    f"Results by Section total for {status} is {total_row[i]}, but Overall Status Counts "
+                    f"says {overall}."
+                )
+
+    for sheet, items in data.items_by_sheet.items():
+        unknown = sorted({it.validation_status for it in items
+                          if it.validation_status and _canonical_status(it.validation_status) is None})
+        if unknown:
+            warnings.append(
+                f"Section sheet {sheet!r} uses unrecognized validation_status value(s) {unknown}; those "
+                f"items are left out of status counts/colors (expected one of {STATUS_ORDER})."
+            )
+
+    items_by_id = _items_by_id(data)
+    for block_name, entries in (("Critical Findings", data.critical_findings),
+                                ("Other Must-Have Items", data.other_must_have)):
+        for entry in entries:
+            entry_id = str(entry.get("id", "")).strip()
+            item = items_by_id.get(entry_id)
+            if item is None:
+                warnings.append(f"{block_name} lists ID {entry_id!r}, which isn't in any section sheet.")
+                continue
+            summary_status = entry.get("status")
+            if summary_status and _canonical_status(str(summary_status)) != _canonical_status(item.validation_status):
+                warnings.append(
+                    f"{block_name} shows {entry_id} as {summary_status!r}, but its section sheet says "
+                    f"{item.validation_status!r}."
+                )
+            if block_name == "Critical Findings" and _canonical_status(item.validation_status) != "Fail":
+                warnings.append(
+                    f"Critical Findings lists {entry_id}, but its section sheet status is "
+                    f"{item.validation_status!r}, not Fail."
+                )
+    return warnings
 
 
 # --------------------------------------------------------------------------
@@ -436,6 +604,7 @@ def make_table_slides(work_dir: Path, template_xml: str, template_rels: str | No
                        title_new_fn, header_values: list, column_widths: list, row_height: int,
                        status_col: int | None = None, status_color_map: dict | None = None,
                        no_wrap_cols: list[int] | None = None, font_fit_cols: list[int] | None = None,
+                       single_line_cols: list[int] | None = None,
                        header_font_size: int = TABLE_HEADER_FONT_SIZE,
                        data_font_size: int = TABLE_DATA_FONT_SIZE) -> list:
     """Clone template_xml (TABLE_TEMPLATE_SLIDE's snapshot) once per page in
@@ -445,7 +614,9 @@ def make_table_slides(work_dir: Path, template_xml: str, template_rels: str | No
     shrinking font_fit_cols' font per-cell via _fit_cell_text(), for any
     value too long to fit column_widths/row_height at data_font_size -- with
     a capped, rare fallback to truncation for pathologically long outliers,
-    see _fit_cell_text()'s docstring), relabel its header, set its title via
+    see _fit_cell_text()'s docstring; and shrinking single_line_cols' font
+    per-cell to whatever keeps the value on one line, see
+    _fit_single_line_size()), relabel its header, set its title via
     title_new_fn(page_idx, total_pages), and insert each clone after the
     previous one (starting after `after`). Returns the new slide filenames,
     in order."""
@@ -465,6 +636,10 @@ def make_table_slides(work_dir: Path, template_xml: str, template_rels: str | No
                 values[col] = display_text
                 if size != data_font_size:
                     font_sizes[col] = size
+        for col in single_line_cols or []:
+            size = _fit_single_line_size(values[col], column_widths[col])
+            if size < data_font_size:
+                font_sizes[col] = size
         row_xml = tables.fill_row(row_template, values)
         if status_col is not None and status_color_map:
             row_xml = tables.style_cell_text_by_value(row_xml, status_col, values[status_col], status_color_map)
@@ -553,7 +728,7 @@ def build_critical_finding_card_slides(work_dir: Path, template_xml: str, templa
         for finding_id, finding_title, section in page_blocks:
             card_xml, shape_id = shapes.card_list_row(
                 shape_id, CONTENT_LEFT, y, CONTENT_WIDTH, CARD_HEIGHT_CRITICAL,
-                id_text=finding_id, id_color=STATUS_COLORS["Fail"],
+                id_text=finding_id, id_color=STATUS_COLORS["Fail"], id_size=_card_id_size(finding_id),
                 title_text=truncate(finding_title, limit), description_text=section,
             )
             parts.append(card_xml)
@@ -645,7 +820,7 @@ def build_section_detail_slides(work_dir: Path, template_xml: str, template_rels
             color = STATUS_COLORS.get(status_key, shapes.TEXT_GRAY)
             card_xml, shape_id = shapes.card_list_row(
                 shape_id, CONTENT_LEFT, y, CONTENT_WIDTH, CARD_HEIGHT_CRITICAL,
-                id_text=it.id, id_color=color,
+                id_text=it.id, id_color=color, id_size=_card_id_size(it.id),
                 title_text=truncate(it.title, 60),
                 description_text=truncate(it.statement, cell_limits.get("critical_finding_card", 150)),
                 status_label=it.validation_status or status_key, status_color=color,
@@ -665,9 +840,10 @@ def build_section_detail_slides(work_dir: Path, template_xml: str, template_rels
         rows_per_page=pages, after=after,
         title_new_fn=lambda i, n, name=section_display: f"Findings — {name}" + (f" ({i}/{n})" if n > 1 else ""),
         header_values=["ID", "Title", "Priority", "Status", "Statement", "Evidence & Notes"],
-        column_widths=FINDINGS_WIDTHS, row_height=FINDINGS_ROW_HEIGHT,
+        column_widths=_fit_id_column(FINDINGS_WIDTHS, [it.id for it in selected], FINDINGS_ID_DONOR_COL),
+        row_height=FINDINGS_ROW_HEIGHT,
         status_col=STATUS_COL, status_color_map=STATUS_COLORS_LOWER,
-        no_wrap_cols=FINDINGS_NO_WRAP_COLS, font_fit_cols=FINDINGS_FONT_FIT_COLS,
+        no_wrap_cols=FINDINGS_NO_WRAP_COLS, font_fit_cols=FINDINGS_FONT_FIT_COLS, single_line_cols=[0],
     )
     table_top = status_y + STATUS_LINE_HEIGHT + STATUS_LINE_GAP
     for filename, page_items in zip(new_filenames, item_pages):
@@ -978,9 +1154,12 @@ def build_deck(checklist_path: Path, customer: str, output_path: Path, base_deck
                 rows_per_page=pages, after=last_inserted,
                 title_new_fn=lambda i, n: f"Other Must-Have Items" + (f" ({i}/{n})" if n > 1 else ""),
                 header_values=["ID", "Title", "Status", "", "", ""],
-                column_widths=OTHER_MUST_HAVE_WIDTHS, row_height=OTHER_MUST_HAVE_ROW_HEIGHT,
+                column_widths=_fit_id_column(
+                    OTHER_MUST_HAVE_WIDTHS, [r[0] for r in other_rows], OTHER_MUST_HAVE_ID_DONOR_COL,
+                ),
+                row_height=OTHER_MUST_HAVE_ROW_HEIGHT,
                 status_col=2, status_color_map=STATUS_COLORS_LOWER,
-                no_wrap_cols=OTHER_MUST_HAVE_NO_WRAP_COLS,
+                no_wrap_cols=OTHER_MUST_HAVE_NO_WRAP_COLS, single_line_cols=[0],
             )
             last_inserted = new_slides[-1] if new_slides else last_inserted
 
@@ -1020,6 +1199,15 @@ def build_deck(checklist_path: Path, customer: str, output_path: Path, base_deck
 
     logger.info("Wrote deck: %s", output_path)
     return output_path
+
+
+def collect_data_warnings(checklist_path: Path) -> list:
+    """check_data_consistency() for a checklist file, loading its own config
+    the same way build_deck() does."""
+    section_config = common.load_config("section_names.yaml")
+    data = read_checklist.read_checklist(checklist_path, section_config)
+    ordered_sections = section_names.order_sections(data.sheet_tab_names, section_config)
+    return check_data_consistency(data, ordered_sections, section_config)
 
 
 def default_output_path(checklist_path: Path, customer: str) -> Path:
@@ -1070,6 +1258,13 @@ def main(argv=None):
         rows_per_slide=rows_per_slide,
         include_pass_items=include_pass_items,
     )
+
+    data_warnings = collect_data_warnings(args.checklist)
+    if data_warnings:
+        print(f"\nWARNING: {len(data_warnings)} checklist data inconsistency(ies) -- the deck built, but may "
+              f"show wrong or missing values:")
+        for w in data_warnings:
+            print(f"  - {w}")
 
     problems = validate_deck.validate(output_path)
     if problems:

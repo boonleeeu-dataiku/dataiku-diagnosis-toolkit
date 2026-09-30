@@ -157,20 +157,21 @@ def status_pill(shape_id: int, x: int, y: int, cx: int, cy: int,
 def card_list_row(start_shape_id: int, x: int, y: int, width: int, height: int,
                    id_text: str, id_color: str, title_text: str, description_text: str = "",
                    status_label: str | None = None, status_color: str | None = None,
-                   id_col_width: int = ID_COL_WIDTH) -> tuple[str, int]:
+                   id_col_width: int = ID_COL_WIDTH, id_size: int = 1200) -> tuple[str, int]:
     """The reused "molecule": a full-width white rounded-rect card with a
     colored ID/number at left, a dark title (+ optional gray description
     line) in the middle, and an optional right-aligned status pill. Used
     identically for critical findings, section fail/partial lists, and
     numbered recommendations (the latter pass id_col_width=NUMBERED_ID_COL_WIDTH,
-    since a rank number needs far less room than a checklist ID)."""
+    since a rank number needs far less room than a checklist ID). id_size
+    lets a caller shrink an ID too long for id_col_width at the default 12pt."""
     shape_id = start_shape_id
     parts = [rounded_rect(shape_id, f"Card - {id_text}", x, y, width, height, CARD_FILL, CARD_BORDER, radius_pct=6000)]
     shape_id += 1
 
     parts.append(text_box(
         shape_id, f"Card ID - {id_text}", x + CARD_PAD, y, id_col_width, height,
-        paragraphs=[[{"text": id_text, "size": 1200, "color": id_color, "bold": True}]],
+        paragraphs=[[{"text": id_text, "size": id_size, "color": id_color, "bold": True}]],
         align="l", anchor="ctr", wrap="none",
     ))
     shape_id += 1

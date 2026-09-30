@@ -111,6 +111,11 @@ def build_platform_review_deck(
           - output_path: absolute path to the generated .pptx
           - structural_problems: list of structural-validation problem
             strings (empty list means the deck passed all automated checks)
+          - data_warnings: list of checklist data inconsistencies (e.g.
+            section totals that don't match Overall Status Counts, Summary
+            rows whose ID/status disagree with the section sheets) -- the
+            deck still built, but may show wrong or missing values; fix the
+            checklist and rebuild rather than patching the deck
           - manual_qa_checklist: guidance for the manual visual QA pass that
             automated validation cannot perform (only present when
             structural_problems is empty)
@@ -157,6 +162,7 @@ def build_platform_review_deck(
     result = {
         "output_path": str(resolved_output),
         "structural_problems": problems,
+        "data_warnings": build_deck.collect_data_warnings(checklist),
         "generator_version": common.VERSION,
     }
     if not problems:

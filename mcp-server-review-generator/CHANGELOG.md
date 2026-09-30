@@ -7,6 +7,34 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-09-30
+
+### Fixed
+
+- A section sheet whose tab name had stray whitespace (e.g. the default template's
+  `"Advanced Security Options (DSS "`, trailing space) showed all zeros in the Results by Section
+  scorecard. `parse_section_breakdown()` strips the Summary sheet's section names, but
+  `build_scorecard_rows()` looked them up by the raw tab name. Both sides are now normalized.
+- Critical Findings / Other Must-Have Items silently showed blank titles, and every Other Must-Have
+  item as "Needs Review", when the Summary block had no column named exactly `Title`/`Status` (the
+  sample checklist's Other Must-Have block has no Status column at all, so Partial items were mislabeled).
+  Missing fields now fall back to that ID's own `title`/`validation_status` from its section sheet, with
+  one warning per block; the hard-coded "Needs Review" default is gone.
+- Long checklist IDs wrapped mid-code in narrow table ID columns in renderers that ignore `wrap="none"`
+  on table cells (e.g. LibreOffice). The ID column is now widened to fit the longest ID (up to a cap,
+  taken from a prose column), and any ID still too long shrinks its own font; card IDs step down from
+  12pt likewise.
+
+### Added
+
+- `data_warnings` in `build_platform_review_deck`'s MCP result (and printed by the CLI): Summary-vs-
+  section-sheet consistency checks that structural validation can't catch — scorecard totals vs.
+  Overall Status Counts, sections missing from the Per-Section Breakdown, Summary IDs not found in any
+  section sheet or with a disagreeing status, unrecognized status labels, uncurated section names.
+- `config/section_names.yaml` entry for the "Advanced Security Options (DSS …" section (displayed as
+  "Advanced Security Options", order 5) — previously shown via the title-cased fallback as
+  "Advanced Security Options (Dss".
+
 ## [0.1.3] - 2026-09-28
 
 ### Fixed
