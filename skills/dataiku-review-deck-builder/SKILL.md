@@ -30,7 +30,7 @@ Call `build_platform_review_deck` with:
   (see "If the base deck isn't found" below).
 
 This already runs structural validation internally and returns
-`{output_path, structural_problems, manual_qa_checklist, generator_version}` — no separate
+`{output_path, structural_problems, data_warnings, manual_qa_checklist, generator_version}` — no separate
 `validate_deck` call is needed for a normal run.
 
 ## 2. If the base deck isn't found
@@ -46,6 +46,11 @@ Don't guess a path — always get it from the user or a real error message.
 
 ## 3. Report results
 
+- If `data_warnings` is non-empty, the deck built but may show wrong or missing values (e.g.
+  section totals that don't match Overall Status Counts, or Summary rows whose ID/status disagree
+  with the section sheets). List the warnings, fix the **checklist** (not the generated deck), and
+  rebuild. Hand-editing the deck would leave the checklist wrong and get overwritten by the next
+  build.
 - If `structural_problems` is non-empty, don't declare success — list the problems and say the
   deck needs another look before sending it out.
 - If empty, tell the user the deck was generated (give the `output_path`), then relay
