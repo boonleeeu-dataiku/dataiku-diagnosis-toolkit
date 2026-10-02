@@ -10,6 +10,8 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-02
+
 ### Added
 
 - A three-tier test setup. `scripts/test.sh fast` runs the deterministic tiers; `scripts/test.sh
