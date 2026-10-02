@@ -114,7 +114,7 @@ def test_regression_v014_summary_blocks_without_title_status_columns(checklist_f
         ("ARCH-002", "Title of ARCH-002", "Architecture, Compute & Infrastructure"),
     ]
     other_rows = build_deck.build_other_must_have_rows(data, {})
-    assert other_rows[0][:3] == ["SEC-001", "Title of SEC-001", "Partial"]
+    assert other_rows[0] == ["SEC-001", "Title of SEC-001", "Partial"]
 
 
 def test_regression_v015_no_total_row(checklist_factory, section_config):

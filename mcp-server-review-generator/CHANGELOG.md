@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-02
+
+### Fixed
+
+- The Other Must-Have Items slides no longer carry 3 empty trailing columns. They came from the 6-column
+  table template; `make_table_slides()` now drops them (`drop_cols`, `tables.delete_columns()`) and the ID/
+  Title/Status columns take the full width.
+
 ## [0.3.0] - 2026-10-02
 
 ### Changed

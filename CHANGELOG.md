@@ -10,6 +10,13 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-10-02
+
+### Fixed
+
+- Re-synced `mcp-server-review-generator` to upstream v0.3.1: the Other Must-Have Items slides no
+  longer carry 3 empty trailing columns.
+
 ## [0.9.0] - 2026-10-02
 
 ### Changed

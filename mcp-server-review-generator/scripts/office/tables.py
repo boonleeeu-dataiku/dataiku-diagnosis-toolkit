@@ -147,6 +147,42 @@ def replace_data_rows(tbl_xml: str, new_rows_xml: str, header_row_count: int = 1
     return tbl_xml[:start] + new_rows_xml + tbl_xml[end:]
 
 
+def delete_columns(tbl_xml: str, col_indices: list[int]) -> str:
+    """Remove the given 0-indexed columns from a table: their <a:gridCol>
+    entries and the matching <a:tc> in every row. Raises if an index is out of
+    range, or if any row's cell count doesn't match the grid (merged cells
+    aren't supported)."""
+    grid = list(re.finditer(r"<a:gridCol\b[^>]*?(?:/>|>.*?</a:gridCol>)", tbl_xml, re.DOTALL))
+    drop = set(col_indices)
+    if any(c < 0 or c >= len(grid) for c in drop):
+        raise ValueError(f"Table has {len(grid)} column(s); cannot delete {sorted(drop)}")
+
+    def _drop_cells(row_match):
+        row = row_match.group(0)
+        cells = list(TC_RE.finditer(row))
+        if len(cells) != len(grid):
+            raise ValueError(f"Row has {len(cells)} cell(s) but the table has {len(grid)} column(s)")
+        pieces, pos = [], 0
+        for i, m in enumerate(cells):
+            pieces.append(row[pos : m.start()])
+            if i not in drop:
+                pieces.append(m.group(0))
+            pos = m.end()
+        pieces.append(row[pos:])
+        return "".join(pieces)
+
+    tbl_xml = TR_RE.sub(_drop_cells, tbl_xml)
+    grid = list(re.finditer(r"<a:gridCol\b[^>]*?(?:/>|>.*?</a:gridCol>)", tbl_xml, re.DOTALL))
+    pieces, pos = [], 0
+    for i, m in enumerate(grid):
+        pieces.append(tbl_xml[pos : m.start()])
+        if i not in drop:
+            pieces.append(m.group(0))
+        pos = m.end()
+    pieces.append(tbl_xml[pos:])
+    return "".join(pieces)
+
+
 def set_column_widths(tbl_xml: str, widths: list[int]) -> str:
     """Replace each <a:gridCol w="..."/> in a table, in order, with the given
     widths (EMU). Raises if the count doesn't match, rather than silently
