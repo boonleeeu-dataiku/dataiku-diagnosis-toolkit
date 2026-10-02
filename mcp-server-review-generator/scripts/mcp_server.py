@@ -133,6 +133,11 @@ def build_platform_review_deck(
             structural_problems is empty)
           - generator_version: this tool's own version (common.VERSION) that
             produced the deck
+          - v2 adds slide_count, narrative_used (path or null),
+            narrative_missing (true when no narrative was used; the deck's
+            judgment text is then generic, derived from cells) and, when
+            missing, narrative_warning, plus applicable_count, pass_count,
+            quick_wins and owner_groups
     """
     layout_config = common.load_config("deck_layout.yaml")
 
@@ -190,10 +195,49 @@ def build_platform_review_deck(
         "generator_version": common.VERSION,
     }
     if built_v2:
-        result.update({k: built_v2[k] for k in ("slide_count", "narrative_used", "applicable_count", "pass_count", "quick_wins", "owner_groups")})
+        result.update({k: built_v2[k] for k in ("slide_count", "narrative_used", "narrative_missing", "applicable_count", "pass_count", "quick_wins", "owner_groups")})
+        if built_v2["narrative_missing"]:
+            import narrative
+            result.update({"narrative_warning": narrative.MISSING_WARNING})  # v2-only key, not a base return key
     if not problems:
         result["manual_qa_checklist"] = validate_deck_lib.MANUAL_QA_CHECKLIST
     return result
+
+
+@mcp.tool()
+@_surface_errors
+def analyze_checklist(checklist_path: str) -> dict[str, Any]:
+    """Read a completed checklist and return the facts a v2 narrative must cite,
+    so Claude can draft <checklist_stem>_narrative.json that validates first time.
+    Read-only; builds no deck. Call it after the checklist is final.
+
+    Args:
+        checklist_path: Path to a completed checklist .xlsx (required). A
+            relative path is resolved against this repo's root.
+
+    Returns:
+        A dict with checklist_sha256 (record it in the narrative), narrative_path
+        (where to save it), counts/total/applicable, per-section counts,
+        ids_by_status, root_cause_groups, quick_win_candidates,
+        remaining_fails, needs_review (each with a suggested_owner; owner
+        groups must cover them all once), not_applicable (na_groups must cover
+        them all once), open_items (Fail/Partial, with headline and action),
+        rules (the narrative's validation constraints) and warnings.
+    """
+    import deck_analysis
+    import narrative
+    import read_checklist
+    import section_names
+
+    checklist = _resolve(checklist_path)
+    if not checklist.exists():
+        raise FileNotFoundError(f"Checklist file not found: {checklist}")
+    section_config = common.load_config("section_names.yaml")
+    layout_config = common.load_config("deck_layout.yaml")
+    data = read_checklist.read_checklist(checklist, section_config)
+    ordered = section_names.order_sections(data.sheet_tab_names, section_config)
+    a = deck_analysis.analyze(data, ordered, layout_config.get("v2", {}))
+    return narrative.scaffold(a, checklist)
 
 
 @mcp.tool(name="validate_deck")

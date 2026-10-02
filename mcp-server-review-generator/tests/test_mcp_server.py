@@ -7,6 +7,7 @@ import pytest
 pytest.importorskip("mcp", reason="mcp SDK not installed (only needed by scripts/mcp_server.py)")
 
 import common  # noqa: E402
+from conftest import item  # noqa: E402
 import mcp_server  # noqa: E402
 from mcp.server.mcpserver.exceptions import ToolError  # noqa: E402
 
@@ -52,3 +53,15 @@ def test_validate_deck_rejects_non_zip(tmp_path):
 def test_validate_deck_missing_file(tmp_path):
     with pytest.raises(ToolError, match="File not found"):
         mcp_server.validate_deck_tool(pptx_path=str(tmp_path / "nope.pptx"))
+
+
+def test_analyze_checklist_returns_scaffold(checklist_factory):
+    path = checklist_factory({"Architecture, Compute & Infrast": [item("ARCH-001", "Fail"), item("ARCH-002", "Not Applicable")]})
+    res = mcp_server.analyze_checklist(checklist_path=str(path))
+    assert res["counts"]["Fail"] == 1 and len(res["checklist_sha256"]) == 64
+    assert [r["id"] for r in res["not_applicable"]] == ["ARCH-002"]
+
+
+def test_analyze_checklist_missing_file_surfaces_as_tool_error(tmp_path):
+    with pytest.raises(ToolError, match="Checklist file not found"):
+        mcp_server.analyze_checklist(checklist_path=str(tmp_path / "nope.xlsx"))

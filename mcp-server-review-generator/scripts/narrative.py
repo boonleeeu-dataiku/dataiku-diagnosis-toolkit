@@ -7,6 +7,7 @@ figure on a risk tile must appear in the cited row's own notes/evidence.
 Any missing key falls back to rule-derived content in build_deck_v2.py.
 """
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -175,3 +176,53 @@ def validate(narr: dict, a: Analysis):
         for n in _numbers(t.get("body", "")) - known:
             warnings.append(f"narrative takeaways[{i}]: figure {n!r} isn't found in any checklist cell; check it.")
     return warnings
+
+
+MISSING_WARNING = (
+    "No narrative was found for this deck, so its verdict, takeaways, risks, roadmap and owner text are generic "
+    "text derived from checklist cells. An LLM-driven run must draft <checklist_stem>_narrative.json from this "
+    "checklist (see analyze_checklist) and rebuild; only a plain script run may ship without one."
+)
+
+RULES = [
+    "Write from this checklist's rows only; never reuse another customer's text.",
+    "takeaways: exactly 3 (tones good, risk, win), or omit the key.",
+    "owners.groups must cover every Needs Review id exactly once (needs_review below).",
+    "na_groups must cover every Not Applicable id exactly once (not_applicable below).",
+    "quick_wins rows must be Fail items; risk2.table Fail or Partial; other citations Fail, Partial or Needs Review.",
+    "A Pass item may be cited only if listed under caveats.",
+    "Every figure on a risk1 tile must appear in the cited row's notes or evidence_found.",
+    "roadmap effort is S, M or L. Record checklist_sha256 (below) once the checklist is final.",
+]
+
+
+def scaffold(a: Analysis, checklist_path) -> dict:
+    """Facts a narrative must cite, derived from checklist cells only. Feeds the
+    analyze_checklist tool so a draft satisfies validate() first time."""
+    path = Path(checklist_path)
+    by_status = {}
+    for r in a.rows.values():
+        by_status.setdefault(r.status, []).append(r.id)
+
+    def brief(r):
+        return {"id": r.id, "title": r.title, "priority": r.priority, "section": r.section,
+                "status": r.status, "headline": r.headline, "action": r.action}
+
+    return {
+        "checklist_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        "narrative_path": str(default_path(path)),
+        "counts": dict(a.counts), "total": a.total, "applicable": a.applicable,
+        "sections": {disp: a.section_counts(disp) for disp, _ in a.section_order},
+        "ids_by_status": by_status,
+        "root_cause_groups": [list(g) for g in a.root_causes],
+        "quick_win_candidates": [{"id": q.id, "setting": q.setting, "from": q.from_, "to": q.to, "confirm": q.confirm}
+                                 for q in a.quick_wins],
+        "remaining_fails": list(a.remaining_fails),
+        "needs_review": [dict(brief(r), suggested_owner=next((o for o, ids in a.owners if r.id in ids), "Other"))
+                         for r in a.by_status("Needs Review")],
+        "not_applicable": [{"id": r.id, "title": r.title, "section": r.section, "headline": r.headline}
+                           for r in a.by_status(NA)],
+        "open_items": [brief(r) for r in a.rows.values() if r.status in ("Fail", "Partial")],
+        "rules": RULES,
+        "warnings": list(a.warnings),
+    }

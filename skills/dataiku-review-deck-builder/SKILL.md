@@ -14,18 +14,23 @@ suggest running that skill first — this one expects a checklist that already h
 ## 0. Tools
 
 Load the deferred tools if needed (`ToolSearch` with
-`select:build_platform_review_deck,validate_deck`). Both come from the bundled
+`select:build_platform_review_deck,validate_deck,analyze_checklist`). Both come from the bundled
 `dataiku-review-generator` MCP server.
 
 ## 1. Generate the deck
 
 **Order of work (required whenever you, an LLM, are running this skill):**
 1. Make sure the checklist is final. Any later edit changes its hash.
-2. Draft the narrative (1b) from this checklist's rows, for this bundle only. Do not skip this step or
+2. Call `analyze_checklist` on the checklist, then draft the narrative (1b) from its output and this
+   checklist's rows, for this bundle only. It returns `checklist_sha256`, the `narrative_path` to save to, the
+   Needs Review and Not Applicable ids your owner and N/A groups must each cover once, quick-win candidates,
+   and the validation rules. Do not skip this step or
    build first and "add it later": the tool's fallback text is generic and is not customer-ready.
-3. Compute `checklist_sha256`, write `<checklist_stem>_narrative.json` beside the checklist, then build (1a).
+3. Write `<checklist_stem>_narrative.json` beside the checklist (with the `checklist_sha256` from
+   `analyze_checklist`), then build (1a).
 4. If the tool rejects the narrative, fix the narrative and rebuild. Never drop it to get a build through.
-5. In your report, state whether a narrative was used (`narrative_used`). If you did not draft one, say so
+5. In your report, state whether a narrative was used (`narrative_used`). If the result has
+   `narrative_missing: true` (with a `narrative_warning`), the deck has no narrative: draft one and rebuild. If you did not draft one, say so
    plainly and say the deck's judgment text is auto-derived and needs reviewer rewriting.
 
 Only a plain script run with no LLM present may build without a narrative.
@@ -72,7 +77,7 @@ Call `build_platform_review_deck` with:
 
 This already runs structural validation internally and returns
 `{output_path, structural_problems, data_warnings, manual_qa_checklist, generator_version}` (v2 adds
-`slide_count, narrative_used, applicable_count, pass_count, quick_wins, owner_groups`) — no separate
+`slide_count, narrative_used, narrative_missing, narrative_warning (only when missing), applicable_count, pass_count, quick_wins, owner_groups`) — no separate
 `validate_deck` call is needed for a normal run.
 
 ## 2. If the base deck isn't found

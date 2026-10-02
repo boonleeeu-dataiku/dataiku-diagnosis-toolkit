@@ -166,3 +166,40 @@ def test_v2_build_autodiscovers_narrative_beside_checklist(checklist_factory, tm
     res = build_deck_v2.build_v2(path, "Acme", tmp_path / "o.pptx", common.BRANDING_TEMPLATE)
     assert res["narrative_used"].endswith("_narrative.json")
     assert any("different version" in w for w in res["warnings"])
+
+
+def test_scaffold_gives_every_fact_a_narrative_must_cover(analysis, tmp_path):
+    data, a = analysis
+    f = tmp_path / "x_review.xlsx"; f.write_bytes(b"checklist bytes")
+    sc = narrative.scaffold(a, f)
+    assert sc["checklist_sha256"] == __import__("hashlib").sha256(b"checklist bytes").hexdigest()
+    assert sc["narrative_path"].endswith("x_review_narrative.json")
+    assert sc["applicable"] == 7 and sc["counts"]["Fail"] == 2
+    assert {r["id"] for r in sc["needs_review"]} == {"ARCH-001", "ARCH-002"}
+    assert all(r["suggested_owner"] for r in sc["needs_review"])
+    assert [r["id"] for r in sc["not_applicable"]] == ["ARCH-004"]
+    assert {r["id"] for r in sc["open_items"]} == {"SEC-001", "SCALE-009", "SCALE-010"}
+    assert sc["rules"] and "root_cause_groups" in sc and "quick_win_candidates" in sc
+
+
+def test_scaffold_suggestions_pass_narrative_validation(analysis, tmp_path):
+    data, a = analysis
+    f = tmp_path / "x.xlsx"; f.write_bytes(b"x")
+    sc = narrative.scaffold(a, f)
+    owners = {}
+    for r in sc["needs_review"]:
+        owners.setdefault(r["suggested_owner"], []).append({"id": r["id"], "ask": "confirm"})
+    narr = {"owners": {"groups": [{"owner": o, "asks": asks} for o, asks in owners.items()]},
+            "na_groups": [{"heading": "N/A", "note": "n", "ids": [r["id"] for r in sc["not_applicable"]]}]}
+    narrative.validate(narr, a)
+
+
+@pytest.mark.skipif(not common.BRANDING_TEMPLATE.exists(), reason="branding template not present")
+def test_v2_build_flags_a_missing_narrative(checklist_factory, tmp_path):
+    import build_deck_v2
+    path = checklist_factory(sections())
+    res = build_deck_v2.build_v2(path, "Acme", tmp_path / "o.pptx", common.BRANDING_TEMPLATE)
+    assert res["narrative_missing"] is True and res["narrative_used"] is None
+    (path.with_name(path.stem + "_narrative.json")).write_text(json.dumps({}))
+    res = build_deck_v2.build_v2(path, "Acme", tmp_path / "o2.pptx", common.BRANDING_TEMPLATE)
+    assert res["narrative_missing"] is False

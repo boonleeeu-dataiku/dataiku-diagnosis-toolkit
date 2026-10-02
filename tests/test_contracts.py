@@ -114,3 +114,10 @@ def test_deck_skill_requires_a_narrative_when_an_llm_runs_it():
 def test_review_skill_hands_off_to_the_deck_builder_with_a_narrative():
     assert "dataiku-review-deck-builder" in REVIEW_SKILL
     assert "_narrative.json" in REVIEW_SKILL
+
+
+def test_deck_skill_uses_the_narrative_helper_tool_and_flag():
+    """The skill drives analyze_checklist and branches on narrative_missing; both must exist in the server."""
+    assert "def analyze_checklist" in MCP_SERVER and '"narrative_missing"' in MCP_SERVER
+    for phrase in ("analyze_checklist", "narrative_missing"):
+        assert phrase in DECK_SKILL

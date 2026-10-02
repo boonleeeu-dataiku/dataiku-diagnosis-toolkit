@@ -1312,9 +1312,12 @@ def main(argv=None):
         parser_error("--narrative only applies to --style v2")
     if args.style == "v2":
         import build_deck_v2
+        import narrative
         result = build_deck_v2.build_v2(args.checklist, args.customer, output_path, base_deck, args.logo, args.narrative)
         output_path = result["output_path"]
         data_warnings = result["warnings"]
+        if result["narrative_missing"]:
+            print(f"\nWARNING: no narrative used. {narrative.MISSING_WARNING}")
     else:
         output_path = build_deck(
             checklist_path=args.checklist,

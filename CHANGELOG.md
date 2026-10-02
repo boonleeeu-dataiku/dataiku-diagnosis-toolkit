@@ -10,6 +10,20 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-02
+
+### Added
+
+- Re-synced `mcp-server-review-generator` to upstream v0.6.0: a new `analyze_checklist` tool returns the facts a
+  v2 narrative must cite (checklist hash and narrative path, Needs Review and Not Applicable ids, quick-win
+  candidates, validation rules), and a v2 build with no narrative now returns `narrative_missing` /
+  `narrative_warning` (the CLI warns too).
+
+### Changed
+
+- `dataiku-review-deck-builder` now has Claude call `analyze_checklist` before drafting the narrative, and treat
+  `narrative_missing` as a prompt to draft one and rebuild.
+
 ## [0.12.0] - 2026-10-02
 
 ### Changed

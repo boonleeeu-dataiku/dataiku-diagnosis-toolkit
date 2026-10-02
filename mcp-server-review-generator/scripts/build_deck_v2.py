@@ -717,10 +717,13 @@ def build_v2(checklist_path: Path, customer: str, output_path: Path, base_deck: 
         prs.save(str(output_path))
         slide_count = len(lst)
 
+    if not narrative_path:
+        logger.warning(narr_mod.MISSING_WARNING)
     logger.info("Wrote v2 deck (%d slides): %s", slide_count, output_path)
     return {
         "output_path": output_path, "slide_count": slide_count, "warnings": warnings,
         "narrative_used": str(narrative_path) if narrative_path else None,
+        "narrative_missing": not narrative_path,
         "applicable_count": a.applicable, "pass_count": a.counts["Pass"],
         "quick_wins": [q.id for q in a.quick_wins],
         "owner_groups": {o: ids for o, ids in a.owners},

@@ -7,6 +7,17 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-02
+
+### Added
+
+- `analyze_checklist` MCP tool: returns the facts a v2 narrative must cite (checklist hash and default narrative
+  path, counts, ids by status, root-cause groups, quick-win candidates, Needs Review items with suggested owners,
+  Not Applicable items, open items, validation rules), so a drafted narrative validates first time.
+  Backed by `narrative.scaffold()`.
+- A v2 build with no narrative now says so: `narrative_missing` (and `narrative_warning`) in the MCP result, and a
+  warning from the CLI and the log. Previously only `narrative_used: null` hinted at it.
+
 ## [0.5.0] - 2026-10-02
 
 ### Added
