@@ -1,6 +1,6 @@
 {
   "name": "dataiku-diagnosis-reader-mcp",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "private": true,
   "description": "Local MCP server exposing the dataiku-diagnosis-reader skill's docs and orient.sh script to MCP-compatible agents.",
   "type": "module",
@@ -13,7 +13,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "dev": "tsc -w -p tsconfig.json"
+    "dev": "tsc -w -p tsconfig.json",
+    "test": "tsc -p tsconfig.json && node --test test/*.test.mjs && node scripts/smoke-test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",

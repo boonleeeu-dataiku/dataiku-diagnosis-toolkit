@@ -12,7 +12,26 @@ package's version when `src/**` changes (tool/resource contracts, behavior); edi
 `references/*.md` or `scripts/orient.sh` in the skill package needs no version bump here, since
 those are read from disk at runtime.
 
-## [Unreleased]
+## [0.2.2] - 2026-10-02
+
+### Fixed
+
+- The server's MCP `initialize` response reported a stale hardcoded version (`0.1.0`). It now
+  reads the version from `package.json` at startup, so the two can't drift. A test asserts they
+  match.
+
+## [0.2.1] - 2026-10-02
+
+Dev tooling only — no change to `src/**`, tool/resource contracts, or server behavior.
+
+### Added
+
+- An `npm test` suite (`node:test`, no new dependencies) in `test/`, run against `dist/` over stdio
+  JSON-RPC. It covers path containment (including symlink and prefix-sibling escapes), `safe_read`
+  caps, filtering and binary refusal, `run_orient` on design/automation bundles, and resource-list
+  sync with `references/*.md`.
+- Synthetic fixture bundles under `test/fixtures/bundles/`. `scripts/smoke-test.mjs` now defaults
+  to one of them when no bundle root is passed.
 
 ## [0.2.0] - 2026-09-27
 
@@ -32,6 +51,7 @@ those are read from disk at runtime.
   `run_orient` (wraps `scripts/orient.sh`) and `safe_read` (bounded, size/line-capped file
   read/grep) as tools.
 
-[Unreleased]: https://github.com/boonleeeu-dataiku/dataiku-diagnosis-reader/compare/mcp-server-diagnosis-reader-v0.2.0...HEAD
+[0.2.2]: https://github.com/boonleeeu-dataiku/dataiku-diagnosis-reader/compare/mcp-server-diagnosis-reader-v0.2.1...mcp-server-diagnosis-reader-v0.2.2
+[0.2.1]: https://github.com/boonleeeu-dataiku/dataiku-diagnosis-reader/compare/mcp-server-diagnosis-reader-v0.2.0...mcp-server-diagnosis-reader-v0.2.1
 [0.2.0]: https://github.com/boonleeeu-dataiku/dataiku-diagnosis-reader/compare/mcp-server-v0.1.0...mcp-server-diagnosis-reader-v0.2.0
 [0.1.0]: https://github.com/boonleeeu-dataiku/dataiku-diagnosis-reader/releases/tag/mcp-server-v0.1.0

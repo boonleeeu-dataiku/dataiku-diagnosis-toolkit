@@ -1,0 +1,70 @@
+{
+  "tools": [
+    {
+      "name": "run_orient",
+      "title": "Run orient.sh triage",
+      "description": "Runs the dataiku-diagnosis-reader skill's orient.sh triage script against bundle_root: reports node type/version, the data-dir mirror location, the 10 largest files in the bundle, and presence/size of key troubleshooting files (dmesg.txt, stacks.txt, cgroups_usage.txt, run/sanity-check.json, hs_err_pid* crash dumps, run/audit/). Read-only, no network calls, no changes made. Read the skill-guide resource first to know how to interpret the output.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bundle_root": {
+            "type": "string",
+            "description": "Absolute path to the bundle root (the directory containing diag.txt/timings.txt). Falls back to the DATAIKU_BUNDLE_ROOT env var if omitted."
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "safe_read",
+      "title": "Guarded file read/grep within a bundle",
+      "description": "Read a bounded slice of a single file inside a diagnosis bundle, with hard size/line caps and optional regex filtering. Use this instead of trying to load whole manifest/log files - some (datadir_listing.txt, run/*.log.N, run/audit/audit.log.N) are 100MB-2.3GB. See the reference-limitations and reference-listings-and-manifests resources for which files need a pattern.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bundle_root": {
+            "type": "string",
+            "description": "Absolute bundle root; falls back to DATAIKU_BUNDLE_ROOT if omitted."
+          },
+          "relative_path": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Path to the target file, relative to bundle_root (e.g. 'datadir_listing.txt' or 'apps/dss/data_design/config/general-settings.json'). Must resolve inside bundle_root."
+          },
+          "pattern": {
+            "type": "string",
+            "description": "Optional JS-flavored regex; only matching lines are returned. Required for files above max_bytes."
+          },
+          "pattern_flags": {
+            "type": "string",
+            "description": "Optional regex flags, e.g. 'i'. Default none."
+          },
+          "max_lines": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 2000,
+            "default": 500
+          },
+          "max_bytes": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 5000000,
+            "default": 500000
+          }
+        },
+        "required": [
+          "relative_path"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    }
+  ]
+}

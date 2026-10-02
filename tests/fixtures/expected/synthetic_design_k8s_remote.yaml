@@ -1,0 +1,39 @@
+# Expected checklist-review results for bundles/synthetic_design_k8s_remote, reviewed against
+# checklists/eval_checklist.xlsx WITHOUT a web search tool available. Field meanings are
+# documented in synthetic_design_baseline.yaml.
+
+bundle: bundles/synthetic_design_k8s_remote
+items:
+  ARCH-001:   # REMOTE deployer -> still Needs Review, remote deployer called out
+    status: [Needs Review]
+    mentions: [remote]
+  ARCH-002:   # no web lookup -> must say currency couldn't be verified, never guess the latest GA
+    status: [Needs Review]
+    mentions: ["14.4.3"]
+    # any phrasing of "couldn't verify/check/look up the latest release", e.g. "could not be
+    # verified", "Couldn't check how current this version is", "could not be looked up"
+    matches: "(could ?n[o']t|can ?n[o']t|cannot|unable to|not able to|wasn't able to)\\b.{0,40}(verif|check|confirm|look(ed)? up|determin)"
+  ARCH-004:   # no sanity-check warning, but SSD can't be confirmed either
+    status: [Pass, Needs Review]
+  ARCH-010:   # cluster attached + two differently sized container configs
+    status: [Pass]
+    mentions: [containerSettings]
+  ARCH-013:
+    status: [Pass, Partial]
+    mentions_any: [eks-main, clusters/]
+  SEC-004:
+    status: [Pass, Partial, Needs Review]
+    mentions: [cgroup]
+  SEC-006:    # DSS terminates TLS itself
+    status: [Pass]
+    mentions: [ssl]
+  SCALE-007:
+    status: [Pass]
+    mentions: [backend.log]
+  SCALE-008:
+    status: [Pass, Partial, Needs Review]
+  SCALE-009:
+    status: [Pass, Partial, Needs Review]
+  SCALE-011:
+    status: [Pass]
+    mentions: [filesystem_root]

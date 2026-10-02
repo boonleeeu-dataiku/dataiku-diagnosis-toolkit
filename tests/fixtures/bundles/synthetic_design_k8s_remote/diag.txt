@@ -1,0 +1,11 @@
+SYNTHETIC TEST FIXTURE - not real diagnosis data.
+> uname -a
+Linux synthetic-host 5.14.0-427.el9.x86_64 #1 SMP x86_64 GNU/Linux
+> printenv
+DKU_BACKEND_JAVA_OPTS=-Xmx8g -XX:+UseG1GC
+DIP_HOME=/data/dataiku/design
+> free -m
+              total        used        free      shared  buff/cache   available
+Mem:          64000       60000        1200          10        2800        3500
+> cat /etc/redhat-release
+Red Hat Enterprise Linux release 9.4 (Plow)

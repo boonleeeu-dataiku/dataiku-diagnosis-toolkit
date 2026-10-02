@@ -22,3 +22,7 @@ diagnosis*.zip
 *.diagnosis.zip
 
 .DS_Store
+
+# Eval run outputs (claude plugin eval + tests/evals/run_review_eval.py)
+evals/results/
+.pytest_cache/

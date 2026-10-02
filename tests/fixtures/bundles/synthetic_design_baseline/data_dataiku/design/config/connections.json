@@ -1,0 +1,20 @@
+{
+  "filesystem_root": {
+    "type": "Filesystem",
+    "params": {
+      "root": "/"
+    },
+    "allowWrite": true,
+    "allowedGroups": [
+      "administrators"
+    ]
+  },
+  "warehouse_pg": {
+    "type": "PostgreSQL",
+    "params": {
+      "host": "pg.synthetic.example",
+      "db": "dwh"
+    },
+    "allowWrite": true
+  }
+}

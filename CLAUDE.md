@@ -42,7 +42,8 @@ which have none.
   To re-sync after upstream changes: diff the upstream repo's `dataiku-diagnosis-reader/` and
   `mcp-server-diagnosis-reader/` directories against this repo's `skills/dataiku-diagnosis-reader/`
   and `mcp-server-diagnosis-reader/` copies (content, `references/*.md`, `scripts/orient.sh`,
-  `src/**`, `package.json`, version frontmatter, `CHANGELOG.md`), and port over whatever differs.
+  `src/**`, `test/**`, `scripts/smoke-test.mjs`, `package.json`, version frontmatter,
+  `CHANGELOG.md`), and port over whatever differs.
   Don't hand-edit content in these two directories here expecting it to persist — fix it upstream
   and re-sync, or the next sync will silently overwrite the fix.
 
@@ -62,10 +63,11 @@ which have none.
   That repo versions itself independently (SemVer in its own `VERSION` file, `CHANGELOG.md`, git
   tags) per its own `CLAUDE.md`.
 
-  To re-sync after upstream changes: diff the upstream repo's `scripts/`, `config/`, `VERSION`,
-  and `requirements.txt` against this repo's `mcp-server-review-generator/` copy, and port over
-  whatever differs. Don't hand-edit content here expecting it to persist — fix it upstream and
-  re-sync, or the next sync will silently overwrite the fix.
+  To re-sync after upstream changes: diff the upstream repo's `scripts/`, `config/`, `tests/`,
+  `VERSION`, `CHANGELOG.md`, `requirements.txt`, `requirements-dev.txt`, and `pytest.ini` against
+  this repo's `mcp-server-review-generator/` copy, and port over whatever differs. Don't hand-edit
+  content here expecting it to persist — fix it upstream and re-sync, or the next sync will
+  silently overwrite the fix.
 
   `resources/` is out of scope for this sync: the branding template is a manual, gitignored,
   user-supplied asset (see below), and the sample completed checklist
@@ -103,3 +105,28 @@ but require the one-time `.venv` setup (see README) to exist before the server c
 Whenever Claude makes edits to `mcp-server-diagnosis-reader/` or `mcp-server-review-generator/`,
 remind the user afterward to also run Codex, so Codex can pick up the changes — Codex only
 adapts to Claude-side changes post-hoc (see `AGENTS.md`) and won't see these updates otherwise.
+
+## Testing
+
+See README's "Testing" section for the three tiers.
+- **Before handing back any change**, run `scripts/test.sh fast`. It makes no model calls.
+- After re-syncing from upstream, `tests/test_vendored_drift.py` confirms the copies match. It
+  skips if the sibling upstream checkouts aren't on disk.
+- **When you add or change a calibration** in `skills/dataiku-diagnosis-checklist-review/SKILL.md`,
+  extend the eval fixtures to cover it (see `tests/fixtures/README.md`):
+  1. Add the item to `EVAL_ITEM_IDS` in `tests/fixtures/build_fixtures.py`.
+  2. Shape a synthetic bundle so it triggers the calibration.
+  3. Record the expected answer in `tests/fixtures/expected/*.yaml`.
+  4. Regenerate the fixtures.
+- **When you change a skill's wording that another component depends on** (status names,
+  Summary block headers, the deck tool's return keys or error text), check
+  `tests/test_contracts.py`.
+- Strict `xfail` tests mark known gaps (see `CHANGELOG.md` → Unreleased → Known issues).
+  When you fix one, remove its marker. Strict mode makes it fail as an unexpected pass until
+  you do.
+- Fixtures are synthetic only. The same rule as "Security / privacy" above applies: never derive
+  them from a real bundle.
+- `scripts/test.sh eval` and the scripts under `tests/evals/` cost real model usage. Run them only
+  when the user asks, or after a skill or model change they want checked. Don't run them as
+  routine verification.
+

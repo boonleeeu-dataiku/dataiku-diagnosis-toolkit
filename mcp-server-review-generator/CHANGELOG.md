@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-10-02
+
+### Added
+
+- A pytest suite under `tests/` (`python3 -m pytest`; config in `pytest.ini`, dev dependencies in
+  `requirements-dev.txt`). It covers checklist parsing, every `data_warnings` check, the v0.1.4/v0.1.5
+  fixes as regression tests, `validate_deck` problem classes, MCP error surfacing, and a golden deck
+  snapshot. The snapshot is skipped when the branding template is absent.
+- An `xfail` test recording a known gap: Critical Findings / Other Must-Have blocks are read with
+  `num_cols=3`, so a `Status` column in the 4th position (the checklist-review skill's standard
+  `ID | Section | Title | Status | Key point` layout) is never compared against the section sheets.
+
 ## [0.1.5] - 2026-09-30
 
 ### Fixed

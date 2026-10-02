@@ -1,0 +1,10 @@
+{
+  "warehouse_pg": {
+    "type": "PostgreSQL",
+    "params": {
+      "host": "pg.synthetic.example",
+      "db": "dwh"
+    },
+    "allowWrite": true
+  }
+}

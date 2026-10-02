@@ -1,0 +1,10 @@
+{
+  "id": "eks-main",
+  "type": "managed",
+  "architecture": "KUBERNETES",
+  "params": {
+    "config": {
+      "clusterId": "synthetic-eks"
+    }
+  }
+}

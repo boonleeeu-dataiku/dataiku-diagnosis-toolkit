@@ -1,21 +1,17 @@
 #!/usr/bin/env node
 // Quick regression check for the built server: initialize -> resources/list -> tools/list ->
-// tools/call run_orient, all over raw JSON-RPC via stdio. Takes a bundle root as a CLI argument;
-// never hardcode a real bundle path here.
+// tools/call run_orient, all over raw JSON-RPC via stdio. Defaults to the committed synthetic
+// fixture bundle; pass a bundle root as a CLI argument to target another one. Never hardcode a
+// real bundle path here.
 //
-// Usage: node scripts/smoke-test.mjs <bundle_root>
+// Usage: node scripts/smoke-test.mjs [bundle_root]
 
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const bundleRoot = process.argv[2];
-if (!bundleRoot) {
-  console.error("Usage: node scripts/smoke-test.mjs <bundle_root>");
-  process.exit(1);
-}
-
 const here = path.dirname(fileURLToPath(import.meta.url));
+const bundleRoot = process.argv[2] ?? path.resolve(here, "..", "test", "fixtures", "bundles", "synthetic_design");
 const serverEntry = path.resolve(here, "..", "dist", "index.js");
 
 const child = spawn("node", [serverEntry], { stdio: ["pipe", "pipe", "inherit"] });

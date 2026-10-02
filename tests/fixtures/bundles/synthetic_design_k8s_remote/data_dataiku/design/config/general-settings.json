@@ -1,0 +1,71 @@
+{
+  "cgroupSettings": {
+    "enabled": true,
+    "cgroupsVersion": "CGROUPS_V2",
+    "hierarchiesMountPoint": "/sys/fs/cgroup",
+    "pythonRRecipes": {
+      "targets": [
+        {
+          "cgroupPathTemplate": "DSS/${user}/pythonRRecipes",
+          "limits": [
+            {
+              "key": "memory.max",
+              "value": "40G"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "useImplicitK8sCluster": false,
+  "defaultK8sClusterId": "eks-main",
+  "containerSettings": {
+    "defaultExecutionConfig": "standard",
+    "executionConfigs": [
+      {
+        "name": "standard",
+        "type": "KUBERNETES",
+        "kubernetesNamespace": "${namespace}",
+        "kubernetesResources": {
+          "memRequestMB": 2048,
+          "memLimitMB": 8192,
+          "cpuRequest": 1,
+          "cpuLimit": 2
+        }
+      },
+      {
+        "name": "large-memory",
+        "type": "KUBERNETES",
+        "kubernetesNamespace": "${namespace}",
+        "kubernetesResources": {
+          "memRequestMB": 8192,
+          "memLimitMB": 32768,
+          "cpuRequest": 2,
+          "cpuLimit": 8
+        }
+      }
+    ]
+  },
+  "sparkSettings": {
+    "executionConfigs": [
+      {
+        "name": "spark-standard",
+        "conf": [
+          {
+            "key": "spark.executor.memory",
+            "value": "4g"
+          }
+        ]
+      }
+    ]
+  },
+  "deployerClientSettings": {
+    "mode": "REMOTE",
+    "nodeUrl": "https://deployer.synthetic.example:11200"
+  },
+  "maxRunningActivities": 10,
+  "maxRunningActivitiesPerJob": 4,
+  "jekSettings": {
+    "maxRunningJobs": 5
+  }
+}

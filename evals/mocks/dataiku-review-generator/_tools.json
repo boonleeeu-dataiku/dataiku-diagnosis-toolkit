@@ -1,0 +1,113 @@
+{
+  "tools": [
+    {
+      "description": "Generate a branded Dataiku Platform Review .pptx deck from a completed\n    checklist workbook, writing it to disk and returning its path.\n\n    Mirrors `python3 scripts/build_deck.py`. Runs the same structural\n    validation automatically afterward (see the validate_deck tool) and\n    reports any problems found, rather than requiring a separate call.\n\n    Args:\n        checklist_path: Path to a completed checklist .xlsx (required).\n            A relative path is resolved against this repo's root, not this\n            server process's working directory.\n        customer: Customer name, shown verbatim (upper-cased) on the title\n            slide (required).\n        logo_path: Optional path to a customer logo image, spliced into the\n            title slide. Omit to leave the title slide without a logo.\n        output_path: Output .pptx path. Defaults to\n            \"output/<Customer_Slug>_Platform_Review_<date>.pptx\", where\n            <date> is a YYYY-MM-DD found in the checklist filename, else\n            today's date.\n        rows_per_slide: Max table rows per findings slide. Defaults to\n            config/deck_layout.yaml's table_rows_per_slide (4 if unset).\n        include_pass_items: Also list Pass/Not-Applicable items in findings\n            tables, not just Fail/Partial/Needs Review. If omitted, uses\n            config/deck_layout.yaml's include_pass_items (default true).\n            Unlike the CLI's --include-pass-items flag (which can only turn\n            this on for a run), passing an explicit false here overrides a\n            true config default for this call.\n        base_deck_path: Base branded .pptx to build from. Defaults to\n            \"resources/Dataiku Branding Template 2026.pptx\".\n\n    Returns:\n        A dict with:\n          - output_path: absolute path to the generated .pptx\n          - structural_problems: list of structural-validation problem\n            strings (empty list means the deck passed all automated checks)\n          - data_warnings: list of checklist data inconsistencies (e.g.\n            section totals that don't match Overall Status Counts, Summary\n            rows whose ID/status disagree with the section sheets) -- the\n            deck still built, but may show wrong or missing values; fix the\n            checklist and rebuild rather than patching the deck\n          - manual_qa_checklist: guidance for the manual visual QA pass that\n            automated validation cannot perform (only present when\n            structural_problems is empty)\n          - generator_version: this tool's own version (common.VERSION) that\n            produced the deck\n    ",
+      "inputSchema": {
+        "properties": {
+          "checklist_path": {
+            "title": "Checklist Path",
+            "type": "string"
+          },
+          "customer": {
+            "title": "Customer",
+            "type": "string"
+          },
+          "logo_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Logo Path"
+          },
+          "output_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Output Path"
+          },
+          "rows_per_slide": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rows Per Slide"
+          },
+          "include_pass_items": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Include Pass Items"
+          },
+          "base_deck_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Base Deck Path"
+          }
+        },
+        "required": [
+          "checklist_path",
+          "customer"
+        ],
+        "type": "object",
+        "title": "build_platform_review_deckArguments"
+      },
+      "name": "build_platform_review_deck",
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "build_platform_review_deckDictOutput"
+      }
+    },
+    {
+      "description": "Run structural self-checks against an already-generated .pptx deck\n    (malformed XML, dangling slide relationships, leftover placeholder\n    text). Does not perform layout/visual QA -- see the manual_qa_checklist\n    returned by build_platform_review_deck for that.\n\n    Args:\n        pptx_path: Path to a .pptx file to validate. A relative path is\n            resolved against this repo's root, not this server process's\n            working directory.\n\n    Returns:\n        A dict with:\n          - pptx_path: the resolved absolute path that was checked\n          - passed: true if no structural problems were found\n          - problems: list of human-readable problem strings (empty if\n            passed is true)\n          - generator_version: this tool's own version (common.VERSION) that\n            ran the validation\n    ",
+      "inputSchema": {
+        "properties": {
+          "pptx_path": {
+            "title": "Pptx Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pptx_path"
+        ],
+        "type": "object",
+        "title": "validate_deck_toolArguments"
+      },
+      "name": "validate_deck",
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "validate_deck_toolDictOutput"
+      }
+    }
+  ]
+}

@@ -1,0 +1,245 @@
+#!/usr/bin/env python3
+"""Regenerate the synthetic eval fixtures under tests/fixtures/.
+
+    mcp-server-review-generator/.venv/bin/python tests/fixtures/build_fixtures.py
+
+Writes:
+  bundles/<scenario>/         hand-designed fake diagnosis bundles (see README.md)
+  checklists/eval_checklist.xlsx
+                              a trimmed copy of the bundled default checklist template,
+                              keeping only the rows listed in EVAL_ITEM_IDS
+The expected answers per scenario live in expected/<scenario>.yaml and are maintained
+by hand -- they encode the checklist-review skill's calibrations, not this script.
+
+Everything here is synthetic. Never copy real bundle data into this directory.
+"""
+
+import json
+import shutil
+from pathlib import Path
+
+import openpyxl
+
+HERE = Path(__file__).resolve().parent
+REPO_ROOT = HERE.parent.parent
+TEMPLATE = REPO_ROOT / "skills" / "dataiku-diagnosis-checklist-review" / "resources" / "checklist_template.xlsx"
+
+# Each item exercises one calibration or evidence source in the checklist-review skill.
+EVAL_ITEM_IDS = [
+    "ARCH-001",   # automation-node existence from a design bundle -> always Needs Review
+    "ARCH-002",   # DSS version currency (web lookup, or Needs Review when unavailable)
+    "ARCH-004",   # SSD storage -> sanity-check.json is authoritative
+    "ARCH-010",   # containerized exec config -> Kubernetes-conditional
+    "ARCH-013",   # cluster config -> Kubernetes-conditional
+    "SEC-004",    # cgroups memory limit
+    "SEC-006",    # HTTPS -> reverse-proxy calibration
+    "SCALE-007",  # backend.log error review
+    "SCALE-008",  # backend Xmx sizing
+    "SCALE-009",  # flow limits -> causal chain with OOM evidence
+    "SCALE-011",  # filesystem_root connection
+]
+
+FIXTURE_MARKER = "SYNTHETIC TEST FIXTURE - not real diagnosis data."
+
+
+def write(path: Path, content) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if isinstance(content, (dict, list)):
+        content = json.dumps(content, indent=2) + "\n"
+    path.write_text(content, encoding="utf-8")
+
+
+def root_files(root: Path, *, mem_total_mb: int, xmx: str, oom: bool) -> None:
+    write(root / "diag.txt", f"""{FIXTURE_MARKER}
+> uname -a
+Linux synthetic-host 5.14.0-427.el9.x86_64 #1 SMP x86_64 GNU/Linux
+> printenv
+DKU_BACKEND_JAVA_OPTS=-Xmx{xmx} -XX:+UseG1GC
+DIP_HOME=/data/dataiku/design
+> free -m
+              total        used        free      shared  buff/cache   available
+Mem:          {mem_total_mb}       {mem_total_mb - 4000}        1200          10        2800        3500
+> cat /etc/redhat-release
+Red Hat Enterprise Linux release 9.4 (Plow)
+""")
+    write(root / "timings.txt",
+          "2026-01-01 00:00:00\t2026-01-01 00:00:01\tuname -a\n"
+          "2026-01-01 00:00:01\t2026-01-01 00:00:02\tprintenv\n"
+          "2026-01-01 00:00:02\t2026-01-01 00:00:03\tfree -m\n"
+          "2026-01-01 00:00:03\t2026-01-01 00:00:04\tdmesg\n")
+    dmesg = "[    0.000000] Linux version 5.14.0-427.el9.x86_64 (synthetic)\n"
+    if oom:
+        dmesg += ("[86012.123456] java invoked oom-killer: gfp_mask=0x140cca, order=0\n"
+                  "[86012.123999] Out of memory: Killed process 4242 (java) total-vm:9000000kB, anon-rss:7900000kB\n"
+                  "[90210.000001] Out of memory: Killed process 5151 (python3) total-vm:6000000kB, anon-rss:5800000kB\n")
+    write(root / "dmesg.txt", dmesg)
+
+
+def baseline_bundle(root: Path) -> None:
+    """Design node, no Kubernetes, plain HTTP, populated local project deployer, cgroups
+    disabled, unlimited flow concurrency with an OOM crash chain, filesystem_root present,
+    rotational disk flagged by DSS's own sanity check, and an old (12.x) DSS version."""
+    root_files(root, mem_total_mb=64000, xmx="2g", oom=True)
+    m = root / "data_dataiku" / "design"
+    write(m / "install.ini", """[general]
+nodeid = synthetic-design-01
+nodetype = design
+installid = SYNTHETICINSTALL01
+
+[server]
+port = 11200
+
+[javaopts]
+backend.xmx = 2g
+""")
+    write(m / "dss-version.json", {"product_version": "12.6.0", "product_commitid": "synthetic", "conf_version": "12600"})
+    write(m / "run" / "sanity-check.json", {"messages": [
+        {"severity": "WARNING", "code": "WARN_MISC_DATADIR_ON_ROTATIONAL_DISK",
+         "details": "The DSS data directory /data/dataiku/design is on a rotational (non-SSD) disk."},
+        {"severity": "WARNING", "code": "WARN_SECURITY_NO_CGROUPS",
+         "details": "cgroups resource control is not enabled."},
+    ]})
+    write(m / "run" / "hs_err_pid4242.log", """#
+# There is insufficient memory for the Java Runtime Environment to continue.
+# Native memory allocation (mmap) failed to map 1048576 bytes for committing reserved memory.
+# Possible reasons:
+#   The system is out of physical RAM or swap space
+#
+""")
+    log = ["[2026/01/01-00:00:00.000] [main] INFO  dku.startup - DSS backend starting"]
+    for i in range(1, 6):
+        log.append(f"[2026/01/0{i}-02:00:00.000] [jek-{i}] ERROR dku.jobs.exec - Job failed: "
+                   "java.lang.OutOfMemoryError: Java heap space")
+    log.append("[2026/01/05-03:00:00.000] [sched-1] ERROR dku.scenarios - Scenario run as deleted user 'old_admin'")
+    write(m / "run" / "backend.log", "\n".join(log) + "\n")
+    write(m / "config" / "general-settings.json", {
+        "cgroupSettings": {"enabled": False, "cgroupsVersion": "CGROUPS_V2"},
+        "useImplicitK8sCluster": False,
+        "containerSettings": {"executionConfigs": []},
+        "sparkSettings": {"executionConfigs": []},
+        "deployerClientSettings": {"mode": "LOCAL"},
+        "maxRunningActivities": 0,
+        "maxRunningActivitiesPerJob": 0,
+        "jekSettings": {"maxRunningJobs": 0},
+    })
+    write(m / "config" / "connections.json", {
+        "filesystem_root": {"type": "Filesystem", "params": {"root": "/"}, "allowWrite": True,
+                            "allowedGroups": ["administrators"]},
+        "warehouse_pg": {"type": "PostgreSQL", "params": {"host": "pg.synthetic.example", "db": "dwh"},
+                         "allowWrite": True},
+    })
+    write(m / "config" / "project-deployer" / "infras" / "prod-automation.json", {
+        "id": "prod-automation", "stage": "Production",
+        "automationNodes": [{"url": "https://automation.synthetic.example:11200"}],
+    })
+    write(m / "config" / "project-deployer" / "deployments" / "SALES_FORECAST-on-prod-automation.json", {
+        "id": "SALES_FORECAST-on-prod-automation", "publishedProjectKey": "SALES_FORECAST",
+        "infraId": "prod-automation", "bundleId": "v12",
+    })
+    write(root / "datadir_listing.txt", "\n".join([
+        "  100  4 drwxr-x---   dataiku dataiku  4096 Jan  1 00:00 /data/dataiku/design/config",
+        "  101  4 -rw-r-----   dataiku dataiku  1200 Jan  1 00:00 /data/dataiku/design/config/general-settings.json",
+        "  102  4 -rw-r-----   dataiku dataiku   200 Jan  1 00:00 /data/dataiku/design/config/project-deployer/infras/prod-automation.json",
+        "  103  4 -rw-r-----   dataiku dataiku   200 Jan  1 00:00 /data/dataiku/design/config/project-deployer/deployments/SALES_FORECAST-on-prod-automation.json",
+    ]) + "\n")
+
+
+def k8s_remote_bundle(root: Path) -> None:
+    """Design node with a managed Kubernetes cluster and two differently sized container
+    configs, DSS-terminated HTTPS, a REMOTE deployer, cgroups with a memory limit, bounded
+    flow limits, a clean backend.log and no filesystem_root -- the "healthy" counterpart."""
+    root_files(root, mem_total_mb=64000, xmx="8g", oom=False)
+    m = root / "data_dataiku" / "design"
+    write(m / "install.ini", """[general]
+nodeid = synthetic-design-02
+nodetype = design
+installid = SYNTHETICINSTALL02
+
+[server]
+port = 443
+ssl = true
+ssl_certificate = /etc/dataiku/tls/dss.crt
+ssl_certificate_key = /etc/dataiku/tls/dss.key
+
+[javaopts]
+backend.xmx = 8g
+""")
+    write(m / "dss-version.json", {"product_version": "14.4.3", "product_commitid": "synthetic", "conf_version": "14400"})
+    write(m / "run" / "sanity-check.json", {"messages": []})
+    write(m / "run" / "backend.log",
+          "[2026/01/01-00:00:00.000] [main] INFO  dku.startup - DSS backend starting\n"
+          "[2026/01/01-00:00:05.000] [main] INFO  dku.startup - DSS backend started\n")
+    write(m / "config" / "general-settings.json", {
+        "cgroupSettings": {
+            "enabled": True, "cgroupsVersion": "CGROUPS_V2", "hierarchiesMountPoint": "/sys/fs/cgroup",
+            "pythonRRecipes": {"targets": [{"cgroupPathTemplate": "DSS/${user}/pythonRRecipes",
+                                            "limits": [{"key": "memory.max", "value": "40G"}]}]},
+        },
+        "useImplicitK8sCluster": False,
+        "defaultK8sClusterId": "eks-main",
+        "containerSettings": {
+            "defaultExecutionConfig": "standard",
+            "executionConfigs": [
+                {"name": "standard", "type": "KUBERNETES", "kubernetesNamespace": "${namespace}",
+                 "kubernetesResources": {"memRequestMB": 2048, "memLimitMB": 8192, "cpuRequest": 1, "cpuLimit": 2}},
+                {"name": "large-memory", "type": "KUBERNETES", "kubernetesNamespace": "${namespace}",
+                 "kubernetesResources": {"memRequestMB": 8192, "memLimitMB": 32768, "cpuRequest": 2, "cpuLimit": 8}},
+            ],
+        },
+        "sparkSettings": {"executionConfigs": [{"name": "spark-standard",
+                                                "conf": [{"key": "spark.executor.memory", "value": "4g"}]}]},
+        "deployerClientSettings": {"mode": "REMOTE", "nodeUrl": "https://deployer.synthetic.example:11200"},
+        "maxRunningActivities": 10,
+        "maxRunningActivitiesPerJob": 4,
+        "jekSettings": {"maxRunningJobs": 5},
+    })
+    write(m / "config" / "connections.json", {
+        "warehouse_pg": {"type": "PostgreSQL", "params": {"host": "pg.synthetic.example", "db": "dwh"},
+                         "allowWrite": True},
+    })
+    write(m / "config" / "clusters" / "eks-main.json", {
+        "id": "eks-main", "type": "managed", "architecture": "KUBERNETES",
+        "params": {"config": {"clusterId": "synthetic-eks"}},
+    })
+
+
+SCENARIOS = {
+    "synthetic_design_baseline": baseline_bundle,
+    "synthetic_design_k8s_remote": k8s_remote_bundle,
+}
+
+
+def build_eval_checklist(dest: Path) -> None:
+    """Copy the bundled template and drop every row not in EVAL_ITEM_IDS (and any sheet
+    left empty), so the eval checklist keeps the template's exact columns and wording."""
+    wb = openpyxl.load_workbook(TEMPLATE)
+    found = set()
+    for ws in list(wb.worksheets):
+        for row in range(ws.max_row, 1, -1):
+            item_id = ws.cell(row=row, column=1).value
+            if item_id in EVAL_ITEM_IDS:
+                found.add(item_id)
+            else:
+                ws.delete_rows(row)
+        if ws.max_row < 2:
+            wb.remove(ws)
+    missing = sorted(set(EVAL_ITEM_IDS) - found)
+    if missing:
+        raise SystemExit(f"EVAL_ITEM_IDS not found in the template: {missing}")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    wb.save(dest)
+
+
+def main() -> None:
+    for name, builder in SCENARIOS.items():
+        root = HERE / "bundles" / name
+        shutil.rmtree(root, ignore_errors=True)
+        builder(root)
+        print(f"wrote {root.relative_to(REPO_ROOT)}")
+    dest = HERE / "checklists" / "eval_checklist.xlsx"
+    build_eval_checklist(dest)
+    print(f"wrote {dest.relative_to(REPO_ROOT)}")
+
+
+if __name__ == "__main__":
+    main()

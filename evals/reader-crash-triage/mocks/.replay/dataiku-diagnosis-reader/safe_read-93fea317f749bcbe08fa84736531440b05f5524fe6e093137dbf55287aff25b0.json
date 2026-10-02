@@ -1,0 +1,10 @@
+{
+  "input": {
+    "bundle_root": "/data/bundles/acme_diag",
+    "relative_path": "data_dataiku/design/run/hs_err_pid4242.log"
+  },
+  "output": "[safe_read] file=data_dataiku/design/run/hs_err_pid4242.log size=0.3K lines_returned=6 truncated=false\n---\n#\n# There is insufficient memory for the Java Runtime Environment to continue.\n# Native memory allocation (mmap) failed to map 1048576 bytes for committing reserved memory.\n# Possible reasons:\n#   The system is out of physical RAM or swap space\n#",
+  "verdict": "ok",
+  "recordedAt": "2026-10-02T03:49:37.788Z",
+  "model": null
+}

@@ -1,0 +1,10 @@
+{
+  "input": {
+    "bundle_root": "/data/bundles/acme_diag",
+    "relative_path": "data_dataiku/design/run/backend.log"
+  },
+  "output": "[safe_read] file=data_dataiku/design/run/backend.log size=0.8K lines_returned=8 truncated=false\n---\n[2026/01/01-00:00:00.000] [main] INFO  dku.startup - DSS backend starting\n[2026/01/01-02:00:00.000] [jek-1] ERROR dku.jobs.exec - Job failed: java.lang.OutOfMemoryError: Java heap space\n[2026/01/02-02:00:00.000] [jek-2] ERROR dku.jobs.exec - Job failed: java.lang.OutOfMemoryError: Java heap space\n[2026/01/03-02:00:00.000] [jek-3] ERROR dku.jobs.exec - Job failed: java.lang.OutOfMemoryError: Java heap space\n[2026/01/04-02:00:00.000] [jek-4] ERROR dku.jobs.exec - Job failed: java.lang.OutOfMemoryError: Java heap space\n[2026/01/05-02:00:00.000] [jek-5] ERROR dku.jobs.exec - Job failed: java.lang.OutOfMemoryError: Java heap space\n[2026/01/05-03:00:00.000] [sched-1] ERROR dku.scenarios - Scenario run as deleted user 'old_admin'",
+  "verdict": "ok",
+  "recordedAt": "2026-10-02T03:49:41.486Z",
+  "model": null
+}

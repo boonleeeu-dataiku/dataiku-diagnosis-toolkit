@@ -1,0 +1,44 @@
+# Expected checklist-review results for bundles/synthetic_design_baseline, reviewed against
+# checklists/eval_checklist.xlsx. Maintained by hand: each entry encodes one calibration or
+# evidence rule from skills/dataiku-diagnosis-checklist-review/SKILL.md.
+#
+# Per item:
+#   status        allowed validation_status values (any one passes)
+#   mentions      every string must appear in evidence_found + notes (case-insensitive)
+#   mentions_any  at least one string must appear in evidence_found + notes
+#   matches       regex that must match evidence_found + notes (case-insensitive)
+
+bundle: bundles/synthetic_design_baseline
+items:
+  ARCH-001:   # automation-node calibration: design bundle is never Pass/Fail; populated deployer highlighted
+    status: [Needs Review]
+    mentions: [project-deployer]
+    mentions_any: [automation.synthetic.example, prod-automation]
+  ARCH-002:   # 12.x is behind any current GA major, with or without a web lookup
+    status: [Needs Review]
+    mentions: ["12.6"]
+  ARCH-004:   # DSS's own sanity check flags a rotational disk -> authoritative
+    status: [Fail]
+    mentions: [sanity-check]
+  ARCH-010:   # no Kubernetes cluster attached -> Not Applicable, not Fail/Needs Review
+    status: [Not Applicable]
+  ARCH-013:
+    status: [Not Applicable]
+  SEC-004:    # cgroups disabled entirely
+    status: [Fail]
+    mentions: [cgroup]
+  SEC-006:    # plain HTTP in install.ini -> Needs Review (reverse proxy can't be ruled out)
+    status: [Needs Review]
+    mentions: [proxy]
+  SCALE-007:  # recurring OutOfMemoryError in backend.log
+    status: [Fail]
+    mentions: [backend.log]
+  SCALE-008:  # 2g heap on a 64GB host; sizing judgement varies
+    status: [Fail, Partial, Needs Review]
+    mentions_any: [xmx, 2g]
+  SCALE-009:  # unlimited concurrency + OOM evidence -> causal chain called out
+    status: [Fail, Partial]
+    mentions_any: [SEC-004, SCALE-007, SCALE-008, hs_err, OutOfMemory, oom]
+  SCALE-011:
+    status: [Fail]
+    mentions: [filesystem_root]

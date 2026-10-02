@@ -1,0 +1,10 @@
+{
+  "input": {
+    "bundle_root": "/data/bundles/acme_diag",
+    "relative_path": "dmesg.txt"
+  },
+  "output": "[safe_read] file=dmesg.txt size=0.4K lines_returned=4 truncated=false\n---\n[    0.000000] Linux version 5.14.0-427.el9.x86_64 (synthetic)\n[86012.123456] java invoked oom-killer: gfp_mask=0x140cca, order=0\n[86012.123999] Out of memory: Killed process 4242 (java) total-vm:9000000kB, anon-rss:7900000kB\n[90210.000001] Out of memory: Killed process 5151 (python3) total-vm:6000000kB, anon-rss:5800000kB",
+  "verdict": "ok",
+  "recordedAt": "2026-10-02T03:49:39.263Z",
+  "model": null
+}

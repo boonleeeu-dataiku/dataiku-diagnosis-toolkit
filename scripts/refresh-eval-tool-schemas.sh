@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Regenerate the plugin-eval mock inputs that are derived from the real MCP servers:
+#   evals/mocks/<server>/_tools.json   each server's real tools/list response
+#   evals/reader-crash-triage/mocks/dataiku-diagnosis-reader/fixtures/orient.txt
+#                                      orient.sh output for the synthetic baseline bundle
+# Run after changing a tool's signature or orient.sh's output. Needs both servers built
+# (see README's One-time setup).
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+export DATAIKU_SKILL_DIR="$PWD/skills/dataiku-diagnosis-reader"
+mcp-server-review-generator/.venv/bin/python - <<'EOF'
+import json, os, subprocess
+
+def tools_list(cmd):
+    p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+    def send(obj):
+        p.stdin.write(json.dumps(obj) + "\n"); p.stdin.flush()
+    def recv(i):
+        while True:
+            m = json.loads(p.stdout.readline())
+            if m.get("id") == i:
+                return m
+    send({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
+        "protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "refresh", "version": "0"}}})
+    recv(1)
+    send({"jsonrpc": "2.0", "method": "notifications/initialized"})
+    send({"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}})
+    result = recv(2)["result"]
+    p.kill()
+    return result
+
+for server, cmd in {
+    "dataiku-review-generator": ["mcp-server-review-generator/.venv/bin/python", "mcp-server-review-generator/scripts/mcp_server.py"],
+    "dataiku-diagnosis-reader": ["node", "mcp-server-diagnosis-reader/dist/index.js"],
+}.items():
+    path = f"evals/mocks/{server}/_tools.json"
+    with open(path, "w") as f:
+        f.write(json.dumps(tools_list(cmd), indent=2) + "\n")
+    print(f"wrote {path}")
+EOF
+
+bundle="$PWD/tests/fixtures/bundles/synthetic_design_baseline"
+out=evals/reader-crash-triage/mocks/dataiku-diagnosis-reader/fixtures/orient.txt
+bash skills/dataiku-diagnosis-reader/scripts/orient.sh "$bundle" | sed "s#$bundle#/data/bundles/acme_diag#g" > "$out"
+echo "wrote $out"

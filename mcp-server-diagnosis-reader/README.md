@@ -152,7 +152,22 @@ bundles used only for local development/verification, is gitignored, and is neve
 
 ## Testing
 
-Use the [MCP Inspector](https://github.com/modelcontextprotocol/inspector):
+```sh
+npm test
+```
+
+This builds, then runs the `node:test` suites in `test/` and `scripts/smoke-test.mjs`, all over real
+stdio JSON-RPC against `dist/`, with no extra dependencies. The suites cover:
+- `safe-path` containment: absolute paths, `../` traversal, symlink escapes, prefix-sibling directories
+- `safe_read` caps, pattern filtering and binary refusal
+- `run_orient` output on design and automation bundles
+- that the resource list stays in sync with `references/*.md`
+
+The fixtures in `test/fixtures/bundles/` are hand-written synthetic bundles (see
+`test/fixtures/README.md`). Edge cases that need large or binary files, or symlinks, are built in a
+temp directory at test time.
+
+For interactive exploration, use the [MCP Inspector](https://github.com/modelcontextprotocol/inspector):
 
 ```sh
 npx @modelcontextprotocol/inspector node dist/index.js

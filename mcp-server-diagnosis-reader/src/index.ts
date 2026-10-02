@@ -1,13 +1,19 @@
 // IMPORTANT: this process talks MCP over stdio, so stdout is the JSON-RPC wire. Never write to
 // stdout (no console.log, here or in any dependency) - all diagnostics must go to console.error.
+import { readFileSync } from "node:fs";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { registerResources } from "./resources.js";
 import { registerRunOrientTool } from "./tools/run-orient.js";
 import { registerSafeReadTool } from "./tools/safe-read.js";
 
+// Single source of truth for the reported version: dist/index.js -> ../package.json.
+const { version } = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as {
+  version: string;
+};
+
 async function main() {
-  const server = new McpServer({ name: "dataiku-diagnosis-reader", version: "0.1.0" });
+  const server = new McpServer({ name: "dataiku-diagnosis-reader", version });
 
   registerResources(server);
   registerRunOrientTool(server);

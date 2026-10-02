@@ -1,0 +1,21 @@
+{
+  "cgroupSettings": {
+    "enabled": false,
+    "cgroupsVersion": "CGROUPS_V2"
+  },
+  "useImplicitK8sCluster": false,
+  "containerSettings": {
+    "executionConfigs": []
+  },
+  "sparkSettings": {
+    "executionConfigs": []
+  },
+  "deployerClientSettings": {
+    "mode": "LOCAL"
+  },
+  "maxRunningActivities": 0,
+  "maxRunningActivitiesPerJob": 0,
+  "jekSettings": {
+    "maxRunningJobs": 0
+  }
+}

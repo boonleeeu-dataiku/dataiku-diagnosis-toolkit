@@ -252,19 +252,58 @@ a result and every result was consumed (no silent mismatches) before saving.
 ## 6. Add/update a Summary sheet
 
 Insert a `Summary` sheet as the first tab (recreate it if it already exists,
-so re-running the skill is idempotent) containing:
-- Header: bundle name/path, node/version info, generation date, reviewer
-- Overall status counts (table) across all sheets
-- Per-section status breakdown (table)
-- Critical findings: must-have items that Fail, most causally-central first
-- Other must-have items that are Partial or Needs Review
-- A short, priority-ordered recommendations list, sequencing linked issues
-  together (e.g., root cause before its symptoms)
+so re-running the skill is idempotent).
 
-Match the existing workbook's font/fill conventions (check an existing
-header cell's font/fill before choosing styles) rather than imposing a new
-look. Color-code status cells consistently (e.g., green/red/yellow-ish
-fills) and freeze the header rows.
+The `dataiku-review-deck-builder` skill turns this workbook into a slide
+deck, and its generator finds each Summary block by the exact header text and
+cell style below. Use this layout and these header texts **verbatim**. Wording
+it differently ("Overall status", "Per-section status breakdown") makes the
+deck show zeros or miss whole sections.
+
+1. **Metadata rows**, one per row near the top. The label goes in column A
+   and must end with a colon; the value goes in column B. Use these labels:
+   `Bundle:`, `Node / Version:`, `Diagnosis generated:`, `Report generated:`
+   (today's date as `YYYY-MM-DD`), `Reviewer:`.
+2. **Block headers**, each alone in column A, in this order and with this exact
+   text:
+   - `Overall Status Counts`
+   - `Per-Section Breakdown`
+   - `Critical Findings - Must-Have Items Failing`
+   - `Other Must-Have Items: Partial / Needs Review`
+   - `Priority-Ordered Recommendations`
+
+   Give all five header cells the **identical** font (bold, same size) and
+   fill. The generator recognises a block header by matching the style of the
+   `Overall Status Counts` cell, so no other column-A cell should share that
+   style.
+3. **Under `Overall Status Counts`**: one row per status, with the status name
+   in column A (`Pass`, `Fail`, `Partial`, `Needs Review`, `Not Applicable`)
+   and its count across all sheets in column B. Then add a `Total` row.
+   Further columns, such as must-have / nice-to-have splits, may follow.
+4. **Under `Per-Section Breakdown`**: a header row
+   `Section | Pass | Fail | Partial | Needs Review | Not Applicable`, then one
+   row per section sheet. Column A holds the sheet's tab name exactly as it
+   appears.
+5. **Under the two must-have blocks**: a header row
+   `ID | Section | Title | Status | Key point`, then one row per item. Critical
+   Findings lists must-have items that Fail, most causally-central first.
+   Other Must-Have Items lists those that are Partial or Needs Review. If a
+   block has no items, keep its header and its column-header row with no rows
+   beneath them. Never write a placeholder row such as `None` or "no
+   must-have items failed": the deck generator would show it as a finding
+   whose ID is "None".
+6. **Under `Priority-Ordered Recommendations`**: one pre-numbered action per
+   row in column A (`1. ...`). Put linked issues together, root cause before
+   its symptoms.
+
+Write every count as a literal number, never an Excel formula such as
+`COUNTIF`. openpyxl saves formulas without computed values, so the deck
+generator, which reads cached values, would see them as empty.
+
+Within that layout, match the existing workbook's font/fill conventions (check
+an existing header cell's font/fill before choosing styles) rather than
+imposing a new look. Color-code status cells consistently (e.g.,
+green/red/yellow-ish fills) and freeze the header rows.
 
 ## 7. Deliver
 

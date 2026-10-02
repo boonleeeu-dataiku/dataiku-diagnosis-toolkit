@@ -120,6 +120,41 @@ an internal Dataiku brand asset, not customer/bundle data, so it isn't covered b
 above — it's simply not committed here because of its size (134MB, over GitHub's 100MB limit),
 the same reason its own upstream repo doesn't commit it either.
 
+## Testing
+
+Testing has three tiers, cheapest first. Run the first on every change. Run the third when
+changing a skill, a calibration, or the model you use.
+
+| Tier | What | Command | Cost |
+|---|---|---|---|
+| 1. Unit | Each MCP server's own suite. Vendored from upstream: `mcp-server-review-generator/tests/` (pytest) and `mcp-server-diagnosis-reader/test/` (`node:test`) | `scripts/test.sh fast` | none |
+| 2. Toolkit | Cross-component contracts (template ↔ deck generator schema, skill ↔ tool wording), manifest consistency, vendored-copy drift against the sibling upstream checkouts, and the review-output checker | `scripts/test.sh fast` | none |
+| 3. LLM evals | The skills end to end with a real model, against synthetic bundles. `evals/` holds `claude plugin eval` cases for the reader and deck builder, with mocked MCP tools. `tests/evals/run_review_eval.py` runs the checklist-review skill and scores its workbook item by item | `scripts/test.sh eval [--model <id>] [--runs 3]` | model usage |
+
+**Tiers 1–2** need the one-time setup. `scripts/test.sh` adds `pytest` to the review generator's
+`.venv` on first run. Two tests skip by design:
+- The golden deck test skips without the branding template.
+- The drift test skips without the sibling `../Dataiku Review Generator` and `../Diagnosis Reader`
+  checkouts. Override their locations with `DATAIKU_REVIEW_GENERATOR_REPO` /
+  `DATAIKU_DIAGNOSIS_READER_REPO`.
+
+**Tier 3 and model changes.** The eval scenarios are synthetic bundles under `tests/fixtures/`.
+Each is designed to trigger specific checklist-review calibrations, and its expected answers are
+in `tests/fixtures/expected/*.yaml`. To check a model change or a skill edit:
+
+```sh
+mcp-server-review-generator/.venv/bin/python tests/evals/run_review_eval.py --model <current> --save-baseline
+mcp-server-review-generator/.venv/bin/python tests/evals/run_review_eval.py --model <candidate>
+mcp-server-review-generator/.venv/bin/python tests/evals/compare.py \
+    evals/baselines/review-<current>.json evals/results/review/<stamp>/summary.json
+```
+
+`compare.py` flags any scenario or checklist item whose pass rate dropped by more than one run
+in three. To check any finished review by hand, run
+`tests/lib/check_review_output.py <review.xlsx> [--bundle <dir>]`. It confirms the workbook has
+the schema and status vocabulary the deck generator needs, and that every evidence path it cites
+exists in the bundle.
+
 ## Versioning & maintenance
 
 This plugin's own release is versioned via `.claude-plugin/plugin.json`'s top-level `version`.

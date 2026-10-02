@@ -10,8 +10,6 @@ Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since
 that gets copied/symlinked into a skills root independently of the rest of this repo. See
 `../CLAUDE.md` for how this relates to `mcp-server-diagnosis-reader/`'s own versioning.
 
-## [Unreleased]
-
 ## [0.1.0] - 2026-09-21
 
 ### Added
@@ -22,5 +20,4 @@ that gets copied/symlinked into a skills root independently of the rest of this 
   and documented limitations.
 - Spark-on-Kubernetes namespace fields documented in `references/data-dir-runtime-and-codeenvs.md`.
 
-[Unreleased]: https://github.com/boonleeeu-dataiku/dataiku-diagnosis-reader/compare/skill-v0.1.0...HEAD
 [0.1.0]: https://github.com/boonleeeu-dataiku/dataiku-diagnosis-reader/releases/tag/skill-v0.1.0
