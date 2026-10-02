@@ -29,7 +29,11 @@ checklist spreadsheet.
 - **`skills/dataiku-review-deck-builder/`** — step 2 of the workflow: turns a completed checklist
   (produced by `dataiku-diagnosis-checklist-review`) into a branded, customer-facing Platform
   Review `.pptx` deck, via the `mcp-server-review-generator` tools below. Authored directly in
-  this repo.
+  this repo. It builds the verdict-first "v2" deck (about 20 slides: verdict on Pass / applicable with
+  N/A excluded, instance snapshot, three risks, quick wins, what we need from you, roadmap, then an
+  appendix of Fail / Partial / Needs Review rows), with a `narrative.json` that Claude drafts
+  from each bundle's own checklist on every run (the tool validates it against item statuses). A build
+  without a narrative, possible only from the plain script, falls back to generic text derived from cells.
 - **`mcp-server-review-generator/`** — a local Python MCP server exposing
   `build_platform_review_deck` and `validate_deck` tools that generate/validate the deck. Vendored
   from a separate upstream repo — see [Versioning & maintenance](#versioning--maintenance) below.

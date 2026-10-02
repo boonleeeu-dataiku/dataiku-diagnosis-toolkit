@@ -1,0 +1,12 @@
+{
+  "caveats": ["SEC-009"],
+  "verdict_title": "Example verdict sentence",
+  "takeaways": [
+    {"heading": "What is sound", "tone": "good", "body": "Example body."},
+    {"heading": "What is at risk", "tone": "risk", "body": "Example body."},
+    {"heading": "Quick wins", "tone": "win", "body": "Example body."}
+  ],
+  "risk1": {"title": "Risk 1: example", "tiles": [{"number": "98", "label": "example", "id": "SEC-001", "note": "example"}],
+            "risk": "Example.", "fix": [{"text": "Example step", "id": "SCALE-009"}]},
+  "roadmap": {"now": [{"effort": "S", "action": "Example", "ids": ["SCALE-010"]}], "next": [], "plan": []}
+}

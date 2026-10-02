@@ -41,3 +41,19 @@ cell_char_limits:
   description: 260
   critical_finding_card: 150
   recommendation_card: 120
+
+# v2 (verdict-first, ~20 slide) deck. See scripts/build_deck_v2.py.
+v2:
+  detail_max_rows: 7        # hard cap on rows per appendix findings slide
+  passed_title_chars: 45    # Passed-checks slide: truncate titles to this
+  # Needs Review items are split by owner using these lowercase keywords in the
+  # item's Action text (first owner, in this order, with a match wins).
+  owner_keywords:
+    "AI platform owner": ["ai platform", "ai owner"]
+    "Infrastructure": ["infra team", "infrastructure team", "infra owner"]
+    "Security and identity": ["security owner", "security team", "identity team"]
+    "Platform team": ["platform"]
+  # Fallback owner when no keyword matches, by checklist ID prefix.
+  owner_by_id_prefix:
+    GENAI: "AI platform owner"
+    ADVSEC: "Security and identity"

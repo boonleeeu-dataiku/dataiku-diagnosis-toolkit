@@ -368,3 +368,8 @@ bundle (e.g. `<bundle-name>_checklist_review.xlsx`) and send it back to the
 conversation. Give a short summary of headline results (counts + the 1-3
 most important findings) rather than repeating the whole checklist back in
 chat.
+
+If the user also asked for a deck (or a "report and powerpoint"), continue with the
+`dataiku-review-deck-builder` skill and follow its order of work in full, including drafting the
+`<checklist_stem>_narrative.json` from this bundle's results before building. Do not build the deck
+without a narrative; if you cannot, say so in your final summary.

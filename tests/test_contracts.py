@@ -103,3 +103,14 @@ def test_deck_skill_error_phrase_matches_server_message():
     """The skill branches on the literal "Base deck not found" error text."""
     assert '"Base deck not found"' in DECK_SKILL
     assert 'f"Base deck not found: ' in MCP_SERVER
+
+
+def test_deck_skill_requires_a_narrative_when_an_llm_runs_it():
+    """The narrative is the judgment text the tool can't derive; skipping it gives a generic deck."""
+    for phrase in ("Order of work (required", "checklist_sha256", "narrative_used", "Do not skip this step"):
+        assert phrase in DECK_SKILL, f"deck skill no longer says {phrase!r}"
+
+
+def test_review_skill_hands_off_to_the_deck_builder_with_a_narrative():
+    assert "dataiku-review-deck-builder" in REVIEW_SKILL
+    assert "_narrative.json" in REVIEW_SKILL

@@ -26,3 +26,6 @@ diagnosis*.zip
 # Eval run outputs (claude plugin eval + tests/evals/run_review_eval.py)
 evals/results/
 .pytest_cache/
+
+# v2 deck narratives hold customer findings
+*_narrative.json

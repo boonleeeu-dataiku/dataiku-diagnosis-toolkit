@@ -96,10 +96,11 @@ TABLE_DATA_FONT_SIZE = 900     # 9pt
 # checklist) has room to render on one line instead of overflowing into the
 # next column; Statement/Evidence & Notes (which have the most slack -- see
 # cell_char_limits in config/deck_layout.yaml) give up the difference. Other
-# Must-Have's ID width instead comes from its 3 always-empty trailing
-# columns (see build_other_must_have_rows).
+# Must-Have only has 3 fields, so make_table_slides() drops the template's 3
+# trailing columns (drop_cols) and these 3 widths take up the full width.
 FINDINGS_WIDTHS = [850000, 1500000, 950000, 700000, 2167038, 2167037]
-OTHER_MUST_HAVE_WIDTHS = [850000, 5500000, 1000000, 328025, 328025, 328025]
+OTHER_MUST_HAVE_WIDTHS = [900000, 6434075, 1000000]
+OTHER_MUST_HAVE_DROP_COLS = [3, 4, 5]
 
 # Row height (EMU) sized for a guaranteed 3 wrapped lines at
 # TABLE_DATA_FONT_SIZE (9pt): 3 x ~137,160 EMU/line + 2x45,720 EMU top/bottom
@@ -497,7 +498,6 @@ def build_other_must_have_rows(data: read_checklist.ChecklistData, cell_limits) 
             entry.get("id", ""),
             truncate(_summary_entry_field(entry, "title", "title", items_by_id), 90),
             _summary_entry_field(entry, "status", "validation_status", items_by_id) or "—",
-            "", "", "",
         ])
     return rows
 
@@ -647,6 +647,7 @@ def make_table_slides(work_dir: Path, template_xml: str, template_rels: str | No
                        status_col: int | None = None, status_color_map: dict | None = None,
                        no_wrap_cols: list[int] | None = None, font_fit_cols: list[int] | None = None,
                        single_line_cols: list[int] | None = None,
+                       drop_cols: list[int] | None = None,
                        header_font_size: int = TABLE_HEADER_FONT_SIZE,
                        data_font_size: int = TABLE_DATA_FONT_SIZE) -> list:
     """Clone template_xml (TABLE_TEMPLATE_SLIDE's snapshot) once per page in
@@ -661,9 +662,19 @@ def make_table_slides(work_dir: Path, template_xml: str, template_rels: str | No
     _fit_single_line_size()), relabel its header, set its title via
     title_new_fn(page_idx, total_pages), and insert each clone after the
     previous one (starting after `after`). Returns the new slide filenames,
-    in order."""
+    in order. drop_cols (0-indexed, in the template's own column numbering)
+    are deleted from the table first, for a schema with fewer columns than
+    the 6-column template; every other column argument then refers to the
+    remaining columns."""
     new_filenames = []
-    tmpl_tbl = tables.set_column_widths(tables.extract_table(template_xml), column_widths)
+
+    def _prepared_table(xml):
+        tbl = tables.extract_table(xml)
+        if drop_cols:
+            tbl = tables.delete_columns(tbl, drop_cols)
+        return tables.set_column_widths(tbl, column_widths)
+
+    tmpl_tbl = _prepared_table(template_xml)
     if no_wrap_cols:
         tmpl_tbl = tables.set_table_no_wrap(tmpl_tbl, no_wrap_cols)
     row_template = tables.set_row_height(tables.row_template(tmpl_tbl, header_row_count=header_row_count), row_height)
@@ -697,7 +708,7 @@ def make_table_slides(work_dir: Path, template_xml: str, template_rels: str | No
         slide_xml = slide_path.read_text(encoding="utf-8")
         slide_xml = text.replace_text_run(slide_xml, "Table", title_new_fn(page_idx, total_pages))
 
-        tbl = tables.set_column_widths(tables.extract_table(slide_xml), column_widths)
+        tbl = _prepared_table(slide_xml)
         if no_wrap_cols:
             tbl = tables.set_table_no_wrap(tbl, no_wrap_cols)
         tbl = tables.set_font_size(tbl, header_font_size)  # header row's size; data rows below are replaced wholesale
@@ -1195,13 +1206,14 @@ def build_deck(checklist_path: Path, customer: str, output_path: Path, base_deck
                 work_dir, table_tmpl_xml, table_tmpl_rels, header_row_count=1,
                 rows_per_page=pages, after=last_inserted,
                 title_new_fn=lambda i, n: f"Other Must-Have Items" + (f" ({i}/{n})" if n > 1 else ""),
-                header_values=["ID", "Title", "Status", "", "", ""],
+                header_values=["ID", "Title", "Status"],
                 column_widths=_fit_id_column(
                     OTHER_MUST_HAVE_WIDTHS, [r[0] for r in other_rows], OTHER_MUST_HAVE_ID_DONOR_COL,
                 ),
                 row_height=OTHER_MUST_HAVE_ROW_HEIGHT,
                 status_col=2, status_color_map=STATUS_COLORS_LOWER,
                 no_wrap_cols=OTHER_MUST_HAVE_NO_WRAP_COLS, single_line_cols=[0],
+                drop_cols=OTHER_MUST_HAVE_DROP_COLS,
             )
             last_inserted = new_slides[-1] if new_slides else last_inserted
 
@@ -1268,6 +1280,11 @@ def parse_args(argv=None):
     parser.add_argument("--rows-per-slide", type=int, default=None, help="Max table rows per slide (default: config/deck_layout.yaml)")
     parser.add_argument("--include-pass-items", action="store_true", help="Include Pass/Not-Applicable items in findings tables too")
     parser.add_argument("--base-deck", type=Path, default=None, help='Base .pptx to build from (default: "resources/Dataiku Branding Template 2026.pptx")')
+    parser.add_argument("--style", choices=["v1", "v2"], default="v2",
+                        help="v2: verdict-first ~20-slide storyline (default, needs python-pptx). v1: one slide per few items")
+    parser.add_argument("--narrative", type=Path, default=None,
+                        help="v2 only (default style): narrative.json with the human-judgment text (see scripts/narrative.py). "
+                             "Default: <checklist_stem>_narrative.json beside the checklist, if present")
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("--version", action="version", version=f"%(prog)s {common.VERSION}")
     return parser.parse_args(argv)
@@ -1291,17 +1308,24 @@ def main(argv=None):
     if args.logo and not args.logo.exists():
         parser_error(f"Logo file not found: {args.logo}")
 
-    output_path = build_deck(
-        checklist_path=args.checklist,
-        customer=args.customer,
-        output_path=output_path,
-        base_deck=base_deck,
-        logo_path=args.logo,
-        rows_per_slide=rows_per_slide,
-        include_pass_items=include_pass_items,
-    )
-
-    data_warnings = collect_data_warnings(args.checklist)
+    if args.narrative and args.style != "v2":
+        parser_error("--narrative only applies to --style v2")
+    if args.style == "v2":
+        import build_deck_v2
+        result = build_deck_v2.build_v2(args.checklist, args.customer, output_path, base_deck, args.logo, args.narrative)
+        output_path = result["output_path"]
+        data_warnings = result["warnings"]
+    else:
+        output_path = build_deck(
+            checklist_path=args.checklist,
+            customer=args.customer,
+            output_path=output_path,
+            base_deck=base_deck,
+            logo_path=args.logo,
+            rows_per_slide=rows_per_slide,
+            include_pass_items=include_pass_items,
+        )
+        data_warnings = collect_data_warnings(args.checklist)
     if data_warnings:
         print(f"\nWARNING: {len(data_warnings)} checklist data inconsistency(ies) -- the deck built, but may "
               f"show wrong or missing values:")

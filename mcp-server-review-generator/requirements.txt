@@ -4,3 +4,5 @@ Pillow
 # Only pin here: the mcp SDK moves fast and 2.x introduced breaking changes
 # over 1.x. Needed only for scripts/mcp_server.py.
 mcp>=2.0.0
+# Only for the v2 deck (scripts/build_deck_v2.py); the v1 path never imports it.
+python-pptx>=1.0.2

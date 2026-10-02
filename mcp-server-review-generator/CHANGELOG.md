@@ -7,6 +7,46 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-02
+
+### Added
+
+- A v2 build with no narrative given uses `<checklist_stem>_narrative.json` beside the checklist when it
+  exists, and reports `narrative_used` (MCP result).
+- A narrative may carry `checklist_sha256`; if the checklist changed since, the build warns that the prose may
+  be stale. `tests/fixtures/narrative_example.json` is a synthetic schema example.
+
+## [0.4.0] - 2026-10-02
+
+### Added
+
+- A v2 deck style (`--style v2`, MCP `style="v2"`): a verdict-first ~20-slide storyline (verdict, instance
+  snapshot, three risks, quick wins, what we need from you, roadmap, then an appendix of non-Pass/non-N/A
+  findings). The headline is Pass / applicable (N/A excluded); the TOC, section dividers, "Thank You" and
+  generator-version line are dropped. v2 is the default; `--style v1` / `style="v1"` keeps the previous deck unchanged.
+- `scripts/deck_analysis.py`: applicable denominator, notes parser (headline / evidence / Action), root-cause
+  grouping, quick-win classifier (Fail + single setting), Needs Review split by owner keywords, N/A groups,
+  and a warning when the checklist's own recommendations cite a Pass or N/A item.
+- Optional `narrative.json` (`--narrative`, MCP `narrative_path`) for the human-judgment text. It is validated
+  in `scripts/narrative.py`: cited IDs must exist and their status must support the claim (a Pass item needs an
+  explicit `caveats` entry), risk-tile figures must appear in the cited row, owner groups must equal the Needs
+  Review total. Omitted keys fall back to text derived from checklist cells.
+- The MCP build tool also returns `slide_count`, `applicable_count`, `pass_count`, `quick_wins` and
+  `owner_groups` for v2 builds.
+- `config/deck_layout.yaml` `v2:` block (row cap, title truncation, owner keywords).
+
+### Changed
+
+- `python-pptx` is now a dependency, used only by the v2 module. The raw-OOXML rule still governs the v1 path.
+
+## [0.3.1] - 2026-10-02
+
+### Fixed
+
+- The Other Must-Have Items slides no longer carry 3 empty trailing columns. They came from the 6-column
+  table template; `make_table_slides()` now drops them (`drop_cols`, `tables.delete_columns()`) and the ID/
+  Title/Status columns take the full width.
+
 ## [0.3.0] - 2026-10-02
 
 ### Changed

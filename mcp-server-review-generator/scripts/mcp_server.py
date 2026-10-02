@@ -75,6 +75,8 @@ def build_platform_review_deck(
     rows_per_slide: int | None = None,
     include_pass_items: bool | None = None,
     base_deck_path: str | None = None,
+    style: str = "v2",
+    narrative_path: str | None = None,
 ) -> dict[str, Any]:
     """Generate a branded Dataiku Platform Review .pptx deck from a completed
     checklist workbook, writing it to disk and returning its path.
@@ -105,6 +107,16 @@ def build_platform_review_deck(
             true config default for this call.
         base_deck_path: Base branded .pptx to build from. Defaults to
             "resources/Dataiku Branding Template 2026.pptx".
+        style: "v2" (default; the verdict-first ~20-slide storyline: verdict,
+            instance snapshot, three risks, quick wins, what we need from
+            you, roadmap, then an appendix) or "v1" (one findings slide per
+            few items). v2 ignores rows_per_slide/include_pass_items.
+        narrative_path: v2 only. Optional narrative.json with the
+            human-judgment text (verdict, takeaways, risks, roadmap...).
+            If omitted, a file named <checklist_stem>_narrative.json beside the
+            checklist is used when present. Every cited ID must exist and its status must support the
+            claim, or the call fails with a specific error. Omitted keys
+            fall back to text derived from checklist cells.
 
     Returns:
         A dict with:
@@ -144,15 +156,27 @@ def build_platform_review_deck(
     if logo is not None and not logo.exists():
         raise FileNotFoundError(f"Logo file not found: {logo}")
 
-    resolved_output = build_deck.build_deck(
-        checklist_path=checklist,
-        customer=customer,
-        output_path=resolved_output,
-        base_deck=base_deck,
-        logo_path=logo,
-        rows_per_slide=effective_rows_per_slide,
-        include_pass_items=effective_include_pass_items,
-    )
+    if style not in ("v1", "v2"):
+        raise ValueError(f"style must be 'v1' or 'v2', got {style!r}")
+    narrative = _resolve(narrative_path) if narrative_path else None
+    if narrative is not None and style != "v2":
+        raise ValueError("narrative_path only applies to style='v2'")
+
+    built_v2 = None
+    if style == "v2":
+        import build_deck_v2
+        built_v2 = build_deck_v2.build_v2(checklist, customer, resolved_output, base_deck, logo, narrative)
+        resolved_output = built_v2["output_path"]
+    else:
+        resolved_output = build_deck.build_deck(
+            checklist_path=checklist,
+            customer=customer,
+            output_path=resolved_output,
+            base_deck=base_deck,
+            logo_path=logo,
+            rows_per_slide=effective_rows_per_slide,
+            include_pass_items=effective_include_pass_items,
+        )
 
     try:
         problems = validate_deck_lib.validate(resolved_output)
@@ -162,9 +186,11 @@ def build_platform_review_deck(
     result = {
         "output_path": str(resolved_output),
         "structural_problems": problems,
-        "data_warnings": build_deck.collect_data_warnings(checklist),
+        "data_warnings": built_v2["warnings"] if built_v2 else build_deck.collect_data_warnings(checklist),
         "generator_version": common.VERSION,
     }
+    if built_v2:
+        result.update({k: built_v2[k] for k in ("slide_count", "narrative_used", "applicable_count", "pass_count", "quick_wins", "owner_groups")})
     if not problems:
         result["manual_qa_checklist"] = validate_deck_lib.MANUAL_QA_CHECKLIST
     return result

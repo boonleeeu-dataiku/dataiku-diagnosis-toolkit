@@ -19,18 +19,60 @@ Load the deferred tools if needed (`ToolSearch` with
 
 ## 1. Generate the deck
 
+**Order of work (required whenever you, an LLM, are running this skill):**
+1. Make sure the checklist is final. Any later edit changes its hash.
+2. Draft the narrative (1b) from this checklist's rows, for this bundle only. Do not skip this step or
+   build first and "add it later": the tool's fallback text is generic and is not customer-ready.
+3. Compute `checklist_sha256`, write `<checklist_stem>_narrative.json` beside the checklist, then build (1a).
+4. If the tool rejects the narrative, fix the narrative and rebuild. Never drop it to get a build through.
+5. In your report, state whether a narrative was used (`narrative_used`). If you did not draft one, say so
+   plainly and say the deck's judgment text is auto-derived and needs reviewer rewriting.
+
+Only a plain script run with no LLM present may build without a narrative.
+
+### 1b. Draft the narrative (v2)
+
+**Ownership:** the reviewer who owns the checklist owns the narrative. You draft it, the reviewer reads and
+edits it before the deck goes to the customer, and it is redrafted whenever the checklist changes. The tool
+validates facts only (IDs, statuses, figures), not prose. It holds customer findings, so never commit it.
+Save it beside the checklist as `<checklist_stem>_narrative.json`; the tool finds it without `narrative_path`.
+Add `"checklist_sha256"` (from `shasum -a 256 <checklist>`) so a later build warns if the checklist changed.
+
+The tool derives counts, root-cause groups, quick wins, the Needs Review split by owner and the N/A groups
+from the checklist. The judgment text is yours: write a `narrative.json` next to the checklist, from its
+rows only. Never copy another customer's text. Keys (all optional; omitted ones fall back to text derived from
+the cells):
+- `verdict_title`, `highlights`, `takeaways` (exactly 3: `heading`, `body`, `tone` good/risk/win),
+  `snapshot_title`, `snapshot` (up to 8 cards: `label`, `value`, `note`, `state` ok/watch/neutral).
+- `risk1` (`title`, `tiles[{number,label,id,note}]`, `risk`, `fix[{text,id}]`, `caveat`), `risk2` (`title`,
+  `table[{id,setting,today,target}]`, `positives`), `risk3` (`title`, `cards[{heading,ids,found,todo}]`).
+- `quick_wins` (`rows[{id,setting,from,to,confirm}]`, Fail items that are single settings), `owners`
+  (`groups[{owner,asks[{id,ask}]}]`, must cover every Needs Review item once), `roadmap`
+  (`now`/`next`/`plan`, each `{effort S|M|L, action, ids}`, plus `footnote`), `na_groups`
+  (`{heading,note,ids}`, must cover every N/A item once), `caveats` (Pass IDs that may be cited as a
+  "Pass, with caveat").
+
+Rules: group findings by root cause (shared evidence, "see SEC-004" in Action text); titles state a conclusion;
+every figure on a main slide must appear in a checklist cell; never cite a Pass item as a problem unless it is
+under `caveats`; effort is indicative. If the tool rejects the narrative, fix the narrative (or the
+checklist), not the tool.
+
 Call `build_platform_review_deck` with:
 - `checklist_path` (required) — the completed checklist `.xlsx`.
 - `customer` (required) — customer name, shown on the title slide.
 - `logo_path` (optional) — a customer logo image for the title slide.
 - `output_path` (optional) — defaults to `output/<Customer_Slug>_Platform_Review_<date>.pptx`.
-- `rows_per_slide` / `include_pass_items` (optional) — layout tuning; leave unset unless the user
+- `style` — `"v2"` (the default: verdict-first, about 20 slides). Pass `"v1"` (one findings slide per few
+  items) only if the user asks for the long form.
+- `narrative_path` (v2 only, optional) — a `narrative.json` you draft in step 1b.
+- `rows_per_slide` / `include_pass_items` (optional, v1 only) — layout tuning; leave unset unless the user
   asks for something specific.
 - `base_deck_path` (optional) — only needed if the branding template isn't at its default location
   (see "If the base deck isn't found" below).
 
 This already runs structural validation internally and returns
-`{output_path, structural_problems, data_warnings, manual_qa_checklist, generator_version}` — no separate
+`{output_path, structural_problems, data_warnings, manual_qa_checklist, generator_version}` (v2 adds
+`slide_count, narrative_used, applicable_count, pass_count, quick_wins, owner_groups`) — no separate
 `validate_deck` call is needed for a normal run.
 
 ## 2. If the base deck isn't found
@@ -49,7 +91,8 @@ Don't guess a path — always get it from the user or a real error message.
 - If `data_warnings` is non-empty, the deck built but may show wrong or missing values (e.g.
   section totals that don't match Overall Status Counts, or Summary rows whose ID/status disagree
   with the section sheets). List the warnings, fix the **checklist** (not the generated deck), and
-  rebuild. Hand-editing the deck would leave the checklist wrong and get overwritten by the next
+  rebuild. A warning that a recommendation cites a Pass or N/A item means the checklist's own
+  recommendations need fixing. Hand-editing the deck would leave the checklist wrong and get overwritten by the next
   build.
 - If `structural_problems` is non-empty, don't declare success — list the problems and say the
   deck needs another look before sending it out.

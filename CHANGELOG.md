@@ -10,6 +10,43 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-02
+
+### Changed
+
+- `dataiku-review-deck-builder`: drafting the v2 `narrative.json` is now a required step whenever Claude runs
+  the skill (finalize checklist, draft narrative from that bundle's rows, record `checklist_sha256`, then build;
+  fix and rebuild if the tool rejects it; report whether `narrative_used`). Only a plain script run with no LLM
+  may build without one. Previously this was guidance a run could skip, giving a generic fallback deck.
+- `dataiku-diagnosis-checklist-review`: when the user also asks for a deck, it hands off to the deck builder
+  and its narrative step instead of building without one.
+
+### Added
+
+- Contract tests that fail if either skill drops the narrative requirement.
+
+## [0.11.0] - 2026-10-02
+
+### Changed
+
+- Re-synced `mcp-server-review-generator` to upstream v0.5.0: v2 is the default style, a v2 build
+  auto-discovers `<checklist_stem>_narrative.json` beside the checklist, and warns when the checklist changed
+  since the narrative was written. `*_narrative.json` is gitignored (it holds customer findings).
+- The deck-builder skill now states that the reviewer who owns the checklist owns the narrative.
+
+## [0.10.0] - 2026-10-02
+
+### Added
+
+- Verdict-first "v2" Platform Review deck: re-synced `mcp-server-review-generator` to upstream v0.4.0, adding
+  `style="v2"` (now the default; `"v1"` keeps the old deck) and an optional `narrative_path` to `build_platform_review_deck`. The `dataiku-review-deck-builder`
+  skill now asks for v2 and drafts the `narrative.json`, which the tool validates against item statuses.
+- `python-pptx` is a new dependency of the review generator (v2 only); the launcher reinstalls on the next start.
+
+### Changed
+
+- The generator sync also picks up upstream v0.3.1 (Other Must-Have Items drops empty trailing columns).
+
 ## [0.9.0] - 2026-10-02
 
 ### Changed
