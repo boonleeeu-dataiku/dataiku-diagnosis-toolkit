@@ -10,6 +10,19 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-02
+
+### Changed
+
+- `dataiku-diagnosis-checklist-review`: the `notes` column is now a crisp, slide-ready summary (a
+  headline plus up to 3 `•` bullets, ~320 characters, no file paths), so a downstream deck can use
+  it on its own. `evidence_found` stays the detailed audit trail (paths, keys, log lines). The
+  Summary `Key point` column is held to one short line too.
+- `tests/lib/check_review_output.py` lints `notes` for length, bullet count and file paths.
+- Re-synced `mcp-server-review-generator` to upstream v0.2.0: the deck's findings table now shows
+  `notes` only (falling back to `evidence_found` when empty), multi-line cells render as one
+  paragraph per line, and speaker notes list Evidence and Notes separately.
+
 ## [0.7.0] - 2026-10-02
 
 ### Added

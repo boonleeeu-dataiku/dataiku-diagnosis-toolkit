@@ -7,6 +7,17 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-02
+
+### Changed
+
+- The findings table's last column (now headed `Notes`) shows the checklist's `notes` column
+  instead of `evidence_found` + `notes` joined, so slides carry the crisp, bulleted summary the
+  checklist-review skill now writes. Falls back to `evidence_found` when `notes` is empty. The
+  full `evidence_found` and `notes` still go to the slide's speaker notes, as separate lines.
+- Table cells render a multi-line value as one paragraph per line (a raw newline in a single
+  run doesn't break the line in PowerPoint), and the font-fit heuristic counts each line.
+
 ## [0.1.6] - 2026-10-02
 
 ### Added

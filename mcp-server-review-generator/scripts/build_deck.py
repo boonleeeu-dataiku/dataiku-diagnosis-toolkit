@@ -247,21 +247,26 @@ def _fit_cell_text(text_value: str, col_width_emu: int, row_height_emu: int,
     usable_w = col_width_emu - 2 * side_inset_emu
     usable_h = row_height_emu - 2 * top_bottom_inset_emu
 
+    def lines_needed(chars_per_line: int) -> int:
+        # Each "\n"-separated line is its own paragraph (see tables._fill_cell),
+        # so a short line still occupies a whole line of the cell.
+        return sum(max(1, -(-len(ln) // chars_per_line)) for ln in text_value.splitlines() or [""])
+
     for size in steps:
         font_pt = size / 100
         avg_char_w = 0.5 * font_pt * 12700
         line_h = 1.2 * font_pt * 12700
         chars_per_line = max(1, int(usable_w // avg_char_w))
         max_lines = max(1, int(usable_h // line_h))
-        if len(text_value) <= chars_per_line * max_lines:
+        if lines_needed(chars_per_line) <= max_lines:
             return text_value, size
 
     floor_size = steps[-1]
     avg_char_w = 0.5 * (floor_size / 100) * 12700
     chars_per_line = max(1, int(usable_w // avg_char_w))
-    max_chars = chars_per_line * max_lines_cap
-    if len(text_value) <= max_chars:
+    if lines_needed(chars_per_line) <= max_lines_cap:
         return text_value, floor_size
+    max_chars = chars_per_line * max_lines_cap
     return text_value[: max(0, max_chars - 1)].rstrip() + "…", floor_size
 
 
@@ -386,38 +391,48 @@ def build_scorecard_rows(data: read_checklist.ChecklistData, ordered_sections: l
     return rows
 
 
+def _finding_cell_text(item) -> str:
+    """What the findings table's last column shows for one item: its `notes`
+    (the checklist-review skill writes these as a crisp headline plus bullets
+    for exactly this purpose). `evidence_found` is the long-form audit trail
+    and stays out of the table; it is still in the slide's speaker notes (see
+    _finding_note_lines). Falls back to `evidence_found` when `notes` is
+    empty, e.g. an older or hand-filled checklist, so a finding never
+    silently loses all its text."""
+    return (item.notes or item.evidence_found or "").strip()
+
+
 def _finding_note_lines(item) -> list:
-    """Full, untruncated Statement/Evidence & Notes for one checklist item,
+    """Full, untruncated Statement/Evidence/Notes for one checklist item,
     as speaker-notes paragraphs (a trailing "" is a blank-paragraph
     separator before the next item). Shared by both a section's card layout
     and its table fallback -- see build_section_detail_slides -- so every
     findings slide's notes read the same way regardless of which layout its
     visible content ended up using."""
-    comments = " ".join(x for x in [item.evidence_found, item.notes] if x)
     return [
         f"{item.id}: {item.title}",
         f"Statement: {(item.statement or '—').strip()}",
-        f"Evidence & Notes: {(comments or '—').strip()}",
+        f"Evidence: {(item.evidence_found or '—').strip()}",
+        f"Notes: {(item.notes or '—').strip()}",
         "",
     ]
 
 
 def build_findings_rows(items: list) -> list:
-    """Statement/Evidence & Notes are left untruncated -- make_table_slides()
+    """Statement/Notes are left untruncated -- make_table_slides()
     shrinks their font per-cell to fit instead (see FINDINGS_FONT_FIT_COLS),
     so a long value only loses context to a trailing "..." in the rare case
     even that can't make it fit (see _fit_cell_text()'s docstring) -- the
     full text still reaches speaker notes either way."""
     rows = []
     for item in items:
-        comments = " ".join(x for x in [item.evidence_found, item.notes] if x)
         rows.append([
             item.id,
             truncate(item.title, 60),
             format_priority(item.priority),
             item.validation_status or "—",
             (item.statement or "").strip(),
-            comments.strip(),
+            _finding_cell_text(item),
         ])
     return rows
 
@@ -866,7 +881,7 @@ def build_section_detail_slides(work_dir: Path, template_xml: str, template_rels
         work_dir, template_xml, template_rels, header_row_count=1,
         rows_per_page=pages, after=after,
         title_new_fn=lambda i, n, name=section_display: f"Findings — {name}" + (f" ({i}/{n})" if n > 1 else ""),
-        header_values=["ID", "Title", "Priority", "Status", "Statement", "Evidence & Notes"],
+        header_values=["ID", "Title", "Priority", "Status", "Statement", "Notes"],
         column_widths=_fit_id_column(FINDINGS_WIDTHS, [it.id for it in selected], FINDINGS_ID_DONOR_COL),
         row_height=FINDINGS_ROW_HEIGHT,
         status_col=STATUS_COL, status_color_map=STATUS_COLORS_LOWER,

@@ -64,14 +64,29 @@ def expected_column_count(template_row_xml: str) -> int:
     return len(extract_cells(template_row_xml))
 
 
+PARA_RE = re.compile(r"<a:p>.*?</a:p>", re.DOTALL)
+
+
 def _fill_cell(cell_xml: str, value: str) -> str:
     """Put `value` (escaped) into the cell's first text run; blank any other
     text runs in the same cell so multi-run placeholder styling doesn't
-    duplicate text. A cell with no text run at all is left untouched."""
+    duplicate text. A cell with no text run at all is left untouched.
+
+    A multi-line value (embedded "\\n") becomes one paragraph per line, each
+    a copy of the cell's first paragraph (same formatting) -- a raw newline
+    inside a single <a:t> doesn't render as a line break in PowerPoint."""
     matches = list(TEXT_RE.finditer(cell_xml))
     if not matches:
         return cell_xml
-    escaped_value = escape(str(value))
+    lines = [ln for ln in str(value).splitlines() if ln.strip()] or [""]
+    if len(lines) > 1:
+        para = PARA_RE.search(cell_xml)
+        if para is not None:
+            para_xml = para.group(0)
+            return (cell_xml[: para.start()]
+                    + "".join(_fill_cell(para_xml, ln) for ln in lines)
+                    + cell_xml[para.end():])
+    escaped_value = escape(lines[0])
     pieces = []
     pos = 0
     for i, m in enumerate(matches):

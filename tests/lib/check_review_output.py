@@ -98,6 +98,26 @@ def cited_paths(text: str) -> list[str]:
     return out
 
 
+NOTES_MAX_CHARS = 350  # SKILL.md asks for ~320; a little slack so the lint isn't brittle
+NOTES_MAX_BULLETS = 4  # SKILL.md asks for 3 under the headline; lint only flags clear overruns
+
+
+def notes_problems(notes: str) -> list[str]:
+    """Ways `notes` breaks the slide-ready format in the checklist-review SKILL.md
+    ("Format of `notes`"): too long, too many bullets, or file paths (which belong in
+    evidence_found)."""
+    notes = (notes or "").strip()
+    problems = []
+    if len(notes) > NOTES_MAX_CHARS:
+        problems.append(f"is {len(notes)} chars (max ~{NOTES_MAX_CHARS})")
+    bullets = sum(1 for line in notes.splitlines() if line.lstrip().startswith("•"))
+    if bullets > NOTES_MAX_BULLETS:
+        problems.append(f"has {bullets} bullets (max {NOTES_MAX_BULLETS})")
+    if cited_paths(notes):
+        problems.append("cites file paths (they belong in evidence_found)")
+    return problems
+
+
 def check(workbook: Path, bundle: Path | None = None, expected: Path | None = None) -> Report:
     report = Report(workbook=str(workbook))
     wb = openpyxl.load_workbook(workbook, data_only=True)
@@ -139,6 +159,8 @@ def check(workbook: Path, bundle: Path | None = None, expected: Path | None = No
             )
         if it.validation_status in EVIDENCE_REQUIRED and not it.evidence_found:
             report.structure.append(f"{it.id}: {it.validation_status} with empty evidence_found.")
+        for problem in notes_problems(it.notes):
+            report.structure.append(f"{it.id}: notes {problem}.")
         if not validated_at.get(it.id):
             report.structure.append(f"{it.id}: validated_at is empty.")
         report.items[it.id] = ItemResult(id=it.id, status=it.validation_status)

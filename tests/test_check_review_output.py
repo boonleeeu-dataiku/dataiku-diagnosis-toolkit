@@ -152,3 +152,19 @@ def test_cli_exit_codes(rg_builder, tmp_path):
     del wb["Summary"]
     wb.save(bad)
     assert cro.main([str(bad), *args]) == 1
+
+
+def test_notes_format_lint(rg_builder, tmp_path):
+    good = "Backend heap too small\n• backend.xmx=2g on 64GB host\n• Action: raise to 8g"
+    long_bullets = "Headline\n" + "\n".join(f"• point {i}" for i in range(5))
+    assert cro.notes_problems(good) == []
+    assert cro.notes_problems("x" * 400) == ["is 400 chars (max ~350)"]
+    assert cro.notes_problems(long_bullets) == ["has 5 bullets (max 4)"]
+    assert cro.notes_problems("See apps/dss/design/install.ini") == [
+        "cites file paths (they belong in evidence_found)"]
+
+    sections = {"Architecture, Compute & Infrast": [
+        rg_builder.item("ARCH-001", "Fail", evidence="x", notes="y" * 400),
+    ]}
+    path = rg_builder.build_checklist(tmp_path / "x.xlsx", sections)
+    assert "ARCH-001: notes is 400 chars (max ~350)." in cro.check(path).structure

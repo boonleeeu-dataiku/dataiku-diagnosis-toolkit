@@ -108,13 +108,59 @@ customer conversation that a static diagnostic snapshot cannot answer —
 don't guess Pass/Fail on those.
 
 For each item, write:
-- `evidence_found`: concrete citations — exact file path(s) and the specific
-  key/value or log line(s) that support the finding.
-- `notes`: the recommendation or caveat, and cross-reference related
+- `evidence_found`: the audit trail — concrete citations with exact file
+  path(s) and the specific key/value or log line(s) that support the finding.
+  This stays detailed; it is not shown on slides. Don't put recommendations
+  here.
+- `notes`: the slide-ready summary. The deck builder shows this text to the
+  customer in a table cell, so it must be crisp, scannable and self-contained
+  (see "Format of `notes`" below). It carries the verdict, the decisive
+  values, and the recommendation or caveat, and cross-references related
   findings by id when they're causally linked (e.g., an OOM crash pattern
   linked to a concurrency-limit setting).
 - `validated_at` / `validated_by`: today's date and a reviewer label noting
   this was an AI-assisted review against the specific bundle.
+
+### Format of `notes`
+
+Plain text, no markdown. One headline line, then bullets, separated by
+newlines, each bullet starting with `• `:
+
+```
+<Headline: verdict + impact, ≤ 80 chars>
+• <Key fact with the actual value or count, ≤ 90 chars>
+• <Key fact or "so what", ≤ 90 chars>
+• Action: <one concrete recommendation, ≤ 90 chars>
+```
+
+- **Length:** at most ~320 characters in total and at most 3 bullets under
+  the headline. For **Pass** and **Not Applicable**, use the headline plus at
+  most one bullet, ≤ 140 characters in total.
+- **Self-contained:** carry the decisive values (e.g. `backend.xmx=2g`,
+  `4 OOM crashes in 30 days`) so a reader needs nothing else. Do **not**
+  include file paths or JSON key dumps; those belong in `evidence_found`.
+- **Impact first:** lead with what it means, not how you found it. One idea
+  per bullet, fragments rather than sentences, no filler.
+- **Cross-references:** a final bullet such as `• See SEC-004 (root cause)`
+  when items are causally linked.
+- **Needs Review:** the `Action:` bullet must say what to verify and with
+  whom (e.g. `Action: confirm with infra team`).
+
+Good:
+
+```
+Backend heap too small for workload
+• backend.xmx=2g on 64GB host
+• 4 OOM crashes in 30 days
+• Action: raise to 8g+; see PERF-003
+```
+
+Bad (too long, method-first, file paths):
+
+```
+In apps/dss/design/install.ini the backend.xmx key is set to 2g, and then
+when we looked at run/hs_err_pid*.log we found OutOfMemoryError ...
+```
 
 Look actively for causal chains across items (e.g., a resource limit set to
 a disabling value, paired with crash dumps and recurring error-log entries,
@@ -185,14 +231,16 @@ one — add each as its own bullet rather than overwriting prior ones.
     bundle is 13.x while latest GA is 14.x), mark **Needs Review** (not
     Fail) — a major-version gap warrants a human look at upgrade planning
     rather than an automatic fail.
-  In both cases, state in `notes`/`evidence_found` the bundle's version, the
-  latest GA version found, its release date if available, and how many
-  major versions behind (0 if current); cite the source. If the web search
-  fails, returns nothing usable, or no web search tool is available in this
-  session, do not guess or fall back to prior/training knowledge of the
-  latest version — set `notes` to state plainly that currency could not be
-  verified against Dataiku's current release information (web lookup
-  failed/unavailable) and mark the item **Needs Review**.
+  In both cases, state the bundle's version, the latest GA version found, its
+  release date if available, and how many major versions behind (0 if
+  current). Keep `notes` short (e.g. `Bundle 13.x vs latest GA 14.x (date) —
+  1 major behind`) and put the full source citation in `evidence_found`. If
+  the web search fails, returns nothing usable, or no web search tool is
+  available in this session, do not guess or fall back to prior/training
+  knowledge of the latest version — set `notes` to state plainly that
+  currency could not be verified against Dataiku's current release
+  information (web lookup failed/unavailable) and mark the item **Needs
+  Review**.
 
 - **HTTPS enforcement check (e.g. "SEC-006", especially for custom/on-prem
   installs):** `install.ini` and DSS's own config only show whether DSS
@@ -201,10 +249,11 @@ one — add each as its own bullet rather than overwriting prior ones.
   DSS and terminates HTTPS there instead — that setup is invisible to the
   diagnosis bundle. So: if the bundle shows DSS is *not* itself configured
   for HTTPS (e.g. plain HTTP in `install.ini`), do not mark this **Fail**.
-  Mark it **Needs Review** instead, and in `notes` state plainly that the
-  bundle cannot confirm or rule out an external reverse proxy terminating
-  HTTPS in front of DSS, and that this needs to be verified directly with
-  the customer/infrastructure team before treating it as a real gap. Only
+  Mark it **Needs Review** instead, and in `notes` state plainly, in one
+  bullet, that the bundle cannot confirm or rule out an external reverse
+  proxy terminating HTTPS in front of DSS, with an `Action:` bullet to verify
+  it directly with the customer/infrastructure team before treating it as a
+  real gap. Only
   mark **Pass** when the bundle shows positive evidence HTTPS is enforced
   somewhere in the path (DSS-terminated or a documented proxy setup
   referenced in the bundle); only mark **Fail** if there is positive
@@ -225,8 +274,9 @@ one — add each as its own bullet rather than overwriting prior ones.
      deploy onto an automation node — an indication an automation node is in
      use. Enumerate its contents (`infras/*.json` and any automation node
      URLs they point to, `deployments/*.json`, published projects) and
-     **highlight this indication prominently at the top of
-     `evidence_found`/`notes`**, citing counts/URLs. Distinguish a populated
+     **highlight this indication prominently in the headline of `notes`**
+     with the counts, and list the URLs and enumeration in `evidence_found`.
+     Distinguish a populated
      deployer (infras + deployments present — strong indication) from one
      that is present but empty (deployer enabled, no sign of actual use).
      `api-deployer/` holds API services to deploy onto an API node — mention
@@ -285,7 +335,9 @@ deck show zeros or miss whole sections.
    row per section sheet. Column A holds the sheet's tab name exactly as it
    appears.
 5. **Under the two must-have blocks**: a header row
-   `ID | Section | Title | Status | Key point`, then one row per item. Critical
+   `ID | Section | Title | Status | Key point`, then one row per item. Keep
+   `Key point` to one line of ≤ 90 characters, echoing the item's `notes`
+   headline. Critical
    Findings lists must-have items that Fail, most causally-central first.
    Other Must-Have Items lists those that are Partial or Needs Review. If a
    block has no items, keep its header and its column-header row with no rows

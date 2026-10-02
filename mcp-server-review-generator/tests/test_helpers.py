@@ -75,3 +75,41 @@ def test_version_file_is_semver():
     import re
 
     assert re.fullmatch(r"\d+\.\d+\.\d+", common.VERSION)
+
+
+def _finding(**kw):
+    from types import SimpleNamespace
+    return SimpleNamespace(id="X-1", title="T", priority="must_have", validation_status="Fail",
+                           statement="S", evidence_found="", notes="", **kw)
+
+
+def test_findings_row_shows_notes_only_and_keeps_evidence_in_speaker_notes():
+    it = _finding()
+    it.evidence_found, it.notes = "a/b.json: key=1", "Headline\n• point"
+    assert build_deck.build_findings_rows([it])[0][5] == "Headline\n• point"
+    assert "Evidence: a/b.json: key=1" in build_deck._finding_note_lines(it)
+    assert "Notes: Headline\n• point" in build_deck._finding_note_lines(it)
+
+
+def test_findings_row_falls_back_to_evidence_when_notes_empty():
+    it = _finding()
+    it.evidence_found = "a/b.json: key=1"
+    assert build_deck.build_findings_rows([it])[0][5] == "a/b.json: key=1"
+
+
+def test_fill_cell_splits_lines_into_paragraphs():
+    from office import tables
+    cell = ('<a:tc><a:txBody><a:p><a:pPr/><a:r><a:rPr sz="900"/><a:t>x</a:t></a:r></a:p>'
+            '</a:txBody></a:tc>')
+    out = tables._fill_cell(cell, "Head & co\n• one\n• two")
+    assert out.count("<a:p>") == 3
+    assert "<a:t>Head &amp; co</a:t>" in out and "<a:t>• two</a:t>" in out
+    assert tables._fill_cell(cell, "single").count("<a:p>") == 1
+
+
+def test_fit_cell_text_counts_each_line_as_a_paragraph():
+    one_line = "x" * 40
+    multi = "\n".join(["x" * 10] * 4)  # same chars as 1 line of 40, but 4 paragraphs
+    _, size_one = build_deck._fit_cell_text(one_line, 2167037, 560000)
+    _, size_multi = build_deck._fit_cell_text(multi, 2167037, 560000)
+    assert size_multi <= size_one
