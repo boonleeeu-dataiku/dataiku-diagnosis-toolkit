@@ -431,7 +431,7 @@ def build_findings_rows(items: list) -> list:
             truncate(item.title, 60),
             format_priority(item.priority),
             item.validation_status or "—",
-            (item.statement or "").strip(),
+            item.slide_statement,
             _finding_cell_text(item),
         ])
     return rows
@@ -864,7 +864,7 @@ def build_section_detail_slides(work_dir: Path, template_xml: str, template_rels
                 shape_id, CONTENT_LEFT, y, CONTENT_WIDTH, CARD_HEIGHT_CRITICAL,
                 id_text=it.id, id_color=color, id_size=_card_id_size(it.id),
                 title_text=truncate(it.title, 60),
-                description_text=truncate(it.statement, cell_limits.get("critical_finding_card", 150)),
+                description_text=truncate(it.slide_statement, cell_limits.get("critical_finding_card", 150)),
                 status_label=it.validation_status or status_key, status_color=color,
             )
             parts.append(card_xml)

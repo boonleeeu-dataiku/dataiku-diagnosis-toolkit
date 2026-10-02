@@ -37,6 +37,7 @@ def item(id, status, priority="must_have", title=None, statement=None, evidence=
         "priority": priority,
         "title": title or f"Title of {id}",
         "statement": statement or f"Statement of {id}",
+        "statement_short": f"Short statement of {id}",
         "validation_status": status,
         "evidence_found": evidence,
         "notes": notes,

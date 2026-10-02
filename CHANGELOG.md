@@ -10,6 +10,16 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-02
+
+### Changed
+
+- Updated the bundled `checklist_template.xlsx`: every item sheet gains a `statement_short` column
+  (a one-sentence, slide-ready rewrite of `statement`).
+- Re-synced `mcp-server-review-generator` to upstream v0.3.0: `statement_short` is now a required
+  checklist column, and the deck's findings table and critical-finding cards show it (falling back to
+  `statement` when empty). Speaker notes keep the full statement.
+
 ## [0.8.0] - 2026-10-02
 
 ### Changed

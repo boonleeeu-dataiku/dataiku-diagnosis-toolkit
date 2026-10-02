@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 REQUIRED_ITEM_COLUMNS = [
     "id", "priority", "check_type", "subtopic", "title", "statement",
-    "parameter_hint", "operator", "expected_value", "unit",
+    "statement_short", "parameter_hint", "operator", "expected_value", "unit",
     "expected_condition_notes", "supporting_evidence", "contradicting_evidence",
     "insufficient_evidence_handling", "rationale", "dataiku_concepts",
     "source_document", "source_page", "source_section", "confidence",
@@ -43,10 +43,16 @@ class ChecklistItem:
     priority: str
     title: str
     statement: str
+    statement_short: str
     validation_status: str
     evidence_found: str
     notes: str
     sheet_tab_name: str
+
+    @property
+    def slide_statement(self) -> str:
+        """Slide-ready statement: `statement_short`, falling back to the full `statement`."""
+        return (self.statement_short or self.statement or "").strip()
 
     @property
     def is_must_have(self) -> bool:
@@ -277,6 +283,7 @@ def parse_section_sheet(ws, sheet_tab_name: str) -> list[ChecklistItem]:
                 priority=str(get("priority") or "").strip(),
                 title=str(get("title") or "").strip(),
                 statement=str(get("statement") or "").strip(),
+                statement_short=str(get("statement_short") or "").strip(),
                 validation_status=str(get("validation_status") or "").strip(),
                 evidence_found=str(get("evidence_found") or "").strip(),
                 notes=str(get("notes") or "").strip(),

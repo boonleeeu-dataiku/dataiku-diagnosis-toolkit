@@ -151,15 +151,15 @@
       " Not Applicable",
       "ARCH-001",
       "Title of ARCH-001",
-      "Statement of ARCH-001",
+      "Short statement of ARCH-001",
       "NEEDS REVIEW",
       "ARCH-002",
       "Title of ARCH-002",
-      "Statement of ARCH-002",
+      "Short statement of ARCH-002",
       "FAIL",
       "ARCH-003",
       "Title of ARCH-003",
-      "Statement of ARCH-003",
+      "Short statement of ARCH-003",
       "PASS"
     ]
   },
@@ -183,11 +183,11 @@
       " Not Applicable",
       "SEC-001",
       "Title of SEC-001",
-      "Statement of SEC-001",
+      "Short statement of SEC-001",
       "PARTIAL",
       "SEC-002",
       "Title of SEC-002",
-      "Statement of SEC-002",
+      "Short statement of SEC-002",
       "NOT APPLICABLE"
     ]
   },
@@ -211,7 +211,7 @@
       " Not Applicable",
       "ADVSEC-001",
       "Hiding error stacks",
-      "Statement of ADVSEC-001",
+      "Short statement of ADVSEC-001",
       "FAIL"
     ]
   },

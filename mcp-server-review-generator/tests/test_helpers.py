@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import build_deck
+import read_checklist
 import common
 import section_names
 
@@ -78,9 +79,9 @@ def test_version_file_is_semver():
 
 
 def _finding(**kw):
-    from types import SimpleNamespace
-    return SimpleNamespace(id="X-1", title="T", priority="must_have", validation_status="Fail",
-                           statement="S", evidence_found="", notes="", **kw)
+    return read_checklist.ChecklistItem(id="X-1", title="T", priority="must_have", validation_status="Fail",
+                                        statement="S", statement_short="", evidence_found="", notes="",
+                                        sheet_tab_name="Sheet", **kw)
 
 
 def test_findings_row_shows_notes_only_and_keeps_evidence_in_speaker_notes():

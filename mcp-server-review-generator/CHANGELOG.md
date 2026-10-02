@@ -7,6 +7,17 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-02
+
+### Changed
+
+- The checklist item sheets now carry a `statement_short` column (right after `statement`), written by
+  the checklist generator. `read_checklist.REQUIRED_ITEM_COLUMNS` requires it, so a checklist without the
+  column is rejected with `ChecklistFormatError`.
+- The findings table's `Statement` column and the critical-finding cards show `statement_short`
+  (via `ChecklistItem.slide_statement`), falling back to the full `statement` when it's empty. Speaker
+  notes still carry the full statement.
+
 ## [0.2.0] - 2026-10-02
 
 ### Changed
