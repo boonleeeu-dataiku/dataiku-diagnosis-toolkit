@@ -115,6 +115,12 @@ Whenever Claude makes edits to `mcp-server-diagnosis-reader/` or `mcp-server-rev
 remind the user afterward to also run Codex, so Codex can pick up the changes — Codex only
 adapts to Claude-side changes post-hoc (see `AGENTS.md`) and won't see these updates otherwise.
 
+Whenever Claude makes or discusses an update to `skills/dataiku-diagnosis-reader/` (or its
+`mcp-server-diagnosis-reader/` pair), remind the user to make the change in the upstream repo
+(`github.com/boonleeeu-dataiku/dataiku-diagnosis-reader`, sibling checkout `../Diagnosis Reader/`)
+and re-sync it here, so the next sync doesn't silently overwrite it. Likewise remind them to run
+Codex afterward, since the skill copy is also read by Codex.
+
 ## Testing
 
 See README's "Testing" section for the three tiers.
