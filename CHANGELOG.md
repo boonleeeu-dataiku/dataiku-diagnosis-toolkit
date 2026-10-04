@@ -10,6 +10,16 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-10-04
+
+### Changed
+
+- Re-synced `skills/dataiku-diagnosis-reader/` to upstream 0.3.0 (secrets section, shorter description,
+  trimmed quick lookup, `orient.sh` first when triaging).
+- `dataiku-diagnosis-checklist-review`: Secrets section now points at the reader's "Handling secrets"
+  instead of carrying its own rules.
+- Codex companion: host-specific `validated_by` label and version-lookup adaptation.
+
 ## [0.17.0] - 2026-10-04
 
 ### Changed

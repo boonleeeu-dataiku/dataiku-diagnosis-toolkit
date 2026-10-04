@@ -1,7 +1,7 @@
 ---
-name: dataiku-diagnosis-reader
-description: Navigate and interpret an extracted Dataiku DSS "diagnosis.zip" support bundle (a.k.a. DSS diagnostic export, support bundle, instance diagnostic archive, or a folder named like "dku_diagnosis_*") to answer troubleshooting questions about instance configuration, crashes/OOMs, performance, resource usage, users, connections, projects, code environments, plugins, deployed bundles, and logs — without re-deriving the bundle's file layout from scratch. Use whenever the user provides, references, or asks about a Dataiku "diagnosis.zip", "dku diagnosis" bundle, DSS support bundle, or wants to diagnose/troubleshoot a Dataiku DSS instance using such a bundle.
-version: 0.2.0
+name: "dataiku-diagnosis-reader"
+description: "Navigate and interpret an extracted Dataiku DSS diagnosis.zip support bundle (also: DSS diagnostic export, instance diagnostic archive, a folder named dku_diagnosis_*) to answer troubleshooting questions on instance configuration, crashes/OOMs, performance, users, connections, projects, code environments, plugins and logs, without re-deriving the bundle layout. Use whenever the user provides or asks about a Dataiku diagnosis bundle or wants to diagnose a DSS instance from one."
+version: 0.3.0
 ---
 
 # Dataiku DSS diagnosis.zip reader
@@ -57,35 +57,34 @@ as a structural model, not a byte-identical layout guaranteed across every bundl
 6. **If asked about job/scenario run history, dataset build timelines, or audit content**, check
    up front whether it's Tier-3 (listing-only) before promising an answer — see
    `references/limitations.md`.
-7. Optionally run `scripts/orient.sh <bundle_root>` first for automated triage: node type,
-   version, mirror path, biggest files, and presence of key troubleshooting files.
+7. When triaging a whole bundle, run `scripts/orient.sh <bundle_root>` first (before steps 2-3 if you
+   like): node type, version, mirror path, biggest files, and presence of key troubleshooting files.
 
 ## Quick lookup (most common questions)
 
 | Question | Where |
 |---|---|
 | DSS version / node type | `<mirror>/dss-version.json`, `<mirror>/install.ini`, or `diag.txt` → `printenv`'s `DKU_NODE_TYPE` (fastest) |
-| Is DSS running? Which components? | `diag.txt` → the `dss status` section |
-| CPU/memory/disk/network/kernel/env vars — any general OS question | `diag.txt` — most small commands are inlined there; see the OS/system table in `references/root-files.md` and `references/lookup-table.md` before reaching for `sysctl.txt`/`ps.txt` |
-| JVM heap size or listening port for a specific DSS component | `diag.txt` → `printenv` (`DKU_*_JAVA_OPTS`, `DKU_*_PORT`) |
+| Any general OS question (CPU, memory, disk, env vars, JVM heap/ports) | `diag.txt` (small commands are inlined; `printenv` holds `DKU_*_JAVA_OPTS`/`DKU_*_PORT`); see `references/root-files.md` |
 | Backend crash / OOM | `dmesg.txt` + `<mirror>/run/hs_err_pid*.log` + `cgroups_usage.txt` |
-| Thread hang / deadlock | `stacks.txt` (JVM thread dump) |
-| Which diagnosis step was slow/huge | `timings.txt` |
-| Instance config (LDAP/SSO/proxy/job concurrency) | `<mirror>/config/general-settings.json` |
-| How resources are restricted/requested (cgroups, container/K8s, Spark) | `<mirror>/config/general-settings.json` → `cgroupSettings`/`containerSettings`/`sparkSettings` (+ `<mirror>/config/clusters/*.json` overrides) — read together, see `references/data-dir-config.md` |
-| Is the internal DB H2 or external PostgreSQL | `<mirror>/config/general-settings.json` → `internalDatabase.connection` (present with a `type` = external; absent = default embedded H2) |
-| Users / groups | `<mirror>/config/users.json` |
-| Data connections | `<mirror>/config/connections.json` |
-| Code-env package versions (resolved) | `<mirror>/code-envs/desc/python/<env>/actual/requirements.txt` |
-| A project's recipes/datasets/scenarios/notebooks | `<mirror>/config/projects/<KEY>/...` |
-| Backend/API/job execution trace | `<mirror>/run/backend.log*` |
-| DSS's own self-diagnostic warnings | `<mirror>/run/sanity-check.json` |
-| Which bundle is activated for a project (mainly automation, rarely design) | `<mirror>/config/projects/<KEY>/active-bundle.json` |
-| Bundle activation history (automation) | `<mirror>/caches/reflected-events-v.json` |
-| Is this node a deployment target or a deployer host | `<mirror>/config/general-settings.json` → `deployerClientSettings.mode` |
-| Job/scenario run history, audit content | Usually **not in the bundle** — check `datadir_listing.txt` for existence/size only |
+| Instance config (LDAP/SSO/proxy/concurrency/resources/internal DB) | `<mirror>/config/general-settings.json`; see `references/data-dir-config.md` |
+| Users / connections / projects | `<mirror>/config/users.json`, `connections.json`, `projects/<KEY>/` |
+| Backend/API/job execution trace, DSS self-diagnostics | `<mirror>/run/backend.log*`, `<mirror>/run/sanity-check.json` |
+| Job/scenario run history, audit content | Usually **not in the bundle**: check `datadir_listing.txt` for existence/size only |
 
 See `references/lookup-table.md` for the full index.
+
+## Handling secrets
+
+Bundles and files beside them hold live credentials (`general-settings.json` internal-DB, connection
+and LDAP bind passwords; `connections.json`; `install.ini`; `dip.properties`; loose notes files). Tool
+output lands in the transcript.
+
+- Read only files you need; don't open notes or READMEs next to the bundle unless asked.
+- Extract specific keys (grep exact names, e.g. in `.ini`/`.properties`); never dump a whole settings
+  block or connection.
+- Never copy a secret into findings, notes, reports or decks.
+- If one is printed, say so, name the file, and tell the user to rotate it.
 
 ## Reference index
 
@@ -113,12 +112,7 @@ See `references/lookup-table.md` for the full index.
 
 ## Known limitations
 
-- Verified against 2 real design-node bundles + 1 real automation-node bundle. `deployer`-node
-  (and any other) internals are unverified — don't fabricate specifics for them.
-- Job run history, scenario run logs, dataset build timelines, and audit-log content are commonly
-  listing-only (Tier 3) — this is the #1 thing to check before promising an answer.
-- Capture completeness varies bundle-to-bundle (e.g. one automation sample mirrored only the
-  *logs* for `acode-envs/`, not the underlying `desc/{spec,actual}` files).
-- `license.json` may be a signed/opaque blob, not fully human-readable.
-
-See `references/limitations.md` for the complete list.
+`deployer`-node (and any other) internals are unverified: don't fabricate specifics. Job run history,
+scenario run logs, dataset build timelines and audit content are commonly listing-only (Tier 3): check
+that before promising an answer. Capture completeness varies bundle to bundle. Full list, including
+verified scope: `references/limitations.md`.

@@ -52,14 +52,9 @@ bundle's structure. At the end, write the result back with `device_commit_files`
 
 ### Secrets
 
-Bundles hold live credentials, and tool output lands in the transcript. See the reader's
-`limitations.md` ("Other things to know") for what is sensitive.
-
-- Read only the files you need; don't open notes or READMEs lying beside the bundle unless asked.
-- Extract specific keys (grep exact names); never dump a whole settings block or connection.
-- Never copy a secret into `evidence_found`, `notes`, the narrative or the deck.
-- If one does get printed, say so in your final summary, name the file, and tell the user to
-  rotate it.
+Follow the reader's "Handling secrets" section. In addition, never copy a secret into
+`evidence_found`, `notes`, the narrative or the deck, and if one does get printed, say so in your
+final summary, name the file, and tell the user to rotate it.
 
 ## 1. Orient
 

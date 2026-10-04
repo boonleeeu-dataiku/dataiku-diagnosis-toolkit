@@ -6,8 +6,8 @@ read-only (see CLAUDE.md), so these changes must be made upstream and re-synced.
 **Principle:** how to read a bundle (layout, safe extraction, secret handling) is owned by the
 reader. The `dataiku-diagnosis-checklist-review` skill owns only checklist judgment. Status:
 section 3 (layout facts) shipped in reader skill v0.2.0 and `calibrations.md` is now judgment-only;
-sections 1, 2 and 4 are still open upstream, and the secrets pointer in the checklist skill is the
-one remaining interim stopgap.
+section 1 (secrets) and the §6 hygiene items shipped in reader skill v0.3.0; sections 2 (withdrawn) and 4
+are closed or moot.
 
 ## 1. Secret handling rule (move from the checklist skill)
 
@@ -93,7 +93,7 @@ For `skills/dataiku-diagnosis-reader/SKILL.md` upstream:
 - Step 7: say "run `scripts/orient.sh <bundle_root>` first when triaging a whole bundle" (the review skill
   already mandates it first).
 - Frontmatter style: match the other skills (quoted `name`/`description`), keep `version`.
-- §1 (secret handling) is still open and is the real fix for the checklist skill's inline Secrets bullets.
+- (Done in reader 0.3.0, along with the other items here.)
 
 ## After upstream ships
 

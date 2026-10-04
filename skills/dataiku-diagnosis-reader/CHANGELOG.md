@@ -9,6 +9,19 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.3.0] - 2026-10-04
+
+### Added
+
+- `SKILL.md`: "Handling secrets" section (read only what is needed, extract specific keys, never copy
+  secrets into outputs, report and rotate if printed).
+
+### Changed
+
+- `SKILL.md`: shorter `description`; "Quick lookup" trimmed to the highest-traffic rows (the full index
+  stays in `references/lookup-table.md`); "Known limitations" reduced to a pointer plus the key caveats;
+  step 7 now says to run `scripts/orient.sh` first when triaging a whole bundle; quoted frontmatter values.
+
 ## [0.2.0] - 2026-10-04
 
 ### Added
