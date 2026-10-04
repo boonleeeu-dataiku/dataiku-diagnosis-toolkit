@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.7] - 2026-10-04
+
+### Fixed
+
+- The v2 build result's `quick_wins` and `owner_groups` came from the automatic analysis even when a narrative
+  supplied its own, so they could disagree with the slides. They now report what the deck rendered.
+- The Risk 1 "One root cause" card now lists the linked check IDs under its label.
+
 ## [0.7.6] - 2026-10-04
 
 ### Fixed

@@ -340,7 +340,8 @@ def risk1_slide(d, a, narr):
         card(s, 0.39 + 2.45, 1.2 + 2 * 1.2, 2.35, 1.1, fill=DK, line=None, name="Root cause card")
         tb(s, 0.39 + 2.45 + 0.15, 1.2 + 2 * 1.2 + 0.1, 2.05, 0.9,
            [P("One root cause", 10, True, MINT, after=3),
-            P(r1.get("linked_label") or f"{len(ids)} checks, one sequence of fixes.", 10, False, WHITE)], "m", name="Root cause text")
+            P(r1.get("linked_label") or f"{len(ids)} checks, one sequence of fixes.", 10, False, WHITE, after=3)] +
+           ([P(", ".join(ids), 8, False, MINT)] if ids else []), "m", name="Root cause text")
     card(s, 5.45, 1.2, 4.15, 1.05, fill="FDEAEA", line="E8A0A0", name="Risk card")
     tb(s, 5.62, 1.28, 3.85, 0.9, [P("Risk", 9, True, "9B2C2C", after=2), P(r1["risk"], 11)], "m", name="Risk text")
     card(s, 5.45, 2.4, 4.15, 2.4, name="Fix card")
@@ -459,6 +460,22 @@ def quickwins_slide(d, a, narr):
     rest = [r.id for r in a.by_status("Fail") if r.id not in won]
     tb(s, 7.3, 3.0, 2.15, 1.5, [P("Remaining fails:", 9, True, MINT, after=3)] +
        [P(i, 9, False, WHITE, after=2) for i in rest[:8]], name="Remaining fails")
+
+
+def rendered_quick_wins(a, narr):
+    """Ids of the quick-win rows the deck shows: the narrative's if it gave any, else the analysis's."""
+    qn_ = narr.get("quick_wins")
+    if qn_ is None:
+        return [q.id for q in a.quick_wins]
+    return [q["id"] for q in qn_["rows"][:6]]
+
+
+def rendered_owner_groups(a, narr):
+    """Owner -> ids the owners slide shows: the narrative's groups if it gave any, else the analysis's."""
+    g = (narr.get("owners") or {}).get("groups")
+    if g is None:
+        return {o: ids for o, ids in a.owners}
+    return {x["owner"]: [k["id"] for k in x["asks"]] for x in g if x["asks"]}
 
 
 def owners_slide(d, a, narr):
@@ -738,6 +755,6 @@ def build_v2(checklist_path: Path, customer: str, output_path: Path, base_deck: 
         "narrative_used": str(narrative_path) if narrative_path else None,
         "narrative_missing": not narrative_path,
         "applicable_count": a.applicable, "pass_count": a.counts["Pass"],
-        "quick_wins": [q.id for q in a.quick_wins],
-        "owner_groups": {o: ids for o, ids in a.owners},
+        "quick_wins": rendered_quick_wins(a, narr),
+        "owner_groups": rendered_owner_groups(a, narr),
     }

@@ -277,3 +277,14 @@ def test_duplicate_item_id_keeps_the_first_occurrence(checklist_factory, section
     a = _analyse(checklist_factory, section_config, secs)
     assert a.rows["ARCH-003"].status == "Pass"
     assert a.total == 8
+
+
+def test_build_result_reports_what_the_deck_rendered(analysis):
+    import build_deck_v2
+    _, a = analysis
+    assert build_deck_v2.rendered_quick_wins(a, {}) == [q.id for q in a.quick_wins]
+    narr = {"quick_wins": {"rows": [{"id": "SCALE-009"}]},
+            "owners": {"groups": [{"owner": "Ops", "asks": [{"id": "X-1"}]}, {"owner": "Empty", "asks": []}]}}
+    assert build_deck_v2.rendered_quick_wins(a, narr) == ["SCALE-009"]
+    assert build_deck_v2.rendered_owner_groups(a, narr) == {"Ops": ["X-1"]}
+    assert build_deck_v2.rendered_owner_groups(a, {}) == {o: ids for o, ids in a.owners}
