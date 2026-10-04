@@ -4,8 +4,10 @@ Target repo: `github.com/boonleeeu-dataiku/dataiku-diagnosis-reader`. The vendor
 read-only (see CLAUDE.md), so these changes must be made upstream and re-synced.
 
 **Principle:** how to read a bundle (layout, safe extraction, secret handling) is owned by the
-reader. The `dataiku-diagnosis-checklist-review` skill owns only checklist judgment. Until this
-lands, the checklist skill carries two interim stopgaps, marked below.
+reader. The `dataiku-diagnosis-checklist-review` skill owns only checklist judgment. Status:
+section 3 (layout facts) shipped in reader skill v0.2.0 and `calibrations.md` is now judgment-only;
+sections 1, 2 and 4 are still open upstream, and the secrets pointer in the checklist skill is the
+one remaining interim stopgap.
 
 ## 1. Secret handling rule (move from the checklist skill)
 
@@ -39,7 +41,10 @@ Proposed: new optional parameter `json_path` (or `json_keys: string[]`) on `safe
 - Also useful: `count_matches: true` returning `grep -c`-style counts and first/last timestamp
   for large logs, replacing the checklist's `device_bash` `grep -c | uniq -c` advice.
 
-## 3. Layout facts missing from the reader docs
+## 3. Layout facts missing from the reader docs: DONE (reader skill v0.2.0)
+
+Shipped. Kept for the record of what moved and where; do not re-add these to the checklist skill.
+New layout facts follow the same path (see CLAUDE.md).
 
 Currently documented only in the checklist skill (`references/calibrations.md`). Add each to
 the named reader reference, then the checklist skill can drop its copy.
@@ -56,9 +61,10 @@ the named reader reference, then the checklist skill can drop its copy.
 | Concurrency/sizing limits can sit under other blocks (e.g. `jekSettings.maxRunningJobs`) than their name suggests; search the whole file for the leaf key (e.g. `traceExplorerDefaultWebApp` is under `generativeAISettings.llmTraceSettings`) | `data-dir-config.md` |
 | `backend.xmx` etc. in `install.ini`; the `config/` folder size from `du -sh` or summing `datadir_listing.txt` | `data-dir-identity.md`, `listings-and-manifests.md` |
 
-**Interim stopgap in the checklist skill:** `references/calibrations.md` still mentions these key
-locations because the calibrations' wording depends on them. Remove the duplicated layout detail
-after re-sync, keeping only the judgment rule.
+Two table rows were refined once checked against real bundles: `sanity-check.json` has two shapes
+(`messages[]` at top level, or under `report.messages`), and `project-deployer/` held only
+`projects/` in the sample (`infras/`, `deployments/` were under `api-deployer/`). The cluster
+`type` (`manual`) and `defaultK8sClusterId` were confirmed in one bundle.
 
 ## 4. Make the guide-first expectation explicit
 
@@ -77,5 +83,5 @@ after re-sync, keeping only the judgment rule.
 
 1. Re-sync here (see CLAUDE.md). `tests/test_vendored_drift.py` confirms the copy.
 2. Update the checklist skill: reference `json_path` in step 0, drop the interim pointer caveat.
-3. Delete the interim allowlist in `tests/test_skill_boundaries.py`.
+3. (Done) The interim allowlist in `tests/test_skill_boundaries.py` is gone; `calibrations.md` is guarded.
 4. Remind the user to run Codex (the MCP server changed).

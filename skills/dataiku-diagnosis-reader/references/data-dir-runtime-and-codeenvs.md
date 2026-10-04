@@ -68,10 +68,29 @@ records install/enable state on *any* node type (see `references/data-dir-config
 | `install.log` | Full install/upgrade transcript | Can be ~90-100MB+; never load whole |
 | `install-impersonation.log` | `dssadmin install-impersonation` output — sets up the OS-user impersonation wrapper referenced by `install.ini`'s `[mus] exec_wrapper_location` | Most operationally relevant for scheduled/unattended job execution (automation) |
 | `hs_err_pid<N>.log` | **JVM fatal crash dumps** (HotSpot error logs) — native-mmap OOM failures, thread/heap/register dump | Primary source for crash/OOM root-cause; cross-reference with `dmesg.txt` (OOM-killer) and `cgroups_usage.txt` (which project/activity was responsible). Not observed in the one automation sample surveyed — absence doesn't rule it out generally |
-| `sanity-check.json` | DSS's own self-diagnostic warnings: `{"messages":[{"severity","code","details"}]}` | Surfaces real misconfigurations DSS itself flagged, e.g. `WARN_CONNECTION_SPARK_NO_GROUP_WITH_DETAILS_READ_ACCESS`, `WARN_MISC_EVENT_SERVER_NO_TARGET` |
+| `sanity-check.json` | DSS's own self-diagnostic warnings: `messages[]` of `{severity, isFatal, code, title, details, message}`. The array is at the top level in two samples and nested under `report.messages` (beside `lastRunTimestamp`) in a third — handle both | Surfaces real misconfigurations DSS itself flagged. Codes seen: `WARN_CONNECTION_SPARK_NO_GROUP_WITH_DETAILS_READ_ACCESS`, `WARN_MISC_EVENT_SERVER_NO_TARGET`, `WARN_MISC_DISK_ROTATIONAL` (data dir on a rotational disk), `WARN_SECURITY_PROCESS_TYPE_WITHOUT_MEMORY_LIMIT` (no cgroup memory limit for a process type), `WARN_MISC_BASE_IMAGE_NOT_FOUND` (missing container base image). These are DSS's own findings, so they are first-hand evidence for the matching host/resource/connection questions |
 | `user-last-activity.json` | Per-login last activity/login timestamps | Can reveal auth/attack attempts in login strings. Not observed in the automation sample surveyed |
 | `cde-images.json`, `built-base-images.json` | Code-env-in-container / Code Studio image build records | Not observed in the automation sample surveyed (consistent with no Code Studio building there) |
 | `audit/audit.log.N` | Rotated audit trail (user actions) | Often ~100MB each. **Not observed as real content in any of the 3 samples surveyed** — only as path/size entries in `datadir_listing.txt`. Don't assume it's ever mirrored as content; verify per-bundle before promising to read it |
+
+## Reading the logs
+
+**Line format.** `backend.log` lines look like `[2026/07/21-08:56:51.095] [thread] [LEVEL] [logger]
+- message`: the level is a **bracketed token mid-line**, after the timestamp and thread name. Match
+`\[ERROR\]` / `\[FATAL\]` / `\[WARN\]`; a line-anchored pattern such as `^ERROR` returns a false
+zero.
+
+**Time window.** Each rotated file covers a very different span: in the samples a file covered
+anywhere from ~1 hour (a busy design node) to ~3 days, so the same count means different things
+for different files. Take the first and last timestamp of **each** file so any count can be quoted
+with the window it covers: `head -1` for the first, and for the last the final line that starts
+with `[` (a file can end mid stack-trace, e.g. `at java.base/...`). Rotation order: `backend.log`
+is newest, then `.1`, `.2` progressively older.
+
+**JVM crash dumps.** `hs_err_pid*.log` is large. Read only the header, the lines starting with
+`# ` (`grep '^# '`, first ~20): they state the cause (e.g. "There is insufficient memory for the
+Java Runtime Environment", "Native memory allocation (mmap) failed to map N bytes") and
+distinguish an OOM from a segfault (`SIGSEGV`). Never read the whole file.
 
 Cross-reference: when investigating a crash, check `hs_err_pid*.log` timestamps against
 `dmesg.txt` OOM-killer entries and `cgroups_usage.txt` to identify which project/activity type was

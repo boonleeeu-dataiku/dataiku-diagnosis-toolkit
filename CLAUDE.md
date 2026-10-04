@@ -47,6 +47,15 @@ which have none.
   Don't hand-edit content in these two directories here expecting it to persist — fix it upstream
   and re-sync, or the next sync will silently overwrite the fix.
 
+  **How to read a bundle is owned by the reader, never by the checklist skill.** When a checklist
+  or calibration change needs a new "where does X live / how do I read it safely" fact (a file
+  path, a JSON key, a log format, a column meaning), add it to the upstream reader's
+  `references/*.md` (spot-checked against a real bundle, per upstream's `CLAUDE.md`), re-sync, then
+  have the checklist skill point to that reference. Don't write the fact into
+  `skills/dataiku-diagnosis-checklist-review/` — `calibrations.md` holds judgment (which status to
+  give) only. `tests/test_skill_boundaries.py` enforces this; extend its `READER_OWNED_TERMS` when
+  a new layout term shows up.
+
 - **`skills/dataiku-diagnosis-checklist-review/`** and **`skills/dataiku-review-deck-builder/`**
   are authored directly in this repo. Neither has an upstream, and neither currently carries an
   independent `version`/`CHANGELOG.md` — don't add versioning to either speculatively; that

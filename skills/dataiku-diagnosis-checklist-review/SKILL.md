@@ -140,7 +140,7 @@ Backend heap too small for workload
 Bad (too long, method-first, file paths):
 
 ```
-In apps/dss/design/install.ini the backend.xmx key is set to 2g, and then
+In apps/dss/design/<some config file> the backend.xmx key is set to 2g, and then
 when we looked at the crash dump we found OutOfMemoryError ...
 ```
 

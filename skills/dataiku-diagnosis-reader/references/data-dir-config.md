@@ -61,6 +61,19 @@ if a manual cluster is targeted) → cgroup/K8s enforcement, cross-checked at ru
 Spark/join recipe; other recipe, scenario, or notebook types may expose the same selection under
 different field names — verify before asserting for those.
 
+**Is a Kubernetes cluster attached?** Check both places, not one: a cluster is attached when
+`config/clusters/` holds a `<name>.json` **or** `general-settings.json` has a non-empty top-level
+`defaultK8sClusterId`. No attached cluster = `config/clusters/` empty/absent **and** no
+`defaultK8sClusterId` (and no cluster reference in the execution configs). In the samples, the
+two bundles with `useImplicitK8sCluster: true` had neither; the one with `useImplicitK8sCluster:
+false` had `defaultK8sClusterId` set to the name of its `clusters/<name>.json`. Each cluster file
+carries `type` (`manual` in the sample — a cluster registered externally, as opposed to one DSS
+provisioned) and `architecture` (`KUBERNETES`); read `type` before assuming DSS manages the
+cluster's namespaces or lifecycle. Only one `manual` cluster file was seen, so the value used for
+a DSS-provisioned cluster is unverified. Note the two flags are independent: that same sample had
+a `manual` cluster file **and** `kubernetesSettings.managedKubernetes: true` on all three Spark
+profiles, so don't infer one from the other.
+
 **Where the Spark-on-Kubernetes namespace lives**: each `sparkSettings.executionConfigs[]` entry
 has `kubernetesSettings.managedKubernetes` (bool) — whether that profile targets an attached
 managed k8s cluster (EKS/GKE/AKS) vs. a self-managed/on-prem one — and
@@ -114,6 +127,41 @@ Actual plugin **source code**, when present, lives separately at `<mirror>/plugi
 `config/project-deployer/projects/` hold deployer infrastructure/deployment target definitions.
 These directories are typically **absent** on a pure automation node (which is a deployment
 *target*, not a deployer *host* — see `general-settings.json`'s `deployerClientSettings.mode`).
+
+Observed shape on the one design sample that hosted a local deployer: `api-deployer/` held
+`infras/<name>.json`, `published-services/<id>.json` and `deployments/<service>-on-<infra>.json`
+(populated), while `project-deployer/` held only `projects/<KEY>.json` (one published project) —
+no `infras/` or `deployments/` under it. Whether a populated Project Deployer also has `infras/`
+and `deployments/` is unverified. `api-deployer/` targets API nodes, not automation nodes. The
+mirror may not copy these subtrees, so also check `config_listing.txt`/`datadir_listing.txt`.
+`deployerClientSettings.mode` was `LOCAL` on that sample; `REMOTE` carries a `nodeUrl` to an
+external Deployer. Exported project bundles live under `<mirror>/bundles/<PROJECT>/` and are
+usually visible only in `datadir_listing.txt`.
+
+## Finding a setting reliably
+
+- A checklist's or doc's hinted path is a pointer, not a guarantee. Before concluding a key is
+  absent, search the whole file for the **leaf key**. Example: `traceExplorerDefaultWebApp` sits
+  under `generativeAISettings.llmTraceSettings`, not at the top level.
+- Limits can sit under a block other than their name suggests. Example: `jekSettings.maxRunningJobs`
+  (a job-execution limit) vs. the top-level `maxRunningActivities`; the former was `0` in two
+  samples, which is "unset", not "zero allowed".
+- Advanced security and behaviour keys (header settings, `dku.feature.*`, upload extensions) can
+  live in `dip.properties` (`key=value`) or `install.ini` instead of `general-settings.json`.
+  Search all three before calling a setting absent.
+- **Is an optional feature in use?** GenAI/Hugging Face signals seen: `localAIServerSettings.*UseLocal`
+  (booleans such as `prepareAICompletionUseLocal`, `aiGenerateSQLUseLocal`), and
+  `generativeAISettings`. Not observed in any sample, so unverified: `agentBuildingSettings`,
+  Agent Hub projects/webapps, and an `INTERNAL_huggingface` code env.
+
+## Connections (`connections.json`) of interest
+
+Besides `type`/`params`/`allowedGroups`: `detailsReadability` (`{readableBy, allowedGroups}`)
+says who may read the connection's details (credentials); `params.root` is the filesystem root
+for filesystem/HDFS connections; `params.hdfsInterface` appears on HDFS connections. DSS also
+flags gaps itself in `run/sanity-check.json` (e.g. `WARN_CONNECTION_SPARK_NO_GROUP_WITH_DETAILS_READ_ACCESS`),
+see `references/data-dir-runtime-and-codeenvs.md`. Connection `params` can hold secrets: never
+dump a whole connection.
 
 ## `config/projects/<PROJECT_KEY>/` — one project's full definition
 

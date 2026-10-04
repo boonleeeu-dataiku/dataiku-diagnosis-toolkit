@@ -1,7 +1,9 @@
 # Known check-specific calibrations
 
-> Interim: some bundle key locations are quoted below because the wording depends on them. How to
-> read the bundle belongs to the reader; see `docs/upstream-reader-spec.md` for what is moving there.
+> Judgment only: this file says which status to give, never where or how to find something in the
+> bundle. That belongs to the reader (`dataiku-diagnosis-reader` skill + MCP server), which is
+> vendored from upstream. If a calibration needs a new "where/how to read" fact, add it to the
+> reader's references upstream, re-sync, and point to it from here. See `CLAUDE.md`.
 
 Apply these interpretations consistently. They come directly from the user,
 supersede a literal reading of the checklist's `expected_value`/evidence
@@ -10,13 +12,13 @@ one — add each as its own bullet rather than overwriting prior ones.
 
 - **Kubernetes-conditional checks in general (Spark-on-K8s, containerized
   execution, cluster configuration, etc.):** first determine whether a
-  Kubernetes cluster is actually attached to the instance at all (see
-  `config/clusters/` and `defaultK8sClusterId`; the reader's `data-dir-config` reference covers them). If no
+  Kubernetes cluster is actually attached to the instance at all (the reader's
+  `data-dir-config` reference says how to tell). If no
   cluster is attached, mark any check that depends on Kubernetes/Elastic
   Compute as **Not Applicable** rather than Fail or Needs Review — these
   checks are only relevant once a cluster is attached. Once a cluster *is*
   attached, it becomes critical that a valid containerized execution
-  configuration (`containerSettings`) is actually present — treat that as a
+  configuration is actually present — treat that as a
   must-have, not optional.
 
 - **Recommended containerized execution config baseline (e.g. a 'Standard'
@@ -36,18 +38,18 @@ one — add each as its own bullet rather than overwriting prior ones.
   (e.g. items about a "per-user namespace pattern", `dss-ns-${dssUserLogin}`,
   or similar, for either Spark configs or containerized execution configs):
   it is sufficient evidence of compliance to see the namespace parameter
-  (e.g. `managedNamespace` / `kubernetesNamespace`) provisioned with a
-  dynamic/templated variable (such as `${namespace}`), **for a managed
-  Kubernetes cluster attached to the Dataiku instance**. Do not require
-  tracing the variable to confirm it literally resolves to the
+  provisioned with a dynamic/templated variable (such as `${namespace}`),
+  **for a managed Kubernetes cluster attached to the Dataiku instance**. Do
+  not require tracing the variable to confirm it literally resolves to the
   `dss-ns-${dssUserLogin}` string — mark the item **Pass** (not Needs
   Review) once a templated/dynamic namespace variable is present, and note
   in `evidence_found` which field/value was seen. This calibration applies
   specifically to a **managed** cluster (Dataiku-provisioned/managed). For a
-  **manual**/externally-registered cluster (check `type` in
-  `config/clusters/<name>.json`), namespace behavior may be governed outside
-  DSS configuration entirely — keep judging that case on its own merits
-  rather than applying this shortcut.
+  **manual**/externally-registered cluster, namespace behavior may be
+  governed outside DSS configuration entirely — keep judging that case on its
+  own merits rather than applying this shortcut. (The reader's
+  `data-dir-config` reference says where the namespace fields live and how
+  to tell managed from manual.)
 
 - **Dataiku DSS version currency check (e.g. "DSS Version Currency"):**
   actively look up Dataiku's current generally-available DSS release with a
@@ -59,9 +61,10 @@ one — add each as its own bullet rather than overwriting prior ones.
   then run a second search for the next major above the one you found
   (e.g. "Dataiku DSS 15 release notes"); take the highest GA version
   confirmed by an official Dataiku source (release notes / changelog /
-  docs.dataiku.com). Never answer from a single standard search. Compare the bundle's `product_version` (from `dss-version.json`,
-  format `MAJOR.MINOR.PATCH`) against the latest GA version's major version
-  number only, and apply this fixed internal rule:
+  docs.dataiku.com). Never answer from a single standard search. Compare the
+  bundle's DSS `product_version` (format `MAJOR.MINOR.PATCH`; the reader's
+  `data-dir-identity` reference says where it is) against the latest GA
+  version's major version number only, and apply this fixed internal rule:
   - If the bundle's **major** version matches the current major release
     (e.g. bundle is 14.x and the latest GA is also 14.x, regardless of minor
     or patch), mark **Pass**.
@@ -85,9 +88,9 @@ one — add each as its own bullet rather than overwriting prior ones.
 - **Feature-conditional GenAI checks (Cobuild default LLMs, Agent Hub
   permissions / service account / impersonation groups, Bring-your-own-LLM
   mode, local Hugging Face):** first confirm the feature is actually in use
-  (e.g. no `agentBuildingSettings`, no Agent Hub projects/webapps, all
-  `localAIServerSettings.*UseLocal` false, no INTERNAL_huggingface code env).
-  If it isn't, mark the check **Not Applicable**, not Fail or Needs Review. A
+  (the reader's `data-dir-config` reference lists the signals it has verified
+  and which it has not). If it isn't, mark the check **Not Applicable**, not
+  Fail or Needs Review. A
   missing key is only a Fail when the feature is demonstrably in use. When a
   setting is turned off but the checklist asks for acceptance or enablement
   (e.g. AI Services terms not accepted while all AI features are disabled),
@@ -97,39 +100,36 @@ one — add each as its own bullet rather than overwriting prior ones.
 
 - **Backend Xmx sizing (e.g. "SCALE-008"):** apply the full rule from the checklist, not just the
   RAM tier. Check all of: (1) `backend.xmx` against the RAM tier; (2) `backend.xmx` >= 3x the size
-  of the `config/` folder (`du -sh` it, or sum `datadir_listing.txt`); (3) it is not in the
-  32-48GB dead zone; (4) `jek.xmx`/`fek.xmx` are not oversized; (5) no `OutOfMemoryError` in the
-  backend logs. State which of these you checked in `evidence_found`; never assume a tier from RAM
-  alone.
+  of the `config/` folder (the reader's `listings-and-manifests` reference says how to size it);
+  (3) it is not in the 32-48GB dead zone; (4) the other components' heaps (`jek.xmx`/`fek.xmx`)
+  are not oversized; (5) no `OutOfMemoryError` in the backend logs. State which of these you
+  checked in `evidence_found`; never assume a tier from RAM alone.
 
 - **Log-error review (e.g. "SCALE-007"):** the bundle usually holds only a few hours of backend
   log. Quote counts with their window (e.g. `214 in ~2.6h`) in both `evidence_found` and `notes`,
-  and group by message pattern (digits and ids normalised), not by raw line.
+  and group by message pattern (digits and ids normalised), not by raw line. The reader's
+  `data-dir-runtime-and-codeenvs` reference says how to count and get the window.
 
 - **Not Applicable headlines:** write one clean reason, not a chain of colons. Use
   `Not applicable: <reason>` (e.g. `Not applicable: no local Hugging Face`), not
   `Not applicable: AI feature not in use: no local Hugging Face`.
 
-- **Reading a hinted setting:** a checklist `parameter_hint` is a pointer,
-  not a guarantee of the exact path. Before marking a setting absent or Fail,
-  search the whole `general-settings.json` for the leaf key (e.g.
-  `traceExplorerDefaultWebApp` lives under `generativeAISettings.llmTraceSettings`,
-  not at the top level). Likewise a concurrency or sizing limit stored under a
-  different block (e.g. `jekSettings.maxRunningJobs`) still counts: a value of
-  `0` means unsized and is a **Fail** for "Flow Limits Sizing", even when
-  `maxRunningActivities` is in range. Connection-detail findings from
-  `sanity-check.json` (e.g. HDFS/Spark connections with no group allowed to read
-  details) are real evidence for connection-details checks: report them
-  **Partial** rather than Not Applicable just because the storage is HDFS and
-  not a cloud object store.
+- **A hinted setting is not proof of absence:** a checklist `parameter_hint` is a pointer,
+  not a guarantee of where the setting lives. Before marking a setting absent or Fail, look for it
+  the way the reader's `data-dir-config` reference ("Finding a setting reliably") describes. A
+  concurrency or sizing limit that sits in a different place than its name suggests still counts:
+  a value of `0` means unsized and is a **Fail** for "Flow Limits Sizing", even when the other
+  concurrency limit is in range. Connection-detail gaps that DSS itself flagged are real evidence
+  for connection-details checks: report them **Partial** rather than Not Applicable just because
+  the storage is HDFS and not a cloud object store.
 
 - **HTTPS enforcement check (e.g. "SEC-006", especially for custom/on-prem
-  installs):** `install.ini` and DSS's own config only show whether DSS
-  itself is terminating TLS. They cannot show whether an external reverse
+  installs):** DSS's own config only shows whether DSS
+  itself is terminating TLS. It cannot show whether an external reverse
   proxy (nginx, an ALB/load balancer, an API gateway, etc.) sits in front of
   DSS and terminates HTTPS there instead — that setup is invisible to the
   diagnosis bundle. So: if the bundle shows DSS is *not* itself configured
-  for HTTPS (e.g. plain HTTP in `install.ini`), do not mark this **Fail**.
+  for HTTPS (e.g. plain HTTP in the server settings), do not mark this **Fail**.
   Mark it **Needs Review** instead, and in `notes` state plainly, in one
   bullet, that the bundle cannot confirm or rule out an external reverse
   proxy terminating HTTPS in front of DSS, with an `Action:` bullet to verify
@@ -142,34 +142,28 @@ one — add each as its own bullet rather than overwriting prior ones.
   record, not just absence from the bundle).
 
 - **Automation-node existence / Design–Automation separation (e.g.
-  "ARCH-001"), when reviewing a design-node bundle** (`install.ini` →
-  `nodetype = design`): the automation node is a separate host with its own
-  bundle, so a design-node bundle can never definitively confirm one exists.
-  Always mark this **Needs Review**, never Pass or Fail from the design
-  bundle alone. Work through the indicators in this order and report what
-  you find:
-  1. **Local deployer on the design host:** if `<mirror>/config/project-deployer/`
-     and/or `<mirror>/config/api-deployer/` are present (also check
-     `datadir_listing.txt`, since the mirror may not copy these subtrees),
-     a deployer is configured locally. `project-deployer/` holds projects to
-     deploy onto an automation node — an indication an automation node is in
-     use. Enumerate its contents (`infras/*.json` and any automation node
-     URLs they point to, `deployments/*.json`, published projects) and
-     **highlight this indication prominently in the headline of `notes`**
-     with the counts, and list the URLs and enumeration in `evidence_found`.
-     Distinguish a populated
-     deployer (infras + deployments present — strong indication) from one
-     that is present but empty (deployer enabled, no sign of actual use).
-     `api-deployer/` holds API services to deploy onto an API node — mention
-     it separately as an API-node indication, not as evidence of an
-     automation node.
-  2. **Remote deployer:** if `general-settings.json` →
-     `deployerClientSettings.mode` is `REMOTE` (pointing at an external
-     Deployer URL), highlight that the design node pushes to a separate
-     Deployer node — suggestive of a Design → Deployer → Automation setup,
-     but any automation infrastructure is defined on that node, not in this
-     bundle. Exported bundles under `DATA_DIR/bundles/<PROJECT>/` (via
-     `datadir_listing.txt`) are weak supporting evidence either way.
+  "ARCH-001"), when reviewing a design-node bundle:** the automation node is
+  a separate host with its own bundle, so a design-node bundle can never
+  definitively confirm one exists. Always mark this **Needs Review**, never
+  Pass or Fail from the design bundle alone. Use the reader's `node-types`
+  and `data-dir-config` (deployer) references to find the indicators, work
+  through them in this order and report what you find:
+  1. **Local Project Deployer on the design host:** a deployer configured
+     locally that holds projects to deploy onto an automation node is an
+     indication an automation node is in use. Enumerate what it holds
+     (infrastructures, deployments, published projects, and any automation
+     node URLs they point to) and **highlight this indication prominently in
+     the headline of `notes`** with the counts, and list the URLs and
+     enumeration in `evidence_found`. Distinguish a populated deployer (strong
+     indication) from one that is present but empty (deployer enabled, no
+     sign of actual use). A local API Deployer targets API nodes — mention it
+     separately as an API-node indication, not as evidence of an automation
+     node.
+  2. **Remote deployer:** if the design node pushes to an external Deployer
+     URL, highlight that — suggestive of a Design → Deployer → Automation
+     setup, but any automation infrastructure is defined on that node, not in
+     this bundle. Exported project bundles are weak supporting evidence either
+     way.
   3. **Otherwise:** state in `notes` that there is no definitive
      configuration in the bundle indicating whether an automation node is
      deployed, and that this needs further verification with the customer.

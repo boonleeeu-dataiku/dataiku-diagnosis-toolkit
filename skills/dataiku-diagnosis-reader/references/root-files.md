@@ -86,7 +86,7 @@ often sufficient on their own.
 | `/proc/mounts` | Every mounted filesystem, including **which cgroup hierarchy version is in use** — separate `/sys/fs/cgroup/memory`, `/sys/fs/cgroup/cpu,cpuacct` etc. mount points indicate **cgroup v1**; a single unified `/sys/fs/cgroup` mount indicates **cgroup v2** | |
 | `ip addr ls` / `ip ro ls` | Network interfaces (with IPs) and routing table | Shows `eth0`/`docker0` interfaces, default route |
 | `df -h` / `df -i` | Disk space and inode usage per filesystem | `/dev/mapper/vg01-vol01  800G  585G  216G  74% /apps` — check this before assuming disk pressure requires `datadir_listing.txt` |
-| `lsblk` / `lsblk -t` | Block device layout (disks, partitions, LVM), and I/O alignment/queue settings | |
+| `lsblk` / `lsblk -t` | Block device layout (disks, partitions, LVM), and I/O alignment/queue settings | `lsblk -t` has a `ROTA` column: `0` = SSD/non-rotational, `1` = rotational (HDD). Match the row to the volume that holds the data dir (cross-check the mount point from `lsblk`/`df -h`). DSS flags the same thing itself as `WARN_MISC_DISK_ROTATIONAL` in `run/sanity-check.json`. In the one sample with the warning, `lsblk -t` showed `ROTA 1` on the data disk and DSS raised that warning, so the two agree |
 | `blkid`, `mount`, `/etc/fstab`, `/etc/mtab`, `findmnt -D`, `ls -Rla /dev/disk/` (version-dependent, see above) | Filesystem UUIDs/labels, active mount options, fstab-defined mounts, disk-by-id/uuid/path symlinks | |
 | `<mirror>/bin/dss status` | Which DSS components are running, their PIDs and uptime | `backend RUNNING pid 3611, uptime 22:17:33` |
 | `iostat -x -c 3 6` | Per-device I/O stats sampled 6× (often fails — not installed) | |

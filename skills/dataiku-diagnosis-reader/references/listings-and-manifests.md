@@ -49,5 +49,16 @@ grep '/data_dataiku/design/managed_datasets/' datadir_listing.txt | sort -k7 -n 
 grep -m1 'timelines/MY_PROJECT' datadir_listing.txt
 ```
 
+To size a subtree (e.g. the whole `config/` folder), sum the size column over its entries. Prefer
+`config_listing.txt`, which covers only `config/`, over filtering `datadir_listing.txt`:
+
+```sh
+# Total bytes of regular files in config/ (perms start with '-'; size is the 7th field)
+awk '$3 ~ /^-/ {s+=$7} END {printf "%.1f MB\n", s/1048576}' config_listing.txt
+```
+
+Don't run `du` on the extracted mirror's `config/` instead: the mirror is a partial copy, so it
+understates the real size (one sample: listing 183 MB vs. 76 MB on disk).
+
 If the question is "does X exist and how big is it," these commands answer it directly. If the
 question is "what does X contain," these files cannot answer it — say so.

@@ -43,6 +43,14 @@ backend.xmx = 8g               ; backend JVM heap size — relevant to OOM inves
 exec_wrapper_location = /etc/dataiku-security/<installid>/execwrapper.sh   ; OS-user impersonation wrapper, used for running jobs as specific users
 ```
 
+`[javaopts]` holds the JVM heap sizes. Only `backend.xmx` was present in the samples (8g, 8g,
+12g); other components' keys (e.g. `jek.xmx`, `fek.xmx`) would sit in the same section when set
+but were not observed, so their absence means "default", and their naming is unverified. The
+effective flags per component are also in `diag.txt` → `printenv` (`DKU_*_JAVA_OPTS`). To size the
+backend heap against the config footprint, take the size of `config/` from `config_listing.txt`
+(sum the size column — see `references/listings-and-manifests.md`), not from `du` on the extracted
+mirror, which is a partial copy.
+
 `nodetype` is the authoritative way to determine what kind of node produced this bundle — always
 read it before assuming the `config/`/`run/` structure documented for one node type applies to
 another (see `references/node-types.md`).
