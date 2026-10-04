@@ -63,14 +63,19 @@ Types: text fields (`positives`, `body`, `action`, `risk`, `found`, ...) are sin
 returns the full `shape` map. A rejection names each wrong field by path: fix exactly those fields instead of
 reading the generator's source.
 
-Rules: group findings by root cause (shared evidence, "see SEC-004" in Action text); titles state a conclusion;
-every figure on a main slide must appear in a checklist cell; never cite a Pass item as a problem unless it is
+Rules: the generator uses `risk1`/`risk2`/`risk3` titles verbatim, and only its auto-derived fallback adds the
+"Risk 1: " / "Risk 2: " / "Risk 3: " prefix, so start each of those three titles with that prefix yourself (e.g.
+`"Risk 1: job limit and memory headroom threaten stability"`); group findings by root cause (shared evidence, "see SEC-004" in Action text); titles state a conclusion;
+every figure on a main slide must appear in a checklist cell, so quote figures
+verbatim from the cells and do not state counts you tallied yourself (e.g. "nine options fail"): the validator
+rejects them, so rephrase without the number or use one the cells carry; never cite a Pass item as a problem unless it is
 under `caveats`; effort is indicative. If the tool rejects the narrative, fix the narrative (or the
 checklist), not the tool.
 
 Call `build_platform_review_deck` with:
 - `checklist_path` (required) — the completed checklist `.xlsx`.
-- `customer` (required) — customer name, shown on the title slide.
+- `customer` (required) — customer name, shown on the title slide. Take it from the user; if not
+  given, ask. Never infer it from an old deck or file name in the same folder.
 - `logo_path` (optional) — a customer logo image for the title slide.
 - `output_path` (optional) — defaults to `output/<Customer_Slug>_Platform_Review_<date>.pptx`.
 - `style` — `"v2"` (the default: verdict-first, about 20 slides). Pass `"v1"` (one findings slide per few

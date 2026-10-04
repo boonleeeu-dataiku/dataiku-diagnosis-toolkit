@@ -10,6 +10,15 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+### Changed
+
+- `dataiku-diagnosis-checklist-review`: never print secrets (parse selected keys only, don't read stray notes
+  files); never pick a checklist among similar templates; search `dip.properties` for advanced-security keys;
+  bracketed `[ERROR]` log grep with time windows; full SCALE-008 rule (3x config folder, dead zone, jek/fek);
+  `WebFetch` fallback for the version lookup; cleaner Not Applicable headline wording.
+- `dataiku-review-deck-builder`: ask for the customer name instead of inferring it; narrative figures must be
+  quoted from checklist cells, not self-tallied; `risk1`-`risk3` titles must carry their "Risk N: " prefix.
+
 ## [0.15.1] - 2026-10-04
 
 ### Fixed

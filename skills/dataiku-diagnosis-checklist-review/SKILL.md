@@ -15,7 +15,9 @@ spreadsheet, plus add/update a Summary tab.
 
 If the user invokes this without giving both paths, ask for: the diagnosis
 bundle path, and the checklist file path. Don't ask anything else up front —
-start working once you have both.
+start working once you have both. Never pick a checklist yourself, even when the folder holds
+one obvious candidate or several similar templates (e.g. dated `*_checklist_template.xlsx`
+copies): a wrong guess silently changes the results. Ask, or offer the bundled default.
 
 If the user says they don't have a checklist file handy, offer to use the
 bundled default template at `resources/checklist_template.xlsx` (relative to
@@ -37,6 +39,20 @@ you're using the default template rather than a user-supplied checklist.
 - If a version-currency check is present in the checklist (see calibration
   below), confirm a web search tool is available — it will be needed to
   look up the latest Dataiku DSS release.
+
+### Secrets: never print them
+
+Bundles and their neighbouring files hold live credentials: `general-settings.json`
+(`internalDatabase` password, connection and LDAP bind passwords), `connections.json`,
+`install.ini`, `dip.properties`, and loose notes files next to the bundle (e.g. `Notes.txt` with an
+API key id and secret). Tool output lands in the transcript.
+
+- Do not `cat`/read files that were not asked for (notes, READMEs beside the bundle) to "get
+  context". Ask the user instead.
+- Never dump a whole settings block. Parse JSON with Python and print only the specific keys
+  you need; for `.ini`/`.properties`, grep the exact key names (e.g. `grep -nE '^\s*(backend|jek|fek)\.xmx'`).
+- If a secret does get printed, say so in your final summary, say which file, and tell the user
+  to rotate it. Never copy secrets into `evidence_found`, `notes`, the narrative or the deck.
 
 ## 1. Orient
 
@@ -62,6 +78,9 @@ Typical high-value sources in a DSS diagnosis bundle:
 - `apps/dss/<node>/config/general-settings.json` — covers most
   settings-based checks (security, cgroups, Spark, containerized execution,
   LLM Mesh/GenAI settings, connections preferences, flow limits, etc.)
+- `apps/dss/<node>/dip.properties` — extra `dku.*`/`security.*` keys; several advanced-security
+  checks (header settings, `dku.feature.*`, upload extensions) live here or in `install.ini`
+  rather than in `general-settings.json`, so search all three before calling a setting absent
 - `apps/dss/<node>/install.ini` — port, backend.xmx, HTTPS/security headers,
   instance/install IDs
 - `apps/dss/<node>/run/sanity-check.json` — DSS's own self-diagnosed
@@ -89,7 +108,9 @@ Typical high-value sources in a DSS diagnosis bundle:
   holding the data dir) and `df`. This is the evidence for SSD-storage checks.
 - `run/hs_err_pid*.log` — JVM crash dumps; grep the `^# ` header lines for
   the crash cause (OOM vs segfault etc.) rather than reading the full file
-- `run/backend.log*` — grep for `ERROR`/`FATAL`/`OutOfMemoryError`; when a
+- `run/backend.log*` — grep for `[ERROR]`/`[FATAL]`/`OutOfMemoryError`. Entries are bracketed
+  (`[ERROR]`), so a bare `ERROR` pattern can return a false zero. Record the first and last
+  timestamp of each rotated file so counts can be quoted with their time window. When a
   file is too large for `safe_read`, use the linked device's shell
   (`device_bash`) to `grep -c` / `grep | sort | uniq -c` for patterns and
   counts instead of reading line by line — this is far cheaper.
@@ -241,7 +262,9 @@ one — add each as its own bullet rather than overwriting prior ones.
   In both cases, state the bundle's version, the latest GA version found, its
   release date if available, and how many major versions behind (0 if
   current). Keep `notes` short (e.g. `Bundle 13.x vs latest GA 14.x (date) —
-  1 major behind`) and put the full source citation in `evidence_found`. If
+  1 major behind`) and put the full source citation in `evidence_found`. If an
+  extended search returns only links with no content, `WebFetch` the official release-notes page for
+  the newest major instead of retrying the search. If
   the web search fails, returns nothing usable, or no web search tool is
   available in this session, do not guess or fall back to prior/training
   knowledge of the latest version — set `notes` to state plainly that
@@ -261,6 +284,21 @@ one — add each as its own bullet rather than overwriting prior ones.
   use **Needs Review** and ask whether it is intentional. For "AI assistant
   debug data in the bundle" checks, a bundle that simply lacks the section is
   **Needs Review**, not Fail.
+
+- **Backend Xmx sizing (e.g. "SCALE-008"):** apply the full rule from the checklist, not just the
+  RAM tier. Check all of: (1) `backend.xmx` against the RAM tier; (2) `backend.xmx` >= 3x the size
+  of the `config/` folder (`du -sh` it, or sum `datadir_listing.txt`); (3) it is not in the
+  32-48GB dead zone; (4) `jek.xmx`/`fek.xmx` are not oversized; (5) no `OutOfMemoryError` in the
+  backend logs. State which of these you checked in `evidence_found`; never assume a tier from RAM
+  alone.
+
+- **Log-error review (e.g. "SCALE-007"):** the bundle usually holds only a few hours of backend
+  log. Quote counts with their window (e.g. `214 in ~2.6h`) in both `evidence_found` and `notes`,
+  and group by message pattern (digits and ids normalised), not by raw line.
+
+- **Not Applicable headlines:** write one clean reason, not a chain of colons. Use
+  `Not applicable: <reason>` (e.g. `Not applicable: no local Hugging Face`), not
+  `Not applicable: AI feature not in use: no local Hugging Face`.
 
 - **Reading a hinted setting:** a checklist `parameter_hint` is a pointer,
   not a guarantee of the exact path. Before marking a setting absent or Fail,
