@@ -114,6 +114,32 @@ def test_narrative_unknown_id_and_bad_effort(analysis):
         narrative.validate({"roadmap": {"now": [{"effort": "XL", "action": "x", "ids": []}]}}, a)
 
 
+def test_narrative_wrong_types_are_reported_by_path(analysis):
+    _, a = analysis
+    bad = {"risk2": {"positives": ["HTTPS on", "exports off"], "table": []},
+           "roadmap": {"now": [{"effort": "S", "action": ["Set Max Jobs"], "ids": ["SEC-001"]}], "next": "later"},
+           "takeaways": [{"heading": "x", "body": ["y"], "tone": "good"}]}
+    with pytest.raises(narrative.NarrativeError) as exc:
+        narrative.validate(bad, a)
+    msg = str(exc.value)
+    for path in ("risk2.positives: expected a string, got a list", "roadmap.now[1].action", "roadmap.next: expected a list",
+                 "takeaways[1].body"):
+        assert path in msg
+
+
+def test_narrative_correct_shapes_pass(analysis):
+    _, a = analysis
+    narrative.validate({"risk2": {"positives": "HTTPS on", "table": []},
+                        "risk1": {"tiles": [{"number": 98, "label": "x", "id": "SEC-001"}], "fix": [{"text": "t", "id": ["SEC-001"]}]},
+                        "roadmap": {"now": [{"effort": "S", "action": "Set Max Jobs", "ids": "SEC-001"}]}}, a)
+
+
+def test_scaffold_exposes_shape(analysis, tmp_path):
+    _, a = analysis
+    f = tmp_path / "x_review.xlsx"; f.write_bytes(b"x")
+    assert narrative.scaffold(a, f)["shape"]["risk2"]["positives"] == "str"
+
+
 def test_narrative_load_errors(tmp_path):
     with pytest.raises(narrative.NarrativeError, match="not found"):
         narrative.load(tmp_path / "missing.json")

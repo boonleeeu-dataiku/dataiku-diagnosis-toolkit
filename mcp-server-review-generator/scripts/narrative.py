@@ -24,6 +24,72 @@ class NarrativeError(ValueError):
     """The narrative file is malformed or contradicts the checklist."""
 
 
+# Expected JSON shapes, checked before any content rule so a wrong type is reported
+# with its path instead of surfacing as a bare TypeError inside a slide builder.
+# STR = string, NUM = string or number, IDS = string or list of strings, a dict = an
+# object, a one-element list = a list of that. Absent keys are fine (they fall back).
+STR, NUM, IDS = "str", "num", "ids"
+_ROW_SPEC = {"id": STR, "setting": STR, "from": STR, "to": STR, "confirm": STR}
+SHAPE = {
+    "checklist_sha256": STR, "verdict_title": STR, "highlights": STR, "snapshot_title": STR, "owners_title": STR,
+    "takeaways": [{"heading": STR, "body": STR, "tone": STR}],
+    "snapshot": [{"label": STR, "value": STR, "note": STR, "state": STR}],
+    "risk1": {"title": STR, "risk": STR, "caveat": STR, "linked_label": STR,
+              "tiles": [{"number": NUM, "label": STR, "id": STR, "note": STR}],
+              "fix": [{"text": STR, "id": IDS}]},
+    "risk2": {"title": STR, "positives": STR,
+              "table": [{"id": STR, "setting": STR, "today": STR, "target": STR}]},
+    "risk3": {"title": STR, "cards": [{"heading": STR, "ids": IDS, "found": STR, "todo": STR}]},
+    "quick_wins": {"title": STR, "rows": [_ROW_SPEC]},
+    "owners": {"groups": [{"owner": STR, "asks": [{"id": STR, "ask": STR}]}], "notes": {"*": STR}},
+    "roadmap": {"title": STR, "footnote": STR,
+                **{col: [{"effort": STR, "action": STR, "ids": IDS}] for col in ("now", "next", "plan")}},
+    "na_groups": [{"heading": STR, "note": STR, "ids": IDS}],
+    "caveats": IDS,
+}
+_TYPE_NAMES = {dict: "an object", list: "a list", str: "a string", int: "a number", float: "a number",
+               bool: "true/false", type(None): "null"}
+
+
+def _shape_problems(value, spec, path, out):
+    got = _TYPE_NAMES.get(type(value), type(value).__name__)
+    if spec == STR:
+        if not isinstance(value, str):
+            hint = " (join the items into one string)" if isinstance(value, list) else ""
+            out.append(f"{path}: expected a string, got {got}{hint}")
+    elif spec == NUM:
+        if isinstance(value, bool) or not isinstance(value, (str, int, float)):
+            out.append(f"{path}: expected a string or number, got {got}")
+    elif spec == IDS:
+        if not (isinstance(value, str) or (isinstance(value, list) and all(isinstance(v, str) for v in value))):
+            out.append(f"{path}: expected an ID string or a list of ID strings, got {got}")
+    elif isinstance(spec, list):
+        if not isinstance(value, list):
+            out.append(f"{path}: expected a list, got {got}")
+            return
+        for i, item in enumerate(value, start=1):
+            _shape_problems(item, spec[0], f"{path}[{i}]", out)
+    else:
+        if not isinstance(value, dict):
+            out.append(f"{path}: expected an object, got {got}")
+            return
+        if "*" in spec:
+            for k, v in value.items():
+                _shape_problems(v, spec["*"], f"{path}.{k}", out)
+            return
+        for k, sub in spec.items():
+            if k in value:
+                _shape_problems(value[k], sub, f"{path}.{k}" if path else k, out)
+
+
+def check_shape(narr: dict):
+    """Raise one NarrativeError listing every wrongly-typed field by path."""
+    problems = []
+    _shape_problems(narr, SHAPE, "", problems)
+    if problems:
+        raise NarrativeError("Narrative has fields of the wrong type:\n  - " + "\n  - ".join(problems))
+
+
 def default_path(checklist_path) -> Path:
     """Where a build looks when no narrative is given: beside the checklist,
     named <checklist_stem>_narrative.json."""
@@ -76,6 +142,7 @@ def _numbers(text):
 
 def validate(narr: dict, a: Analysis):
     """Raise NarrativeError on contradictions; return a list of soft warnings."""
+    check_shape(narr)
     warnings = []
     caveats = set(_ids(narr.get("caveats", []), "caveats"))
     for cid in caveats:
@@ -192,6 +259,7 @@ RULES = [
     "quick_wins rows must be Fail items; risk2.table Fail or Partial; other citations Fail, Partial or Needs Review.",
     "A Pass item may be cited only if listed under caveats.",
     "Every figure on a risk1 tile must appear in the cited row's notes or evidence_found.",
+    "Text fields (positives, action, body, ...) are single strings, not lists; only ids/ids-like fields take lists.",
     "roadmap effort is S, M or L. Record checklist_sha256 (below) once the checklist is final.",
 ]
 
@@ -224,5 +292,6 @@ def scaffold(a: Analysis, checklist_path) -> dict:
                            for r in a.by_status(NA)],
         "open_items": [brief(r) for r in a.rows.values() if r.status in ("Fail", "Partial")],
         "rules": RULES,
+        "shape": SHAPE,
         "warnings": list(a.warnings),
     }

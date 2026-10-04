@@ -690,14 +690,18 @@ def build_v2(checklist_path: Path, customer: str, output_path: Path, base_deck: 
         d = Deck(prs)
         edit_cover(prs.slides[0], data)
 
-        verdict_slide(d, a, narr)
-        snapshot_slide(d, a, narr, data)
-        risk1_slide(d, a, narr)
-        risk2_slide(d, a, narr)
-        risk3_slide(d, a, narr)
-        quickwins_slide(d, a, narr)
-        owners_slide(d, a, narr)
-        roadmap_slide(d, a, narr, data)
+        narrative_slides = [(verdict_slide, ()), (snapshot_slide, (data,)), (risk1_slide, ()), (risk2_slide, ()),
+                            (risk3_slide, ()), (quickwins_slide, ()), (owners_slide, ()), (roadmap_slide, (data,))]
+        for build, extra in narrative_slides:
+            try:
+                build(d, a, narr, *extra)
+            except (TypeError, KeyError, AttributeError) as exc:
+                if not narrative_path:
+                    raise
+                raise narr_mod.NarrativeError(
+                    f"{build.__name__.removesuffix('_slide')} slide could not be built from the narrative "
+                    f"({type(exc).__name__}: {exc}); check that key's fields against analyze_checklist's `shape`."
+                ) from exc
         appendix_divider(d)
         method_slide(d, a, data)
         passed_slide(d, a, v2)

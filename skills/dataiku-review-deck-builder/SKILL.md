@@ -58,6 +58,11 @@ the cells):
   (`{heading,note,ids}`, must cover every N/A item once), `caveats` (Pass IDs that may be cited as a
   "Pass, with caveat").
 
+Types: text fields (`positives`, `body`, `action`, `risk`, `found`, ...) are single strings, never lists;
+`ids` / `fix[].id` take an ID string or a list of IDs; `tiles[].number` is a string or number. `analyze_checklist`
+returns the full `shape` map. A rejection names each wrong field by path: fix exactly those fields instead of
+reading the generator's source.
+
 Rules: group findings by root cause (shared evidence, "see SEC-004" in Action text); titles state a conclusion;
 every figure on a main slide must appear in a checklist cell; never cite a Pass item as a problem unless it is
 under `caveats`; effort is indicative. If the tool rejects the narrative, fix the narrative (or the

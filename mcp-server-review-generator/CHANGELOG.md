@@ -7,6 +7,20 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-10-04
+
+### Fixed
+
+- A narrative with a wrong-typed field (e.g. a list for `risk2.positives` or `roadmap.now[].action`) failed the
+  build with a bare `TypeError` that named no field. `narrative.validate` now checks every field's type first and
+  reports all offenders together by path (`risk2.positives: expected a string, got a list ...`). Any type error
+  that still escapes inside a narrative-driven slide is re-raised as a `NarrativeError` naming the slide.
+
+### Added
+
+- `analyze_checklist` returns a `shape` map of the expected narrative types, and a rule that text fields are
+  strings, so a draft is right first time.
+
 ## [0.7.0] - 2026-10-04
 
 ### Added

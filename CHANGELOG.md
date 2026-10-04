@@ -10,7 +10,18 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-10-04
+
+### Added
+
+- Re-synced `mcp-server-review-generator` to upstream v0.7.1: a narrative with a wrong-typed field (a list where
+  a string is expected, e.g. `risk2.positives`) is now rejected with every offending field named by path instead
+  of a bare type error, and `analyze_checklist` returns a `shape` map of the expected types.
+
 ### Changed
+
+- `dataiku-review-deck-builder`: the narrative key list now states field types, and says to fix the field named
+  in a rejection rather than reading the generator's source.
 
 - `dataiku-diagnosis-checklist-review`: the version-currency check now requires an extended web search plus a
   look for the next major; `diag.txt` (`lsblk` ROTA) is a named source for SSD checks; new calibrations make
