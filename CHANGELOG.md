@@ -10,6 +10,13 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+## [0.15.3] - 2026-10-04
+
+### Fixed
+
+- Re-synced `mcp-server-review-generator` to upstream v0.7.3: narrative `risk1`/`risk2`/`risk3` titles now get the
+  "Risk N:" lead added when missing, so slides 4-6 are always labelled.
+
 ## [0.15.2] - 2026-10-04
 
 ### Changed

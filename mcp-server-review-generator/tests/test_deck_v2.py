@@ -248,3 +248,11 @@ def test_v2_build_risk3_cards_accept_string_ids(checklist_factory, tmp_path):
             {"heading": "Backups", "ids": "ARCH-002", "found": "Unknown", "todo": "Ask infra"}]}}))
     res = build_deck_v2.build_v2(path, "Acme", tmp_path / "o.pptx", common.BRANDING_TEMPLATE)
     assert res["narrative_used"].endswith("_narrative.json")
+
+
+def test_risk_title_adds_prefix_only_when_missing():
+    import build_deck_v2
+    assert build_deck_v2.risk_title(1, "Memory is unsized") == "Risk 1: Memory is unsized"
+    assert build_deck_v2.risk_title(2, "Risk 2: Hardening") == "Risk 2: Hardening"
+    assert build_deck_v2.risk_title(3, "risk 3:  Ops") == "risk 3:  Ops"
+    assert build_deck_v2.risk_title(1, "Risk 2: wrong slot") == "Risk 1: Risk 2: wrong slot"

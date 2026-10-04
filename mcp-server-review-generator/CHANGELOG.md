@@ -7,6 +7,13 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-10-04
+
+### Fixed
+
+- A narrative's `risk1`/`risk2`/`risk3` titles were used verbatim, so a title without the "Risk N:" lead
+  left slides 4-6 unlabelled (only the auto-derived fallback added it). The prefix is now added when missing.
+
 ## [0.7.2] - 2026-10-04
 
 ### Fixed

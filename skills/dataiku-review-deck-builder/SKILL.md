@@ -63,9 +63,7 @@ Types: text fields (`positives`, `body`, `action`, `risk`, `found`, ...) are sin
 returns the full `shape` map. A rejection names each wrong field by path: fix exactly those fields instead of
 reading the generator's source.
 
-Rules: the generator uses `risk1`/`risk2`/`risk3` titles verbatim, and only its auto-derived fallback adds the
-"Risk 1: " / "Risk 2: " / "Risk 3: " prefix, so start each of those three titles with that prefix yourself (e.g.
-`"Risk 1: job limit and memory headroom threaten stability"`); group findings by root cause (shared evidence, "see SEC-004" in Action text); titles state a conclusion;
+Rules: the generator adds the "Risk 1: " / "Risk 2: " / "Risk 3: " lead to `risk1`/`risk2`/`risk3` titles when it is missing, so write a plain conclusion title; group findings by root cause (shared evidence, "see SEC-004" in Action text); titles state a conclusion;
 every figure on a main slide must appear in a checklist cell, so quote figures
 verbatim from the cells and do not state counts you tallied yourself (e.g. "nine options fail"): the validator
 rejects them, so rephrase without the number or use one the cells carry; never cite a Pass item as a problem unless it is

@@ -317,13 +317,19 @@ def snapshot_slide(d, a, narr, data):
         tb(s, lx + 0.2, 4.9, 1.7, 0.2, [P(txt, 8.5, False, GREY)], name=f"Legend text {k + 1}")
 
 
+def risk_title(n, title):
+    """Slide title for risk card `n`: a narrative title without the "Risk N:" lead gets one."""
+    title = str(title).strip()
+    return title if re.match(rf"Risk\s*{n}\s*:", title, re.I) else f"Risk {n}: {title}"
+
+
 def risk1_slide(d, a, narr):
     r1 = narr.get("risk1")
     if r1 is None:
         r1 = fallback_risk1(a)
     if not r1:
         return None
-    s = d.cream(r1["title"])
+    s = d.cream(risk_title(1, r1["title"]))
     tiles = r1.get("tiles", [])[:5]
     for i, t in enumerate(tiles):
         cx = 0.39 + (i % 2) * 2.45; cy = 1.2 + (i // 2) * 1.2
@@ -383,7 +389,7 @@ def risk2_slide(d, a, narr):
               "table": [{"id": r.id, "setting": clip(r.title, 38), "today": clip(r.headline, 50),
                          "target": clip(r.action or "-", 50)} for r in sel]}
     rows_ = r2["table"][:7]
-    s = d.cream(r2["title"])
+    s = d.cream(risk_title(2, r2["title"]))
     body = []
     for e in rows_:
         row = a.rows[e["id"]]
@@ -417,7 +423,7 @@ def risk3_slide(d, a, narr):
         r3 = {"title": "Risk 3: open items still to close",
               "cards": [{"heading": clip(r.title, 32), "ids": [r.id], "found": r.headline, "todo": r.action or "Confirm with the owner."}
                         for r in left[:3]]}
-    s = d.cream(r3["title"])
+    s = d.cream(risk_title(3, r3["title"]))
     cards = r3["cards"][:3]
     for i, c in enumerate(cards):
         cx = 0.39 + i * 3.1
