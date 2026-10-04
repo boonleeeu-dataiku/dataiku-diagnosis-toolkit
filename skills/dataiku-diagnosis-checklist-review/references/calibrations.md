@@ -17,18 +17,17 @@ one — add each as its own bullet rather than overwriting prior ones.
   cluster is attached, mark any check that depends on Kubernetes/Elastic
   Compute as **Not Applicable** rather than Fail or Needs Review — these
   checks are only relevant once a cluster is attached. Once a cluster *is*
-  attached, it becomes critical that a valid containerized execution
-  configuration is actually present — treat that as a
-  must-have, not optional.
+  attached, a valid containerized execution configuration must be present —
+  treat that as a must-have: if none is defined, mark the check **Fail**.
 
 - **Recommended containerized execution config baseline (e.g. a 'Standard'
   config at ~200MB/16000MB and a 'Webapp' config at ~500MB/500MB, or similar
   named/sized baselines):** treat any such baseline given in the checklist's
   `expected_value`/`supporting_evidence` as an illustrative example, not a
   literal instruction to match names or exact sizes. It is sufficient to see
-  **more than one containerized execution config defined with genuinely
-  varying sizes** (e.g. different memory/CPU requests-limits across configs,
-  showing an intent to size workloads differently) — mark this **Pass**
+  **two or more containerized execution configs whose memory or CPU
+  requests/limits genuinely differ** (showing an intent to size workloads
+  differently) — mark this **Pass**
   even when the config names and exact memory figures don't match the
   baseline example. Still call out in `notes` if all configs are actually
   identically sized despite different names (that remains a real gap, as
@@ -51,39 +50,18 @@ one — add each as its own bullet rather than overwriting prior ones.
   `data-dir-config` reference says where the namespace fields live and how
   to tell managed from manual.)
 
-- **Dataiku DSS version currency check (e.g. "DSS Version Currency"):**
-  actively look up Dataiku's current generally-available DSS release with a
-  web search (do this each run — the answer changes over time, don't rely on
-  memorized/training-time knowledge of "the latest version"). Use the
-  **extended** search mode: a standard search can return a stale answer and
-  miss a newer major (a standard search once reported 14.7.2 when DSS 15.0.2
-  was already out). Search for "Dataiku DSS latest version release notes",
-  then run a second search for the next major above the one you found
-  (e.g. "Dataiku DSS 15 release notes"); take the highest GA version
-  confirmed by an official Dataiku source (release notes / changelog /
-  docs.dataiku.com). Never answer from a single standard search. Compare the
-  bundle's DSS `product_version` (format `MAJOR.MINOR.PATCH`; the reader's
-  `data-dir-identity` reference says where it is) against the latest GA
-  version's major version number only, and apply this fixed internal rule:
-  - If the bundle's **major** version matches the current major release
-    (e.g. bundle is 14.x and the latest GA is also 14.x, regardless of minor
-    or patch), mark **Pass**.
-  - If the bundle's major version is behind the current major release (e.g.
-    bundle is 13.x while latest GA is 14.x), mark **Needs Review** (not
-    Fail) — a major-version gap warrants a human look at upgrade planning
-    rather than an automatic fail.
-  In both cases, state the bundle's version, the latest GA version found, its
-  release date if available, and how many major versions behind (0 if
-  current). Keep `notes` short (e.g. `Bundle 13.x vs latest GA 14.x (date) —
-  1 major behind`) and put the full source citation in `evidence_found`. If an
-  extended search returns only links with no content, `WebFetch` the official release-notes page for
-  the newest major instead of retrying the search. If
-  the web search fails, returns nothing usable, or no web search tool is
-  available in this session, do not guess or fall back to prior/training
-  knowledge of the latest version — set `notes` to state plainly that
-  currency could not be verified against Dataiku's current release
-  information (web lookup failed/unavailable) and mark the item **Needs
-  Review**.
+- **Dataiku DSS version currency check (e.g. "DSS Version Currency"):** look up the current GA
+  release at run time (see the SKILL's "Version-currency lookup"), then compare the bundle's DSS
+  `product_version` (the reader's `data-dir-identity` reference says where it is) against the latest
+  GA's **major** version only:
+  - Same major (e.g. bundle 14.x, latest GA 14.x, any minor/patch): **Pass**.
+  - Bundle's major is behind: **Needs Review** (not Fail) — a major gap warrants a human look at
+    upgrade planning.
+  - Lookup failed, returned nothing usable, or no web search tool is available: **Needs Review**.
+    Never guess from prior knowledge; say in `notes` that currency could not be verified.
+  State the bundle's version, the latest GA version, its release date if known, and how many majors
+  behind (0 if current). Keep `notes` short (e.g. `Bundle 13.x vs latest GA 14.x (date) — 1 major
+  behind`); put the full source citation in `evidence_found`.
 
 - **Feature-conditional GenAI checks (Cobuild default LLMs, Agent Hub
   permissions / service account / impersonation groups, Bring-your-own-LLM
@@ -98,21 +76,17 @@ one — add each as its own bullet rather than overwriting prior ones.
   debug data in the bundle" checks, a bundle that simply lacks the section is
   **Needs Review**, not Fail.
 
-- **Backend Xmx sizing (e.g. "SCALE-008"):** apply the full rule from the checklist, not just the
-  RAM tier. Check all of: (1) `backend.xmx` against the RAM tier; (2) `backend.xmx` >= 3x the size
+- **Backend Xmx sizing (e.g. a "backend Xmx" check):** apply the full rule from the checklist, not
+  just the RAM tier. Check all of: (1) `backend.xmx` against the RAM tier; (2) `backend.xmx` >= 3x the size
   of the `config/` folder (the reader's `listings-and-manifests` reference says how to size it);
   (3) it is not in the 32-48GB dead zone; (4) the other components' heaps (`jek.xmx`/`fek.xmx`)
   are not oversized; (5) no `OutOfMemoryError` in the backend logs. State which of these you
   checked in `evidence_found`; never assume a tier from RAM alone.
 
-- **Log-error review (e.g. "SCALE-007"):** the bundle usually holds only a few hours of backend
+- **Log-error review (e.g. a backend log-error check):** the bundle usually holds only a few hours of backend
   log. Quote counts with their window (e.g. `214 in ~2.6h`) in both `evidence_found` and `notes`,
   and group by message pattern (digits and ids normalised), not by raw line. The reader's
   `data-dir-runtime-and-codeenvs` reference says how to count and get the window.
-
-- **Not Applicable headlines:** write one clean reason, not a chain of colons. Use
-  `Not applicable: <reason>` (e.g. `Not applicable: no local Hugging Face`), not
-  `Not applicable: AI feature not in use: no local Hugging Face`.
 
 - **A hinted setting is not proof of absence:** a checklist `parameter_hint` is a pointer,
   not a guarantee of where the setting lives. Before marking a setting absent or Fail, look for it
@@ -123,7 +97,7 @@ one — add each as its own bullet rather than overwriting prior ones.
   for connection-details checks: report them **Partial** rather than Not Applicable just because
   the storage is HDFS and not a cloud object store.
 
-- **HTTPS enforcement check (e.g. "SEC-006", especially for custom/on-prem
+- **HTTPS enforcement check (especially for custom/on-prem
   installs):** DSS's own config only shows whether DSS
   itself is terminating TLS. It cannot show whether an external reverse
   proxy (nginx, an ALB/load balancer, an API gateway, etc.) sits in front of
@@ -141,8 +115,7 @@ one — add each as its own bullet rather than overwriting prior ones.
   evidence no HTTPS exists anywhere (e.g. explicit customer confirmation on
   record, not just absence from the bundle).
 
-- **Automation-node existence / Design–Automation separation (e.g.
-  "ARCH-001"), when reviewing a design-node bundle:** the automation node is
+- **Automation-node existence / Design–Automation separation, when reviewing a design-node bundle:** the automation node is
   a separate host with its own bundle, so a design-node bundle can never
   definitively confirm one exists. Always mark this **Needs Review**, never
   Pass or Fail from the design bundle alone. Use the reader's `node-types`

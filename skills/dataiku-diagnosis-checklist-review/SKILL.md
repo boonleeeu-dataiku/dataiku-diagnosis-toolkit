@@ -29,31 +29,37 @@ spreadsheet, plus add/update a Summary tab.
 - If the user has no checklist handy, offer the bundled default template at
   `resources/checklist_template.xlsx` (relative to this skill's own directory), and say plainly once
   you proceed that you're using the default rather than a user-supplied checklist.
-- If this session is linked to the user's computer (remote-devices tools present) and the paths are
-  local, request folder access to the common parent directory of both
-  (`device_request_folder_access`), then `device_stage_files` the checklist into the container to
-  read/write it, and `device_list_dir` (recursive) on the bundle to see its structure.
 - **How to read the bundle comes from the reader, not from this skill.** Before touching the
   bundle, load the `dataiku-diagnosis-reader` skill. If skills can't be loaded here, read the
   reader's `SKILL.md` and its `references/limitations.md` and `references/listings-and-manifests.md`
   files directly. Use its `lookup-table` / `data-dir-config` references to find where a setting
   lives.
-- The reader ships `scripts/orient.sh`; run it with Bash (or the linked device's shell,
-  `device_bash`). Read bundle files with your normal read/search tools (or `device_bash`),
-  following the reader's `limitations.md` ("Large-file hazards") and `listings-and-manifests.md`
-  guidance: grep/head/wc the big files, never
-  load them whole. If you find the reader lacks a layout fact you need, say so in your final
-  summary rather than recording it in this skill.
+- Read bundle files with your normal read/search tools, following the reader's `limitations.md`
+  ("Large-file hazards") and `listings-and-manifests.md`: grep/head/wc the big files, never load
+  them whole. If the reader lacks a layout fact you need, say so in your final summary rather than
+  recording it in this skill.
 - Load the `xlsx` skill before reading/writing the spreadsheet.
 - If the checklist has a version-currency check, confirm a web search tool is available; it is
-  needed to look up the latest Dataiku DSS release.
+  needed to look up the latest Dataiku DSS release (procedure below).
+
+### Files on a linked computer
+
+Only when this session is linked to the user's computer (remote-devices tools present) and the
+paths are local: request folder access to the common parent of both
+(`device_request_folder_access`), `device_stage_files` the checklist into the container, run
+`orient.sh` and bundle reads through `device_bash`, and `device_list_dir` (recursive) to see the
+bundle's structure. At the end, write the result back with `device_commit_files` (step 7).
 
 ### Secrets
 
-Bundles hold live credentials, and tool output lands in the transcript. Follow the reader's
-secret-handling guidance; never copy a secret into `evidence_found`, `notes`, the narrative or the
-deck. If one does get printed, say so in your final summary, name the file, and tell the user to
-rotate it. (The reader's guidance is being added upstream; see `docs/upstream-reader-spec.md`.)
+Bundles hold live credentials, and tool output lands in the transcript. See the reader's
+`limitations.md` ("Other things to know") for what is sensitive.
+
+- Read only the files you need; don't open notes or READMEs lying beside the bundle unless asked.
+- Extract specific keys (grep exact names); never dump a whole settings block or connection.
+- Never copy a secret into `evidence_found`, `notes`, the narrative or the deck.
+- If one does get printed, say so in your final summary, name the file, and tell the user to
+  rotate it.
 
 ## 1. Orient
 
@@ -61,25 +67,30 @@ Run the reader's `scripts/orient.sh <bundle_root>` first. It reports node type/v
 largest files, and which key troubleshooting files are present. This
 tells you what evidence is realistically available before you plan reads.
 
+If it shows a node type the reader hasn't verified (e.g. `deployer`) or no data-dir mirror, say what
+the bundle cannot support and mark the rows that depend on it **Needs Review**, not Fail.
+
 ## 2. Read the checklist fully
 
-Dump every sheet's rows (id, priority, check_type, statement, parameter_hint,
-operator, expected_value, supporting_evidence, contradicting_evidence,
-rationale, source references) into a working file — don't try to hold 50+
-rows of context in your head. Note the exact result-column headers and their
-column positions per sheet (they may differ sheet to sheet).
+Dump every sheet's rows into a working file — don't try to hold 50+ rows of context in your head.
+Keep at least `id`, `priority`, `check_type`, `statement`, `parameter_hint`, `operator`,
+`expected_value`, `unit`, `expected_condition_notes`, `supporting_evidence`, `contradicting_evidence`,
+`insufficient_evidence_handling` and `ambiguity_notes` when present. Note the exact result-column
+headers and their column positions per sheet (they may differ sheet to sheet).
+
+`priority` is `must_have` or `nice_to_have`. "Must-have" below means `priority == must_have`.
 
 ## 3. Plan evidence gathering by theme, not by row
 
 Group checklist rows by the source they need (settings, host/OS, logs, crash dumps, deployers,
 clusters) and read each source once for all of its rows, rather than re-reading it per row. Find
-each source and the safe way to read it via the reader's `lookup-table` and the other reader
-references. Never read a large file whole (the reader's `listings-and-manifests` reference covers
-the safe patterns).
+each source via the reader's `lookup-table` and the other reader references.
 
 ## 4. Evaluate every row
 
-First read `references/calibrations.md` in full and apply it to every matching row.
+First read `references/calibrations.md` in full and apply it to every matching row. Where a row's
+`insufficient_evidence_handling` says what to do when the bundle lacks the evidence, follow it; a
+matching calibration overrides it.
 
 For each checklist item, decide one of a small fixed set of statuses (keep
 this consistent across the whole workbook): **Pass**, **Fail**, **Partial**,
@@ -101,8 +112,8 @@ For each item, write:
   values, and the recommendation or caveat, and cross-references related
   findings by id when they're causally linked (e.g., an OOM crash pattern
   linked to a concurrency-limit setting).
-- `validated_at` / `validated_by`: today's date and a reviewer label noting
-  this was an AI-assisted review against the specific bundle.
+- `validated_at` / `validated_by`: today's date (`YYYY-MM-DD`) and, verbatim,
+  `Claude (AI-assisted review of <bundle name>)`.
 
 ### Format of `notes`
 
@@ -111,14 +122,16 @@ newlines, each bullet starting with `• `:
 
 ```
 <Headline: verdict + impact, ≤ 80 chars>
-• <Key fact with the actual value or count, ≤ 90 chars>
-• <Key fact or "so what", ≤ 90 chars>
-• Action: <one concrete recommendation, ≤ 90 chars>
+• <Key fact with the actual value or count, ≤ 80 chars>
+• <Key fact or "so what", ≤ 80 chars>
+• Action: <one concrete recommendation, ≤ 80 chars>
 ```
 
-- **Length:** at most ~320 characters in total and at most 3 bullets under
+- **Length:** at most 320 characters in total and at most 3 bullets under
   the headline. For **Pass** and **Not Applicable**, use the headline plus at
   most one bullet, ≤ 140 characters in total.
+- **Not Applicable headline:** `Not applicable: <one reason>` (e.g. `Not applicable: no local
+  Hugging Face`), never a chain of colons.
 - **Self-contained:** carry the decisive values (e.g. `backend.xmx=2g`,
   `4 OOM crashes in 30 days`) so a reader needs nothing else. Do **not**
   include file paths or JSON key dumps; those belong in `evidence_found`.
@@ -150,6 +163,15 @@ a disabling value, paired with crash dumps and recurring error-log entries,
 all pointing to one root cause) — call these out explicitly and prioritize
 them, rather than reporting each row in isolation.
 
+### Version-currency lookup
+
+Which status to give is in `references/calibrations.md`. To find the latest GA release: use the
+**extended** web-search mode every run (a standard search can miss a newer major). Search "Dataiku
+DSS latest version release notes", then once more for the next major above the one found (e.g.
+"Dataiku DSS 15 release notes"). Take the highest GA version confirmed by an official Dataiku source
+(release notes, changelog, docs.dataiku.com). If results are links only, `WebFetch` the official
+release-notes page for the newest major. Never answer from training knowledge.
+
 ## 5. Write results back with openpyxl
 
 Match each row by its `id` column (not by row number) when writing results,
@@ -165,7 +187,7 @@ rows (ID, Section, Title, Status) from the section sheets and applies one fixed 
 only the judgment text:
 
 - `checklist_path`, `reviewer`, `bundle`, and optionally `node_version` and `diagnosis_generated`.
-- `key_points`: `{item id: one line, <= 90 characters}` for **every** must-have item that is Fail,
+- `key_points`: `{item id: one line, <= 90 characters}` for **every** must-have item (`priority == must_have`) that is Fail,
   Partial or Needs Review, and for no other item. Echo the headline of the item's `notes`. The key
   order sets the row order within each block. List Fail items most causally central first.
 - `recommendations`: the ordered actions, linked issues together and root cause before its
@@ -187,6 +209,9 @@ texts `Overall Status Counts`, `Per-Section Breakdown`,
 
 ## 7. Deliver
 
+Before delivering, check: every id has one of the five statuses; each `notes` is within budget with
+no file paths or secrets; the Summary was written after the last edit.
+
 Send the updated file to the conversation. If the source file came from the
 user's linked computer, write the result back to the same path via
 `device_commit_files` as well, and say so in one line. If you used the
@@ -198,6 +223,6 @@ most important findings) rather than repeating the whole checklist back in
 chat.
 
 If the user also asked for a deck (or a "report and powerpoint"), continue with the
-`dataiku-review-deck-builder` skill and follow its order of work in full, including drafting the
-`<checklist_stem>_narrative.json` from this bundle's results before building. Do not build the deck
-without a narrative; if you cannot, say so in your final summary.
+`dataiku-review-deck-builder` skill and follow its order of work in full, including the narrative
+(`<checklist_stem>_narrative.json`). Do not build the deck without one; if you cannot, say so in your
+final summary.

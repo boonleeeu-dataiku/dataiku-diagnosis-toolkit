@@ -13,9 +13,9 @@ suggest running that skill first — this one expects a checklist that already h
 
 ## 0. Tools
 
-Load the deferred tools if needed (`ToolSearch` with
-`select:build_platform_review_deck,analyze_checklist`). Both come from the bundled
-`dataiku-review-generator` MCP server.
+`write_summary`, `analyze_checklist`, `build_platform_review_deck` and `validate_deck` come from the
+bundled `dataiku-review-generator` MCP server. If they are deferred, load them with your host's tool
+discovery (in Claude Code, `ToolSearch` with `select:<name>,...`). Names may carry a server prefix.
 
 ## 1. Generate the deck
 
@@ -45,22 +45,13 @@ Save it beside the checklist as `<checklist_stem>_narrative.json`; the tool find
 Add `"checklist_sha256"` (from `shasum -a 256 <checklist>`) so a later build warns if the checklist changed.
 
 The tool derives counts, root-cause groups, quick wins, the Needs Review split by owner and the N/A groups
-from the checklist. The judgment text is yours: write a `narrative.json` next to the checklist, from its
-rows only. Never copy another customer's text. Keys (all optional; omitted ones fall back to text derived from
-the cells):
-- `verdict_title`, `highlights`, `takeaways` (exactly 3: `heading`, `body`, `tone` good/risk/win),
-  `snapshot_title`, `snapshot` (up to 8 cards: `label`, `value`, `note`, `state` ok/watch/neutral).
-- `risk1` (`title`, `tiles[{number,label,id,note}]`, `risk`, `fix[{text,id}]`, `caveat`), `risk2` (`title`,
-  `table[{id,setting,today,target}]`, `positives`), `risk3` (`title`, `cards[{heading,ids,found,todo}]`).
-- `quick_wins` (`rows[{id,setting,from,to,confirm}]`, Fail items that are single settings), `owners`
-  (`groups[{owner,asks[{id,ask}]}]`, must cover every Needs Review item once), `roadmap`
-  (`now`/`next`/`plan`, each `{effort S|M|L, action, ids}`, plus `footnote`), `na_groups`
-  (`{heading,note,ids}`, must cover every N/A item once), `caveats` (Pass IDs that may be cited as a
-  "Pass, with caveat").
-
-Types (the exact shapes are in the `shape` map `analyze_checklist` returns): text fields (`positives`, `body`, `action`, `risk`, `found`, ...) are single strings, never lists;
-`ids` / `fix[].id` take an ID string or a list of IDs; `tiles[].number` is a string or number. A rejection names each wrong field by path: fix exactly those fields instead of
-reading the generator's source.
+from the checklist. The judgment text is yours: write it from this checklist's rows only, and never copy
+another customer's text. All keys are optional; omitted ones fall back to text derived from the cells.
+`analyze_checklist` returns the `shape` map with the exact keys and types (`verdict_title`, `highlights`,
+`takeaways`, `snapshot`, `risk1`-`risk3`, `quick_wins`, `owners`, `roadmap`, `na_groups`, `caveats`). Follow it
+rather than this file. `owners` must cover every Needs Review item once and `na_groups` every N/A item once.
+Text fields are single strings, never lists. A rejection names each wrong field by path: fix exactly those
+fields instead of reading the generator's source.
 
 Rules: the generator adds the "Risk 1: " / "Risk 2: " / "Risk 3: " lead to `risk1`/`risk2`/`risk3` titles when it is missing, so write a plain conclusion title; group findings by root cause (shared evidence, "see SEC-004" in Action text); titles state a conclusion;
 every figure on a main slide must appear in a checklist cell, so quote figures
@@ -96,8 +87,7 @@ The tool needs `Dataiku Branding Template 2026.pptx` (134MB, not bundled with th
 this plugin's README). If the call fails with a "Base deck not found" error:
 - Relay that message plainly, and tell the user to complete the one-time setup (placing the file at
   `mcp-server-review-generator/resources/Dataiku Branding Template 2026.pptx`), **or**
-- If they already have a copy elsewhere (e.g. a sibling `Dataiku Review Generator` checkout on this
-  machine), ask for its path and retry the call with `base_deck_path` set explicitly.
+- If they already have a copy elsewhere, ask for its path and retry the call with `base_deck_path` set explicitly.
 
 Don't guess a path — always get it from the user or a real error message.
 

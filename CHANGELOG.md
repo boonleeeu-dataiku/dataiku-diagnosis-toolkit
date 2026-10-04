@@ -10,6 +10,22 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-10-04
+
+### Changed
+
+- `dataiku-diagnosis-checklist-review`: defines "must-have" as `priority == must_have`; reads each row's
+  `insufficient_evidence_handling` before deciding; fixed `validated_by` string; one notes budget (320
+  chars, bullets <= 80); stop rule for unverified node types; final self-check; linked-computer steps
+  gathered into one block; version-lookup procedure moved from `calibrations.md` into the skill;
+  secrets guidance made self-contained.
+- `calibrations.md`: judgment only. An attached cluster with no containerized config is now an explicit
+  **Fail**; the config-variety rule is stated precisely; item ids are examples, not keys.
+- `dataiku-review-deck-builder`: narrative key list replaced by a pointer to `analyze_checklist`'s `shape`;
+  host-neutral tool loading; machine-specific path reference removed.
+- `dataiku-codex-workflow`: dropped facts duplicated from the task skills.
+- `docs/upstream-reader-spec.md` §6: reader skill hygiene changes to make upstream.
+
 ## [0.16.0] - 2026-10-04
 
 ### Removed

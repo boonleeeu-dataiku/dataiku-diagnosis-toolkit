@@ -145,3 +145,9 @@ def test_write_summary_headers_are_the_ones_the_skill_prescribes_and_the_reader_
 
 def test_deck_skill_orders_write_summary_before_the_narrative():
     assert "write_summary" in DECK_SKILL
+
+
+def test_review_skill_defines_must_have_and_uses_insufficient_evidence_column():
+    """Step 6 keys off must-have items and step 4 defers to the checklist's own fallback column."""
+    for phrase in ("priority == must_have", "insufficient_evidence_handling", "Claude (AI-assisted review of"):
+        assert phrase in REVIEW_SKILL, f"review skill no longer says {phrase!r}"

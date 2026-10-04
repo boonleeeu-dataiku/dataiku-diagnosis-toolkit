@@ -83,9 +83,21 @@ Two table rows were refined once checked against real bundles: `sanity-check.jso
   secret-named keys, oversize file.
 - Bump the skill version per upstream CLAUDE.md.
 
+## 6. Skill hygiene (from the 2026-10 skills audit)
+
+For `skills/dataiku-diagnosis-reader/SKILL.md` upstream:
+
+- Shorten the `description` to ~500 chars, triggers first (it is ~1000 now).
+- Trim the "Quick lookup" table to the ~6 highest-traffic rows and point to `references/lookup-table.md`; drop
+  "Known limitations" in favour of a one-line pointer to `references/limitations.md`.
+- Step 7: say "run `scripts/orient.sh <bundle_root>` first when triaging a whole bundle" (the review skill
+  already mandates it first).
+- Frontmatter style: match the other skills (quoted `name`/`description`), keep `version`.
+- §1 (secret handling) is still open and is the real fix for the checklist skill's inline Secrets bullets.
+
 ## After upstream ships
 
 1. Re-sync here (see CLAUDE.md). `tests/test_vendored_drift.py` confirms the copy.
-2. Update the checklist skill: drop the interim pointer caveat for the secrets guidance.
+2. Update the checklist skill: replace its inline Secrets bullets with a pointer to the reader's section.
 3. (Done) The interim allowlist in `tests/test_skill_boundaries.py` is gone; `calibrations.md` is guarded.
 4. Remind the user to run Codex (the skill copy changed).
