@@ -17,7 +17,7 @@ Regenerate the bundles and checklist after editing `build_fixtures.py`:
 mcp-server-review-generator/.venv/bin/python tests/fixtures/build_fixtures.py
 ```
 
-When you add a calibration to `skills/dataiku-diagnosis-checklist-review/SKILL.md`, update these
+When you add a calibration to `skills/dataiku-diagnosis-checklist-review/references/calibrations.md`, update these
 fixtures to cover it:
 1. Add the item's ID to `EVAL_ITEM_IDS`.
 2. Shape a bundle so it triggers the calibration.

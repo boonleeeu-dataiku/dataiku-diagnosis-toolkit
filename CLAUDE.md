@@ -112,7 +112,7 @@ See README's "Testing" section for the three tiers.
 - **Before handing back any change**, run `scripts/test.sh fast`. It makes no model calls.
 - After re-syncing from upstream, `tests/test_vendored_drift.py` confirms the copies match. It
   skips if the sibling upstream checkouts aren't on disk.
-- **When you add or change a calibration** in `skills/dataiku-diagnosis-checklist-review/SKILL.md`,
+- **When you add or change a calibration** in `skills/dataiku-diagnosis-checklist-review/references/calibrations.md`,
   extend the eval fixtures to cover it (see `tests/fixtures/README.md`):
   1. Add the item to `EVAL_ITEM_IDS` in `tests/fixtures/build_fixtures.py`.
   2. Shape a synthetic bundle so it triggers the calibration.

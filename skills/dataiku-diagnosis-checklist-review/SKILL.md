@@ -13,52 +13,51 @@ listing check items (typically columns like `id`, `priority`, `check_type`,
 against the bundle's actual contents and write the results back into the
 spreadsheet, plus add/update a Summary tab.
 
-If the user invokes this without giving both paths, ask for: the diagnosis
-bundle path, and the checklist file path. Don't ask anything else up front —
-start working once you have both. Never pick a checklist yourself, even when the folder holds
-one obvious candidate or several similar templates (e.g. dated `*_checklist_template.xlsx`
-copies): a wrong guess silently changes the results. Ask, or offer the bundled default.
+## Reference files (in this skill's `references/` directory)
 
-If the user says they don't have a checklist file handy, offer to use the
-bundled default template at `resources/checklist_template.xlsx` (relative to
-this skill's own directory) instead, and say plainly once you proceed that
-you're using the default template rather than a user-supplied checklist.
+- `calibrations.md` — **read in full before evaluating any row** (step 4). It holds the user's
+  check-specific interpretations, which override a literal reading of the checklist.
+- `summary-layout.md` — manual Summary layout. Read only if `write_summary` is unavailable (step 6).
 
-## 0. Access and tools
+## 0. Inputs, access and tools
 
-- If this session is linked to the user's computer (remote-devices tools
-  present) and the paths are local file paths, request folder access to the
-  common parent directory covering both the bundle and the checklist
-  (`device_request_folder_access`), then `device_stage_files` the checklist
-  into the container to read/write it, and `device_list_dir` (recursive) on
-  the bundle to see its structure.
-- Load the `dataiku-diagnosis-reader` tools if deferred
-  (`ToolSearch` with `select:...run_orient,...safe_read`, using whatever
-  prefix — bare or `mcp__remote-devices__` — is present in the tool list).
+- If the user hasn't given both paths, ask for the diagnosis bundle path and the checklist file
+  path, nothing else up front. Start once you have both.
+- Never pick a checklist yourself, even when the folder holds one obvious candidate or several
+  similar templates (e.g. dated `*_checklist_template.xlsx` copies): a wrong guess silently changes
+  the results. Ask, or offer the bundled default.
+- If the user has no checklist handy, offer the bundled default template at
+  `resources/checklist_template.xlsx` (relative to this skill's own directory), and say plainly once
+  you proceed that you're using the default rather than a user-supplied checklist.
+- If this session is linked to the user's computer (remote-devices tools present) and the paths are
+  local, request folder access to the common parent directory of both
+  (`device_request_folder_access`), then `device_stage_files` the checklist into the container to
+  read/write it, and `device_list_dir` (recursive) on the bundle to see its structure.
+- **How to read the bundle comes from the reader, not from this skill.** Before touching the
+  bundle, load the `dataiku-diagnosis-reader` skill. If skills can't be loaded here, read the
+  reader MCP server's `skill-guide`, `reference-limitations` and `reference-listings-and-manifests`
+  resources instead. Use its `lookup-table` / `data-dir-config` references to find where a setting
+  lives.
+- Load the reader's tools if deferred (`ToolSearch` with `select:...run_orient,...safe_read`, using
+  whatever prefix — bare or `mcp__remote-devices__` — is present in the tool list). Read bundle
+  files with `safe_read`; use the linked device's shell (`device_bash`) only for what `safe_read`
+  cannot do. If you find the reader lacks a layout fact you need, say so in your final summary
+  rather than recording it in this skill.
 - Load the `xlsx` skill before reading/writing the spreadsheet.
-- If a version-currency check is present in the checklist (see calibration
-  below), confirm a web search tool is available — it will be needed to
-  look up the latest Dataiku DSS release.
+- If the checklist has a version-currency check, confirm a web search tool is available; it is
+  needed to look up the latest Dataiku DSS release.
 
-### Secrets: never print them
+### Secrets
 
-Bundles and their neighbouring files hold live credentials: `general-settings.json`
-(`internalDatabase` password, connection and LDAP bind passwords), `connections.json`,
-`install.ini`, `dip.properties`, and loose notes files next to the bundle (e.g. `Notes.txt` with an
-API key id and secret). Tool output lands in the transcript.
-
-- Do not `cat`/read files that were not asked for (notes, READMEs beside the bundle) to "get
-  context". Ask the user instead.
-- Never dump a whole settings block. Parse JSON with Python and print only the specific keys
-  you need; for `.ini`/`.properties`, grep the exact key names (e.g. `grep -nE '^\s*(backend|jek|fek)\.xmx'`).
-- If a secret does get printed, say so in your final summary, say which file, and tell the user
-  to rotate it. Never copy secrets into `evidence_found`, `notes`, the narrative or the deck.
+Bundles hold live credentials, and tool output lands in the transcript. Follow the reader's
+secret-handling guidance; never copy a secret into `evidence_found`, `notes`, the narrative or the
+deck. If one does get printed, say so in your final summary, name the file, and tell the user to
+rotate it. (The reader's guidance is being added upstream; see `docs/upstream-reader-spec.md`.)
 
 ## 1. Orient
 
 Run `run_orient` on the bundle root first. It reports node type/version, the
-largest files, and presence of key troubleshooting files (dmesg, stacks,
-cgroups usage, sanity-check.json, hs_err_pid crash dumps, audit logs). This
+largest files, and which key troubleshooting files are present. This
 tells you what evidence is realistically available before you plan reads.
 
 ## 2. Read the checklist fully
@@ -71,56 +70,15 @@ column positions per sheet (they may differ sheet to sheet).
 
 ## 3. Plan evidence gathering by theme, not by row
 
-Many checklist rows share the same underlying source file. Read each source
-file once and extract everything relevant, rather than re-reading it per row.
-Typical high-value sources in a DSS diagnosis bundle:
-
-- `apps/dss/<node>/config/general-settings.json` — covers most
-  settings-based checks (security, cgroups, Spark, containerized execution,
-  LLM Mesh/GenAI settings, connections preferences, flow limits, etc.)
-- `apps/dss/<node>/dip.properties` — extra `dku.*`/`security.*` keys; several advanced-security
-  checks (header settings, `dku.feature.*`, upload extensions) live here or in `install.ini`
-  rather than in `general-settings.json`, so search all three before calling a setting absent
-- `apps/dss/<node>/install.ini` — port, backend.xmx, HTTPS/security headers,
-  instance/install IDs
-- `apps/dss/<node>/run/sanity-check.json` — DSS's own self-diagnosed
-  warnings; treat these as authoritative, direct evidence for the relevant
-  checklist items (SSD/rotational disk, missing cgroup limits, missing base
-  images, connection detail-read gaps, etc.)
-- `apps/dss/<node>/config/connections.json` — enumerate connection types and
-  their relevant settings (detailsReadability/readableBy, hdfsInterface,
-  fast-write flags, filesystem_root presence/restrictions) programmatically
-  (parse as JSON) rather than dumping it raw — it's usually too large for a
-  single safe_read.
-- `apps/dss/<node>/config/clusters/<name>.json` — cluster type
-  (manual vs managed), architecture, Spark/container overrides. An empty or
-  absent `config/clusters/` directory, and no `defaultK8sClusterId`/cluster
-  reference in `general-settings.json`, means no Kubernetes cluster is
-  attached to the instance at all — check this before evaluating any
-  Kubernetes-conditional item (see calibration below).
-- `apps/dss/<node>/config/project-deployer/` and `config/api-deployer/` —
-  presence means a deployer is hosted locally on this node; together with
-  `deployerClientSettings` in `general-settings.json`, these are the
-  indicators for Design/Automation separation checks (see calibration below).
-- `dmesg.txt`, `sysctl.txt`, `syspackages.txt` — total RAM, kernel/OS version
-- `diag.txt` — host command output: `free -m` (RAM), `lsblk -t` (the `ROTA`
-  column: 0 = SSD/non-rotational, 1 = rotational; match it to the volume
-  holding the data dir) and `df`. This is the evidence for SSD-storage checks.
-- `run/hs_err_pid*.log` — JVM crash dumps; grep the `^# ` header lines for
-  the crash cause (OOM vs segfault etc.) rather than reading the full file
-- `run/backend.log*` — grep for `[ERROR]`/`[FATAL]`/`OutOfMemoryError`. Entries are bracketed
-  (`[ERROR]`), so a bare `ERROR` pattern can return a false zero. Record the first and last
-  timestamp of each rotated file so counts can be quoted with their time window. When a
-  file is too large for `safe_read`, use the linked device's shell
-  (`device_bash`) to `grep -c` / `grep | sort | uniq -c` for patterns and
-  counts instead of reading line by line — this is far cheaper.
-- `apps/dataiku-dss-<version>/dss-version.json` — product version
-
-For files bigger than a few hundred KB, always use a `pattern` on
-`safe_read`, or use `device_bash` with grep/python for structured parsing —
-never try to read a multi-hundred-MB file whole.
+Group checklist rows by the source they need (settings, host/OS, logs, crash dumps, deployers,
+clusters) and read each source once for all of its rows, rather than re-reading it per row. Find
+each source and the safe way to read it via the reader's `lookup-table` and the other reader
+references. Never read a large file whole (the reader's `listings-and-manifests` reference covers
+the safe patterns).
 
 ## 4. Evaluate every row
+
+First read `references/calibrations.md` in full and apply it to every matching row.
 
 For each checklist item, decide one of a small fixed set of statuses (keep
 this consistent across the whole workbook): **Pass**, **Fail**, **Partial**,
@@ -183,186 +141,13 @@ Bad (too long, method-first, file paths):
 
 ```
 In apps/dss/design/install.ini the backend.xmx key is set to 2g, and then
-when we looked at run/hs_err_pid*.log we found OutOfMemoryError ...
+when we looked at the crash dump we found OutOfMemoryError ...
 ```
 
 Look actively for causal chains across items (e.g., a resource limit set to
 a disabling value, paired with crash dumps and recurring error-log entries,
 all pointing to one root cause) — call these out explicitly and prioritize
 them, rather than reporting each row in isolation.
-
-### Known check-specific calibrations
-
-Apply these interpretations consistently. They come directly from the user,
-supersede a literal reading of the checklist's `expected_value`/evidence
-text, and should be extended here over time whenever the user gives another
-one — add each as its own bullet rather than overwriting prior ones.
-
-- **Kubernetes-conditional checks in general (Spark-on-K8s, containerized
-  execution, cluster configuration, etc.):** first determine whether a
-  Kubernetes cluster is actually attached to the instance at all (see
-  `config/clusters/` and `defaultK8sClusterId` in step 3 above). If no
-  cluster is attached, mark any check that depends on Kubernetes/Elastic
-  Compute as **Not Applicable** rather than Fail or Needs Review — these
-  checks are only relevant once a cluster is attached. Once a cluster *is*
-  attached, it becomes critical that a valid containerized execution
-  configuration (`containerSettings`) is actually present — treat that as a
-  must-have, not optional.
-
-- **Recommended containerized execution config baseline (e.g. a 'Standard'
-  config at ~200MB/16000MB and a 'Webapp' config at ~500MB/500MB, or similar
-  named/sized baselines):** treat any such baseline given in the checklist's
-  `expected_value`/`supporting_evidence` as an illustrative example, not a
-  literal instruction to match names or exact sizes. It is sufficient to see
-  **more than one containerized execution config defined with genuinely
-  varying sizes** (e.g. different memory/CPU requests-limits across configs,
-  showing an intent to size workloads differently) — mark this **Pass**
-  even when the config names and exact memory figures don't match the
-  baseline example. Still call out in `notes` if all configs are actually
-  identically sized despite different names (that remains a real gap, as
-  distinct from just not matching the example's naming/numbers).
-
-- **Spark and containerized-execution per-user Kubernetes namespace checks**
-  (e.g. items about a "per-user namespace pattern", `dss-ns-${dssUserLogin}`,
-  or similar, for either Spark configs or containerized execution configs):
-  it is sufficient evidence of compliance to see the namespace parameter
-  (e.g. `managedNamespace` / `kubernetesNamespace`) provisioned with a
-  dynamic/templated variable (such as `${namespace}`), **for a managed
-  Kubernetes cluster attached to the Dataiku instance**. Do not require
-  tracing the variable to confirm it literally resolves to the
-  `dss-ns-${dssUserLogin}` string — mark the item **Pass** (not Needs
-  Review) once a templated/dynamic namespace variable is present, and note
-  in `evidence_found` which field/value was seen. This calibration applies
-  specifically to a **managed** cluster (Dataiku-provisioned/managed). For a
-  **manual**/externally-registered cluster (check `type` in
-  `config/clusters/<name>.json`), namespace behavior may be governed outside
-  DSS configuration entirely — keep judging that case on its own merits
-  rather than applying this shortcut.
-
-- **Dataiku DSS version currency check (e.g. "DSS Version Currency"):**
-  actively look up Dataiku's current generally-available DSS release with a
-  web search (do this each run — the answer changes over time, don't rely on
-  memorized/training-time knowledge of "the latest version"). Use the
-  **extended** search mode: a standard search can return a stale answer and
-  miss a newer major (a standard search once reported 14.7.2 when DSS 15.0.2
-  was already out). Search for "Dataiku DSS latest version release notes",
-  then run a second search for the next major above the one you found
-  (e.g. "Dataiku DSS 15 release notes"); take the highest GA version
-  confirmed by an official Dataiku source (release notes / changelog /
-  docs.dataiku.com). Never answer from a single standard search. Compare the bundle's `product_version` (from `dss-version.json`,
-  format `MAJOR.MINOR.PATCH`) against the latest GA version's major version
-  number only, and apply this fixed internal rule:
-  - If the bundle's **major** version matches the current major release
-    (e.g. bundle is 14.x and the latest GA is also 14.x, regardless of minor
-    or patch), mark **Pass**.
-  - If the bundle's major version is behind the current major release (e.g.
-    bundle is 13.x while latest GA is 14.x), mark **Needs Review** (not
-    Fail) — a major-version gap warrants a human look at upgrade planning
-    rather than an automatic fail.
-  In both cases, state the bundle's version, the latest GA version found, its
-  release date if available, and how many major versions behind (0 if
-  current). Keep `notes` short (e.g. `Bundle 13.x vs latest GA 14.x (date) —
-  1 major behind`) and put the full source citation in `evidence_found`. If an
-  extended search returns only links with no content, `WebFetch` the official release-notes page for
-  the newest major instead of retrying the search. If
-  the web search fails, returns nothing usable, or no web search tool is
-  available in this session, do not guess or fall back to prior/training
-  knowledge of the latest version — set `notes` to state plainly that
-  currency could not be verified against Dataiku's current release
-  information (web lookup failed/unavailable) and mark the item **Needs
-  Review**.
-
-- **Feature-conditional GenAI checks (Cobuild default LLMs, Agent Hub
-  permissions / service account / impersonation groups, Bring-your-own-LLM
-  mode, local Hugging Face):** first confirm the feature is actually in use
-  (e.g. no `agentBuildingSettings`, no Agent Hub projects/webapps, all
-  `localAIServerSettings.*UseLocal` false, no INTERNAL_huggingface code env).
-  If it isn't, mark the check **Not Applicable**, not Fail or Needs Review. A
-  missing key is only a Fail when the feature is demonstrably in use. When a
-  setting is turned off but the checklist asks for acceptance or enablement
-  (e.g. AI Services terms not accepted while all AI features are disabled),
-  use **Needs Review** and ask whether it is intentional. For "AI assistant
-  debug data in the bundle" checks, a bundle that simply lacks the section is
-  **Needs Review**, not Fail.
-
-- **Backend Xmx sizing (e.g. "SCALE-008"):** apply the full rule from the checklist, not just the
-  RAM tier. Check all of: (1) `backend.xmx` against the RAM tier; (2) `backend.xmx` >= 3x the size
-  of the `config/` folder (`du -sh` it, or sum `datadir_listing.txt`); (3) it is not in the
-  32-48GB dead zone; (4) `jek.xmx`/`fek.xmx` are not oversized; (5) no `OutOfMemoryError` in the
-  backend logs. State which of these you checked in `evidence_found`; never assume a tier from RAM
-  alone.
-
-- **Log-error review (e.g. "SCALE-007"):** the bundle usually holds only a few hours of backend
-  log. Quote counts with their window (e.g. `214 in ~2.6h`) in both `evidence_found` and `notes`,
-  and group by message pattern (digits and ids normalised), not by raw line.
-
-- **Not Applicable headlines:** write one clean reason, not a chain of colons. Use
-  `Not applicable: <reason>` (e.g. `Not applicable: no local Hugging Face`), not
-  `Not applicable: AI feature not in use: no local Hugging Face`.
-
-- **Reading a hinted setting:** a checklist `parameter_hint` is a pointer,
-  not a guarantee of the exact path. Before marking a setting absent or Fail,
-  search the whole `general-settings.json` for the leaf key (e.g.
-  `traceExplorerDefaultWebApp` lives under `generativeAISettings.llmTraceSettings`,
-  not at the top level). Likewise a concurrency or sizing limit stored under a
-  different block (e.g. `jekSettings.maxRunningJobs`) still counts: a value of
-  `0` means unsized and is a **Fail** for "Flow Limits Sizing", even when
-  `maxRunningActivities` is in range. Connection-detail findings from
-  `sanity-check.json` (e.g. HDFS/Spark connections with no group allowed to read
-  details) are real evidence for connection-details checks: report them
-  **Partial** rather than Not Applicable just because the storage is HDFS and
-  not a cloud object store.
-
-- **HTTPS enforcement check (e.g. "SEC-006", especially for custom/on-prem
-  installs):** `install.ini` and DSS's own config only show whether DSS
-  itself is terminating TLS. They cannot show whether an external reverse
-  proxy (nginx, an ALB/load balancer, an API gateway, etc.) sits in front of
-  DSS and terminates HTTPS there instead — that setup is invisible to the
-  diagnosis bundle. So: if the bundle shows DSS is *not* itself configured
-  for HTTPS (e.g. plain HTTP in `install.ini`), do not mark this **Fail**.
-  Mark it **Needs Review** instead, and in `notes` state plainly, in one
-  bullet, that the bundle cannot confirm or rule out an external reverse
-  proxy terminating HTTPS in front of DSS, with an `Action:` bullet to verify
-  it directly with the customer/infrastructure team before treating it as a
-  real gap. Only
-  mark **Pass** when the bundle shows positive evidence HTTPS is enforced
-  somewhere in the path (DSS-terminated or a documented proxy setup
-  referenced in the bundle); only mark **Fail** if there is positive
-  evidence no HTTPS exists anywhere (e.g. explicit customer confirmation on
-  record, not just absence from the bundle).
-
-- **Automation-node existence / Design–Automation separation (e.g.
-  "ARCH-001"), when reviewing a design-node bundle** (`install.ini` →
-  `nodetype = design`): the automation node is a separate host with its own
-  bundle, so a design-node bundle can never definitively confirm one exists.
-  Always mark this **Needs Review**, never Pass or Fail from the design
-  bundle alone. Work through the indicators in this order and report what
-  you find:
-  1. **Local deployer on the design host:** if `<mirror>/config/project-deployer/`
-     and/or `<mirror>/config/api-deployer/` are present (also check
-     `datadir_listing.txt`, since the mirror may not copy these subtrees),
-     a deployer is configured locally. `project-deployer/` holds projects to
-     deploy onto an automation node — an indication an automation node is in
-     use. Enumerate its contents (`infras/*.json` and any automation node
-     URLs they point to, `deployments/*.json`, published projects) and
-     **highlight this indication prominently in the headline of `notes`**
-     with the counts, and list the URLs and enumeration in `evidence_found`.
-     Distinguish a populated
-     deployer (infras + deployments present — strong indication) from one
-     that is present but empty (deployer enabled, no sign of actual use).
-     `api-deployer/` holds API services to deploy onto an API node — mention
-     it separately as an API-node indication, not as evidence of an
-     automation node.
-  2. **Remote deployer:** if `general-settings.json` →
-     `deployerClientSettings.mode` is `REMOTE` (pointing at an external
-     Deployer URL), highlight that the design node pushes to a separate
-     Deployer node — suggestive of a Design → Deployer → Automation setup,
-     but any automation infrastructure is defined on that node, not in this
-     bundle. Exported bundles under `DATA_DIR/bundles/<PROJECT>/` (via
-     `datadir_listing.txt`) are weak supporting evidence either way.
-  3. **Otherwise:** state in `notes` that there is no definitive
-     configuration in the bundle indicating whether an automation node is
-     deployed, and that this needs further verification with the customer.
 
 ## 5. Write results back with openpyxl
 
@@ -392,34 +177,12 @@ the saved sheet as the deck generator will and compares it to what it meant to w
 Call it **before** drafting the deck narrative: the narrative pins a hash of the final file, so
 changing the Summary afterwards makes the narrative look stale.
 
-The sheet it writes is what the `dataiku-review-deck-builder` skill's generator reads, so its
-layout must not drift. If the tool is not available, write the sheet by hand to this layout and
-use these header texts **verbatim**; differently worded headers make the deck show zeros or miss
-whole sections.
-
-1. **Metadata rows**, label in column A ending in a colon, value in column B: `Bundle:`,
-   `Node / Version:`, `Diagnosis generated:`, `Report generated:` (today, `YYYY-MM-DD`), `Reviewer:`.
-2. **Block headers**, each alone in column A, in this order:
-   - `Overall Status Counts`
-   - `Per-Section Breakdown`
-   - `Critical Findings - Must-Have Items Failing`
-   - `Other Must-Have Items: Partial / Needs Review`
-   - `Priority-Ordered Recommendations`
-
-   Give all five the **identical** font (bold, same size) and fill, and give no other column-A
-   cell that style: the generator treats any cell matching it as a block header.
-3. Under `Overall Status Counts`: one row per status (`Pass`, `Fail`, `Partial`, `Needs Review`,
-   `Not Applicable`) with its count in column B, then a `Total` row.
-4. Under `Per-Section Breakdown`: a header row
-   `Section | Pass | Fail | Partial | Needs Review | Not Applicable`, then one row per section sheet
-   with the tab name exactly as it appears.
-5. Under the two must-have blocks: a header row `ID | Section | Title | Status | Key point`, then one
-   row per item. If a block has no items, keep its header and column-header row and write no rows
-   (never a placeholder such as `None`: the deck would show it as a finding whose ID is "None").
-6. Under `Priority-Ordered Recommendations`: one pre-numbered action per row in column A (`1. ...`).
-
-Write every count as a literal integer, never an Excel formula such as `COUNTIF`: openpyxl saves
-formulas without cached values, so the deck generator would see them as empty.
+If the tool is not available, read `references/summary-layout.md` and write the sheet by hand to
+that layout. The deck generator reads this sheet, so its layout must not drift. Use the header
+texts `Overall Status Counts`, `Per-Section Breakdown`,
+`Critical Findings - Must-Have Items Failing`, `Other Must-Have Items: Partial / Needs Review` and
+`Priority-Ordered Recommendations` **verbatim**, and the metadata labels `Bundle:`,
+`Node / Version:`, `Diagnosis generated:`, `Report generated:`, `Reviewer:`.
 
 ## 7. Deliver
 

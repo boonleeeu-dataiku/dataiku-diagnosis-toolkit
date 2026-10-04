@@ -18,7 +18,7 @@ checklist spreadsheet.
   own directory) if the user doesn't have their own checklist. Applies a set of user-defined
   check-specific calibrations (e.g. Kubernetes-conditional items, version currency, HTTPS behind
   a reverse proxy, automation-node existence from a design-node bundle) — see the skill's
-  "Known check-specific calibrations" section. Authored directly in this repo.
+  `references/calibrations.md`. Authored directly in this repo.
 - **`mcp-server-diagnosis-reader/`** — a local MCP server exposing `dataiku-diagnosis-reader`'s
   docs as resources and `run_orient` / `safe_read` as tools, for MCP-compatible agents that can't
   load Claude Skills directly (Cursor, other Claude Desktop installs, etc.). It contains no

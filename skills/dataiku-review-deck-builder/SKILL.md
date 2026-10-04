@@ -14,7 +14,7 @@ suggest running that skill first — this one expects a checklist that already h
 ## 0. Tools
 
 Load the deferred tools if needed (`ToolSearch` with
-`select:build_platform_review_deck,validate_deck,analyze_checklist`). Both come from the bundled
+`select:build_platform_review_deck,analyze_checklist`). Both come from the bundled
 `dataiku-review-generator` MCP server.
 
 ## 1. Generate the deck
@@ -22,13 +22,13 @@ Load the deferred tools if needed (`ToolSearch` with
 **Order of work (required whenever you, an LLM, are running this skill):**
 1. Make sure the checklist is final, including its Summary sheet (the review skill writes it with
    `write_summary`; if it is missing or stale, call that first). Any later edit changes its hash.
-2. Call `analyze_checklist` on the checklist, then draft the narrative (1b) from its output and this
+2. Call `analyze_checklist` on the checklist, then draft the narrative (next section) from its output and this
    checklist's rows, for this bundle only. It returns `checklist_sha256`, the `narrative_path` to save to, the
    Needs Review and Not Applicable ids your owner and N/A groups must each cover once, quick-win candidates,
    and the validation rules. Do not skip this step or
    build first and "add it later": the tool's fallback text is generic and is not customer-ready.
 3. Write `<checklist_stem>_narrative.json` beside the checklist (with the `checklist_sha256` from
-   `analyze_checklist`), then build (1a).
+   `analyze_checklist`), then build ("Build the deck" below).
 4. If the tool rejects the narrative, fix the narrative and rebuild. Never drop it to get a build through.
 5. In your report, state whether a narrative was used (`narrative_used`). If the result has
    `narrative_missing: true` (with a `narrative_warning`), the deck has no narrative: draft one and rebuild. If you did not draft one, say so
@@ -36,7 +36,7 @@ Load the deferred tools if needed (`ToolSearch` with
 
 Only a plain script run with no LLM present may build without a narrative.
 
-### 1b. Draft the narrative (v2)
+### Draft the narrative (v2)
 
 **Ownership:** the reviewer who owns the checklist owns the narrative. You draft it, the reviewer reads and
 edits it before the deck goes to the customer, and it is redrafted whenever the checklist changes. The tool
@@ -58,9 +58,8 @@ the cells):
   (`{heading,note,ids}`, must cover every N/A item once), `caveats` (Pass IDs that may be cited as a
   "Pass, with caveat").
 
-Types: text fields (`positives`, `body`, `action`, `risk`, `found`, ...) are single strings, never lists;
-`ids` / `fix[].id` take an ID string or a list of IDs; `tiles[].number` is a string or number. `analyze_checklist`
-returns the full `shape` map. A rejection names each wrong field by path: fix exactly those fields instead of
+Types (the exact shapes are in the `shape` map `analyze_checklist` returns): text fields (`positives`, `body`, `action`, `risk`, `found`, ...) are single strings, never lists;
+`ids` / `fix[].id` take an ID string or a list of IDs; `tiles[].number` is a string or number. A rejection names each wrong field by path: fix exactly those fields instead of
 reading the generator's source.
 
 Rules: the generator adds the "Risk 1: " / "Risk 2: " / "Risk 3: " lead to `risk1`/`risk2`/`risk3` titles when it is missing, so write a plain conclusion title; group findings by root cause (shared evidence, "see SEC-004" in Action text); titles state a conclusion;
@@ -70,6 +69,8 @@ rejects them, so rephrase without the number or use one the cells carry; never c
 under `caveats`; effort is indicative. If the tool rejects the narrative, fix the narrative (or the
 checklist), not the tool.
 
+### Build the deck
+
 Call `build_platform_review_deck` with:
 - `checklist_path` (required) — the completed checklist `.xlsx`.
 - `customer` (required) — customer name, shown on the title slide. Take it from the user; if not
@@ -78,7 +79,7 @@ Call `build_platform_review_deck` with:
 - `output_path` (optional) — defaults to `output/<Customer_Slug>_Platform_Review_<date>.pptx`.
 - `style` — `"v2"` (the default: verdict-first, about 20 slides). Pass `"v1"` (one findings slide per few
   items) only if the user asks for the long form.
-- `narrative_path` (v2 only, optional) — a `narrative.json` you draft in step 1b.
+- `narrative_path` (v2 only, optional) — a `narrative.json` you drafted above.
 - `rows_per_slide` / `include_pass_items` (optional, v1 only) — layout tuning; leave unset unless the user
   asks for something specific.
 - `base_deck_path` (optional) — only needed if the branding template isn't at its default location
