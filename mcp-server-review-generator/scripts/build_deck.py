@@ -332,15 +332,12 @@ def format_month_year(date_str) -> str:
     return s
 
 
-LEADING_NUMBER_RE = re.compile(r"^\s*\d+[.)]\s*")
-
-
 def _strip_leading_number(value: str) -> str:
     """Recommendations in the checklist's Summary sheet are already written
     as a priority-ordered, pre-numbered list (e.g. "1. Fix ..."). Card/list
     layouts add their own numeral badge, so strip the source's own leading
     "N. " to avoid showing the number twice."""
-    return LEADING_NUMBER_RE.sub("", value or "")
+    return common.strip_leading_number(value)
 
 
 def _canonical_status(status: str) -> str | None:
@@ -1300,8 +1297,8 @@ def main(argv=None):
     logger.info("Dataiku Review Generator v%s", common.VERSION)
 
     layout_config = common.load_config("deck_layout.yaml")
-    base_deck = args.base_deck or (common.REPO_ROOT / layout_config.get("base_deck", "resources/Dataiku Branding Template 2026.pptx"))
-    rows_per_slide = args.rows_per_slide or layout_config.get("table_rows_per_slide", 4)
+    base_deck = args.base_deck or (common.REPO_ROOT / layout_config.get("base_deck", common.DEFAULT_BASE_DECK))
+    rows_per_slide = args.rows_per_slide or layout_config.get("table_rows_per_slide", common.DEFAULT_ROWS_PER_SLIDE)
     include_pass_items = args.include_pass_items or layout_config.get("include_pass_items", False)
     output_path = args.output or default_output_path(args.checklist, args.customer)
 

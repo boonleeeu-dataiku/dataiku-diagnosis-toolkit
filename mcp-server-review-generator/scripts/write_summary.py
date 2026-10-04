@@ -15,13 +15,13 @@ be reused for any other column-A cell on the sheet.
 
 import logging
 import os
-import re
 from datetime import date
 from pathlib import Path
 
 import openpyxl
 from openpyxl.styles import Font, PatternFill
 
+import common
 import read_checklist
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,6 @@ STATUS_FILLS = {
 }
 COLUMN_WIDTHS = {"A": 46, "B": 20, "C": 44, "D": 16, "E": 90, "F": 16}
 
-_LEADING_NUMBER_RE = re.compile(r"^\s*\d+\s*[.)]\s*")
 _STATUS_BY_LOWER = {s.lower(): s for s in STATUSES}
 
 
@@ -209,7 +208,7 @@ def _write_sheet(ws, *, items_by_sheet, key_points, recommendations, metadata):
     block_header(HEADERS["recommendations"])
     n = 0
     for rec in recommendations:
-        text = _LEADING_NUMBER_RE.sub("", str(rec).strip())
+        text = common.strip_leading_number(str(rec).strip())
         if not text:
             continue
         n += 1
@@ -245,7 +244,7 @@ def _verify(path: Path, items_by_sheet, config, key_points, recommendations) -> 
         expected_ids = [r[0] for r in _finding_rows(items_by_sheet, statuses, key_points)]
         if [r.get("id") for r in got] != expected_ids:
             problems.append(f"{name} read back as {[r.get('id') for r in got]}, expected {expected_ids}.")
-    expected_recs = len([r for r in recommendations if _LEADING_NUMBER_RE.sub("", str(r).strip())])
+    expected_recs = len([r for r in recommendations if common.strip_leading_number(str(r).strip())])
     if len(data.recommendations) != expected_recs:
         problems.append(f"{len(data.recommendations)} recommendations read back, expected {expected_recs}.")
     for label in ("Bundle", "Report generated", "Reviewer"):
@@ -319,5 +318,5 @@ def write_summary(
         "sections": list(items_by_sheet),
         "critical_findings": len(_finding_rows(items_by_sheet, {"Fail"}, key_points)),
         "other_must_have": len(_finding_rows(items_by_sheet, {"Partial", "Needs Review"}, key_points)),
-        "recommendations": len([r for r in recommendations if _LEADING_NUMBER_RE.sub("", str(r).strip())]),
+        "recommendations": len([r for r in recommendations if common.strip_leading_number(str(r).strip())]),
     }

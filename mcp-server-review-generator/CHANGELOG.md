@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.5] - 2026-10-04
+
+### Changed
+
+- No deck-output change. The leading-number stripper existed three times with two regexes; it is now one
+  `common.strip_leading_number` (the tolerant form, so v1 also strips "1 . Fix"). `build_deck`, `build_deck_v2`
+  and `write_summary` use it.
+- `deck_analysis.STATUS_ORDER` (the 4-status stacked-bar order) is renamed `STACK_ORDER` so it no longer shares
+  a name with `build_deck.STATUS_ORDER` (the 5-status checklist order). Documented why v2's Needs Review is blue.
+- The base-deck path and rows-per-slide fallbacks are `common.DEFAULT_BASE_DECK` / `DEFAULT_ROWS_PER_SLIDE`
+  instead of literals repeated in `build_deck.py`, `build_deck_v2.py` and `mcp_server.py`.
+
 ## [0.7.4] - 2026-10-04
 
 ### Changed

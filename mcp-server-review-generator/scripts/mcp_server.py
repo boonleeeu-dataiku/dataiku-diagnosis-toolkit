@@ -144,10 +144,10 @@ def build_platform_review_deck(
     checklist = _resolve(checklist_path)
     base_deck = (
         _resolve(base_deck_path) if base_deck_path
-        else common.REPO_ROOT / layout_config.get("base_deck", "resources/Dataiku Branding Template 2026.pptx")
+        else common.REPO_ROOT / layout_config.get("base_deck", common.DEFAULT_BASE_DECK)
     )
     logo = _resolve(logo_path) if logo_path else None
-    effective_rows_per_slide = rows_per_slide if rows_per_slide is not None else layout_config.get("table_rows_per_slide", 4)
+    effective_rows_per_slide = rows_per_slide if rows_per_slide is not None else layout_config.get("table_rows_per_slide", common.DEFAULT_ROWS_PER_SLIDE)
     effective_include_pass_items = (
         include_pass_items if include_pass_items is not None
         else layout_config.get("include_pass_items", False)

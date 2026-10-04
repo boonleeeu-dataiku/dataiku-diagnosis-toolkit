@@ -2,6 +2,7 @@
 
 import copy
 import functools
+import re
 from pathlib import Path
 
 import yaml
@@ -12,6 +13,18 @@ CONFIG_DIR = REPO_ROOT / "config"
 OUTPUT_DIR = REPO_ROOT / "output"
 
 BRANDING_TEMPLATE = RESOURCES_DIR / "Dataiku Branding Template 2026.pptx"
+
+# Fallbacks for when config/deck_layout.yaml omits the key (it normally sets both).
+DEFAULT_BASE_DECK = "resources/Dataiku Branding Template 2026.pptx"  # relative to REPO_ROOT
+DEFAULT_ROWS_PER_SLIDE = 4
+
+_LEADING_NUMBER_RE = re.compile(r"^\s*\d+\s*[.)]\s*")
+
+
+def strip_leading_number(value) -> str:
+    """Drop a source-written list numeral ("1. Fix ...", "2) Fix ...") from the front of a
+    recommendation; the deck and Summary layouts add their own numbering."""
+    return _LEADING_NUMBER_RE.sub("", value or "")
 
 # Single source of truth for this tool's own version (SemVer), read from the
 # repo-root VERSION file so every script gets it via `common.VERSION` -- see

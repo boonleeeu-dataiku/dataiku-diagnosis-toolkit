@@ -46,6 +46,9 @@ def test_strip_leading_number():
     assert build_deck._strip_leading_number("1. Fix it") == "Fix it"
     assert build_deck._strip_leading_number("12) Fix it") == "Fix it"
     assert build_deck._strip_leading_number("Fix 1. it") == "Fix 1. it"
+    # one shared, tolerant implementation (v1, v2 and the Summary sheet all use it)
+    assert common.strip_leading_number("1 . Fix it") == "Fix it"
+    assert common.strip_leading_number(None) == ""
 
 
 def test_format_month_year():

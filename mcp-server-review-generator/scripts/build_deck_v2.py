@@ -42,6 +42,8 @@ STATUS = {  # chip fill, text
     "Pass": ("D9F7EF", "0B6B55"), "Fail": ("FDEAEA", "9B2C2C"), "Partial": ("FFF1D6", "8A5A00"),
     "Needs Review": ("E8EEFB", "2F4C9E"), "Not Applicable": ("F1F2F4", "5B6470"),
 }
+# Stacked-bar segments. Needs Review is deliberately blue here (the v1 deck uses peach, see
+# build_deck.STATUS_COLORS), so it stays distinct from Partial's amber in the bar.
 SEG = {"Pass": MINT, "Needs Review": BLUE, "Partial": AMBER, "Fail": RED}
 DOT = {"ok": MINT, "watch": AMBER, "neutral": "B8BFC9"}
 L_CREAM, L_DARK = "CUSTOM_5", "CUSTOM_3_1"
@@ -239,7 +241,7 @@ def verdict_slide(d, a, narr):
                                   P(f"{a.na} of {a.total} items are N/A and excluded", 8.5, False, GREY, "c")], name="Headline caption")
     bx, bw, by, bh = 3.2, 6.4, 1.55, 0.5
     x = bx
-    for label in da.STATUS_ORDER:
+    for label in da.STACK_ORDER:
         n = c[label]
         if not n:
             continue
@@ -293,7 +295,7 @@ def snapshot_slide(d, a, narr, data):
                 cards.append({"label": label, "value": clip(str(md[key]), 28), "note": "", "state": "neutral"})
         for disp, _ in a.section_order:
             sc = a.section_counts(disp)
-            app = sum(sc[k] for k in da.STATUS_ORDER)
+            app = sum(sc[k] for k in da.STACK_ORDER)
             cards.append({"label": clip(disp, 26).upper(), "value": f"{sc['Pass']} of {app} pass",
                           "note": f"{sc['Fail']} fail, {sc['Partial']} partial", "state": "watch" if sc["Fail"] else "ok"})
         cards = cards[:8]
@@ -494,7 +496,7 @@ def owners_slide(d, a, narr):
 def roadmap_slide(d, a, narr, data):
     road = narr.get("roadmap")
     if road is None:
-        recs = [da.LEADING_NUMBER_RE.sub("", r) for r in data.recommendations]
+        recs = [common.strip_leading_number(r) for r in data.recommendations]
         if not recs:
             return None
         per = math.ceil(len(recs) / 3)
@@ -688,7 +690,7 @@ def build_v2(checklist_path: Path, customer: str, output_path: Path, base_deck: 
         v1_path = Path(tmp) / "v1.pptx"
         build_deck.build_deck(
             checklist_path=checklist_path, customer=customer, output_path=v1_path, base_deck=base_deck,
-            logo_path=logo_path, rows_per_slide=layout_config.get("table_rows_per_slide", 4),
+            logo_path=logo_path, rows_per_slide=layout_config.get("table_rows_per_slide", common.DEFAULT_ROWS_PER_SLIDE),
             include_pass_items=False,
         )
         prs = Presentation(str(v1_path))

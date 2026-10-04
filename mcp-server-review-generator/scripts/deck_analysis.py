@@ -11,14 +11,14 @@ import re
 from dataclasses import dataclass, field
 
 
-STATUS_ORDER = ["Pass", "Needs Review", "Partial", "Fail"]  # stacked-bar order
+# Stacked-bar order (N/A excluded). Not the checklist column order: see build_deck.STATUS_ORDER.
+STACK_ORDER = ["Pass", "Needs Review", "Partial", "Fail"]
 NA = "Not Applicable"
 ID_RE = re.compile(r"\b[A-Z][A-Z0-9]*-\d{3}\b")
 NUMBER_RE = re.compile(r"\d[\d,.]*")
 CONFIG_KV_RE = re.compile(r"\b([A-Za-z_][\w.]*[A-Za-z])\s*=\s*([^\s,;)]+)")
 SET_VERB_RE = re.compile(r"^(set|hide|enable|disable|turn|restrict|remove|add)\b", re.I)
 FLIP = {"true": "true", "false": "false"}
-LEADING_NUMBER_RE = re.compile(r"^\s*\d+\s*[.)]\s*")
 
 
 @dataclass
@@ -63,7 +63,7 @@ class Analysis:
         return [r for r in self.rows.values() if r.status == status]
 
     def section_counts(self, display):
-        out = {s: 0 for s in STATUS_ORDER + [NA]}
+        out = {s: 0 for s in STACK_ORDER + [NA]}
         for r in self.rows.values():
             if r.section == display:
                 out[r.status] += 1
@@ -72,7 +72,7 @@ class Analysis:
 
 def canonical_status(status):
     s = (status or "").strip().lower()
-    for canon in STATUS_ORDER + [NA]:
+    for canon in STACK_ORDER + [NA]:
         if canon.lower() == s:
             return canon
     return None
@@ -232,7 +232,7 @@ def expand_ids(text):
 def analyze(data, ordered_sections, v2_config=None):
     v2_config = v2_config or {}
     rows = build_rows(data, ordered_sections)
-    counts = {s: 0 for s in STATUS_ORDER + [NA]}
+    counts = {s: 0 for s in STACK_ORDER + [NA]}
     for r in rows.values():
         counts[r.status] += 1
     total = len(rows)
