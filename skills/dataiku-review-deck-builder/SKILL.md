@@ -20,7 +20,8 @@ Load the deferred tools if needed (`ToolSearch` with
 ## 1. Generate the deck
 
 **Order of work (required whenever you, an LLM, are running this skill):**
-1. Make sure the checklist is final. Any later edit changes its hash.
+1. Make sure the checklist is final, including its Summary sheet (the review skill writes it with
+   `write_summary`; if it is missing or stale, call that first). Any later edit changes its hash.
 2. Call `analyze_checklist` on the checklist, then draft the narrative (1b) from its output and this
    checklist's rows, for this bundle only. It returns `checklist_sha256`, the `narrative_path` to save to, the
    Needs Review and Not Applicable ids your owner and N/A groups must each cover once, quick-win candidates,

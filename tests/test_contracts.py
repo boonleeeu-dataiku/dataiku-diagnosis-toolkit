@@ -121,3 +121,27 @@ def test_deck_skill_uses_the_narrative_helper_tool_and_flag():
     assert "def analyze_checklist" in MCP_SERVER and '"narrative_missing"' in MCP_SERVER
     for phrase in ("analyze_checklist", "narrative_missing"):
         assert phrase in DECK_SKILL
+
+
+def test_review_skill_drives_write_summary_with_the_tools_real_parameters():
+    """The skill tells the model to call write_summary; its argument names and the key-point limit
+    must be the ones the server actually has."""
+    import write_summary
+
+    sig = MCP_SERVER.split("def write_summary(", 1)[1].split(") ->", 1)[0]
+    for param in ("checklist_path", "reviewer", "bundle", "key_points", "recommendations", "node_version",
+                  "diagnosis_generated"):
+        assert f"`{param}`" in REVIEW_SKILL, f"SKILL.md no longer mentions write_summary's `{param}`"
+        assert re.search(rf"\b{param}:", sig), f"mcp_server.write_summary has no `{param}` parameter"
+    assert f"<= {write_summary.KEY_POINT_MAX_CHARS} characters" in REVIEW_SKILL
+
+
+def test_write_summary_headers_are_the_ones_the_skill_prescribes_and_the_reader_matches():
+    import write_summary
+
+    assert list(write_summary.HEADERS.values()) == [h for h, _ in SUMMARY_BLOCKS]
+    assert write_summary.STATUSES == build_deck.STATUS_ORDER
+
+
+def test_deck_skill_orders_write_summary_before_the_narrative():
+    assert "write_summary" in DECK_SKILL

@@ -7,6 +7,24 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-03
+
+### Added
+
+- `write_summary` MCP tool (`scripts/write_summary.py`): writes the checklist's Summary sheet deterministically.
+  Metadata labels, the five block headers and their single shared style, status counts, per-section tallies and
+  the Critical Findings / Other Must-Have rows (ID, Section, Title, Status) are computed from the section sheets,
+  so the layout the reader expects no longer depends on which model wrote it. The caller supplies only a one-line
+  key point per listed finding (<= 90 chars, dict order = row order) and the ordered recommendations. Bad input
+  (missing/extra key point, unknown id, blank status, empty recommendations) fails before the file is touched, and
+  the saved sheet is re-read with `read_checklist` and compared before it replaces the original.
+
+### Fixed
+
+- Critical Findings / Other Must-Have blocks are now read with `num_cols=5`, so the `Status` and `Key point`
+  columns are no longer dropped. A Summary status that disagrees with the section sheet is now reported (the
+  `xfail` test recording this gap is removed).
+
 ## [0.6.0] - 2026-10-02
 
 ### Added

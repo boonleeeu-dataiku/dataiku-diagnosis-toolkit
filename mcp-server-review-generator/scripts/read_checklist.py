@@ -236,9 +236,9 @@ def parse_summary_sheet(ws, config: dict) -> dict:
         elif section_names.find_narrative_block(header_text, "per_section_breakdown", config):
             per_section_breakdown = parse_section_breakdown(ws, start, end)
         elif section_names.find_narrative_block(header_text, "critical_findings", config):
-            critical_findings = parse_id_led_table(ws, start, end, num_cols=3)
+            critical_findings = parse_id_led_table(ws, start, end, num_cols=5)
         elif section_names.find_narrative_block(header_text, "other_must_have", config):
-            other_must_have = parse_id_led_table(ws, start, end, num_cols=3)
+            other_must_have = parse_id_led_table(ws, start, end, num_cols=5)
         elif section_names.find_narrative_block(header_text, "recommendations", config):
             recommendations = parse_recommendation_list(ws, start, end)
         else:

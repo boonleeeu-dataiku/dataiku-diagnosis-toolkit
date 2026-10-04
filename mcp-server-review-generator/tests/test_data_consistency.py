@@ -69,12 +69,6 @@ def test_summary_status_disagreeing_with_sheet_warns(checklist_factory, section_
     assert any("shows SEC-001 as 'Needs Review', but its section sheet says 'Partial'" in w for w in warnings)
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "Known gap: parse_summary_sheet() reads Critical Findings / Other Must-Have with num_cols=3, so in "
-    "the checklist-review skill's standard 'ID | Section | Title | Status | Key point' layout the "
-    "Status column is never read and a disagreeing Summary status goes unreported. Remove this "
-    "marker once fixed."
-))
 def test_summary_status_in_fourth_column_is_checked(checklist_factory, section_config):
     other = [{"id": "SEC-001", "section": "x", "title": "x", "status": "Needs Review"}]
     warnings = _warnings(checklist_factory(other=other), section_config)

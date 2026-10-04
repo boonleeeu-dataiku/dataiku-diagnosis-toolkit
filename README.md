@@ -35,7 +35,7 @@ checklist spreadsheet.
   from each bundle's own checklist on every run (the tool validates it against item statuses). A build
   without a narrative, possible only from the plain script, falls back to generic text derived from cells.
 - **`mcp-server-review-generator/`** — a local Python MCP server exposing
-  `build_platform_review_deck`, `validate_deck` and `analyze_checklist` tools that generate/validate the deck and
+  `build_platform_review_deck`, `validate_deck`, `analyze_checklist` and `write_summary` tools that generate/validate the deck and
   return the facts its narrative must cite. Vendored
   from a separate upstream repo — see [Versioning & maintenance](#versioning--maintenance) below.
 

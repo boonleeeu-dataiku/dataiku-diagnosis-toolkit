@@ -84,6 +84,9 @@ Typical high-value sources in a DSS diagnosis bundle:
   `deployerClientSettings` in `general-settings.json`, these are the
   indicators for Design/Automation separation checks (see calibration below).
 - `dmesg.txt`, `sysctl.txt`, `syspackages.txt` — total RAM, kernel/OS version
+- `diag.txt` — host command output: `free -m` (RAM), `lsblk -t` (the `ROTA`
+  column: 0 = SSD/non-rotational, 1 = rotational; match it to the volume
+  holding the data dir) and `df`. This is the evidence for SSD-storage checks.
 - `run/hs_err_pid*.log` — JVM crash dumps; grep the `^# ` header lines for
   the crash cause (OOM vs segfault etc.) rather than reading the full file
 - `run/backend.log*` — grep for `ERROR`/`FATAL`/`OutOfMemoryError`; when a
@@ -218,10 +221,14 @@ one — add each as its own bullet rather than overwriting prior ones.
 - **Dataiku DSS version currency check (e.g. "DSS Version Currency"):**
   actively look up Dataiku's current generally-available DSS release with a
   web search (do this each run — the answer changes over time, don't rely on
-  memorized/training-time knowledge of "the latest version"). Search for
-  something like "Dataiku DSS latest version release notes" and use an
-  official Dataiku source (release notes / changelog / docs.dataiku.com) for
-  the answer. Compare the bundle's `product_version` (from `dss-version.json`,
+  memorized/training-time knowledge of "the latest version"). Use the
+  **extended** search mode: a standard search can return a stale answer and
+  miss a newer major (a standard search once reported 14.7.2 when DSS 15.0.2
+  was already out). Search for "Dataiku DSS latest version release notes",
+  then run a second search for the next major above the one you found
+  (e.g. "Dataiku DSS 15 release notes"); take the highest GA version
+  confirmed by an official Dataiku source (release notes / changelog /
+  docs.dataiku.com). Never answer from a single standard search. Compare the bundle's `product_version` (from `dss-version.json`,
   format `MAJOR.MINOR.PATCH`) against the latest GA version's major version
   number only, and apply this fixed internal rule:
   - If the bundle's **major** version matches the current major release
@@ -241,6 +248,32 @@ one — add each as its own bullet rather than overwriting prior ones.
   currency could not be verified against Dataiku's current release
   information (web lookup failed/unavailable) and mark the item **Needs
   Review**.
+
+- **Feature-conditional GenAI checks (Cobuild default LLMs, Agent Hub
+  permissions / service account / impersonation groups, Bring-your-own-LLM
+  mode, local Hugging Face):** first confirm the feature is actually in use
+  (e.g. no `agentBuildingSettings`, no Agent Hub projects/webapps, all
+  `localAIServerSettings.*UseLocal` false, no INTERNAL_huggingface code env).
+  If it isn't, mark the check **Not Applicable**, not Fail or Needs Review. A
+  missing key is only a Fail when the feature is demonstrably in use. When a
+  setting is turned off but the checklist asks for acceptance or enablement
+  (e.g. AI Services terms not accepted while all AI features are disabled),
+  use **Needs Review** and ask whether it is intentional. For "AI assistant
+  debug data in the bundle" checks, a bundle that simply lacks the section is
+  **Needs Review**, not Fail.
+
+- **Reading a hinted setting:** a checklist `parameter_hint` is a pointer,
+  not a guarantee of the exact path. Before marking a setting absent or Fail,
+  search the whole `general-settings.json` for the leaf key (e.g.
+  `traceExplorerDefaultWebApp` lives under `generativeAISettings.llmTraceSettings`,
+  not at the top level). Likewise a concurrency or sizing limit stored under a
+  different block (e.g. `jekSettings.maxRunningJobs`) still counts: a value of
+  `0` means unsized and is a **Fail** for "Flow Limits Sizing", even when
+  `maxRunningActivities` is in range. Connection-detail findings from
+  `sanity-check.json` (e.g. HDFS/Spark connections with no group allowed to read
+  details) are real evidence for connection-details checks: report them
+  **Partial** rather than Not Applicable just because the storage is HDFS and
+  not a cloud object store.
 
 - **HTTPS enforcement check (e.g. "SEC-006", especially for custom/on-prem
   installs):** `install.ini` and DSS's own config only show whether DSS
@@ -301,61 +334,54 @@ a result and every result was consumed (no silent mismatches) before saving.
 
 ## 6. Add/update a Summary sheet
 
-Insert a `Summary` sheet as the first tab (recreate it if it already exists,
-so re-running the skill is idempotent).
+Once every item's `validation_status` is filled in, call the `write_summary` tool of the
+`dataiku-review-generator` MCP server. It recreates the `Summary` sheet as the first tab, so
+re-running is idempotent. It computes the metadata labels, counts, per-section tallies and finding
+rows (ID, Section, Title, Status) from the section sheets and applies one fixed style. You supply
+only the judgment text:
 
-The `dataiku-review-deck-builder` skill turns this workbook into a slide
-deck, and its generator finds each Summary block by the exact header text and
-cell style below. Use this layout and these header texts **verbatim**. Wording
-it differently ("Overall status", "Per-section status breakdown") makes the
-deck show zeros or miss whole sections.
+- `checklist_path`, `reviewer`, `bundle`, and optionally `node_version` and `diagnosis_generated`.
+- `key_points`: `{item id: one line, <= 90 characters}` for **every** must-have item that is Fail,
+  Partial or Needs Review, and for no other item. Echo the headline of the item's `notes`. The key
+  order sets the row order within each block. List Fail items most causally central first.
+- `recommendations`: the ordered actions, linked issues together and root cause before its
+  symptoms. Leave out the numbering; the tool adds `1. `, `2. `, ...
 
-1. **Metadata rows**, one per row near the top. The label goes in column A
-   and must end with a colon; the value goes in column B. Use these labels:
-   `Bundle:`, `Node / Version:`, `Diagnosis generated:`, `Report generated:`
-   (today's date as `YYYY-MM-DD`), `Reviewer:`.
-2. **Block headers**, each alone in column A, in this order and with this exact
-   text:
+The tool fails without touching the file if a key point is missing, extra, too long or multi-line,
+or if any item has a blank or unknown status. Fix the input and call it again. It also re-reads
+the saved sheet as the deck generator will and compares it to what it meant to write.
+
+Call it **before** drafting the deck narrative: the narrative pins a hash of the final file, so
+changing the Summary afterwards makes the narrative look stale.
+
+The sheet it writes is what the `dataiku-review-deck-builder` skill's generator reads, so its
+layout must not drift. If the tool is not available, write the sheet by hand to this layout and
+use these header texts **verbatim**; differently worded headers make the deck show zeros or miss
+whole sections.
+
+1. **Metadata rows**, label in column A ending in a colon, value in column B: `Bundle:`,
+   `Node / Version:`, `Diagnosis generated:`, `Report generated:` (today, `YYYY-MM-DD`), `Reviewer:`.
+2. **Block headers**, each alone in column A, in this order:
    - `Overall Status Counts`
    - `Per-Section Breakdown`
    - `Critical Findings - Must-Have Items Failing`
    - `Other Must-Have Items: Partial / Needs Review`
    - `Priority-Ordered Recommendations`
 
-   Give all five header cells the **identical** font (bold, same size) and
-   fill. The generator recognises a block header by matching the style of the
-   `Overall Status Counts` cell, so no other column-A cell should share that
-   style.
-3. **Under `Overall Status Counts`**: one row per status, with the status name
-   in column A (`Pass`, `Fail`, `Partial`, `Needs Review`, `Not Applicable`)
-   and its count across all sheets in column B. Then add a `Total` row.
-   Further columns, such as must-have / nice-to-have splits, may follow.
-4. **Under `Per-Section Breakdown`**: a header row
-   `Section | Pass | Fail | Partial | Needs Review | Not Applicable`, then one
-   row per section sheet. Column A holds the sheet's tab name exactly as it
-   appears.
-5. **Under the two must-have blocks**: a header row
-   `ID | Section | Title | Status | Key point`, then one row per item. Keep
-   `Key point` to one line of ≤ 90 characters, echoing the item's `notes`
-   headline. Critical
-   Findings lists must-have items that Fail, most causally-central first.
-   Other Must-Have Items lists those that are Partial or Needs Review. If a
-   block has no items, keep its header and its column-header row with no rows
-   beneath them. Never write a placeholder row such as `None` or "no
-   must-have items failed": the deck generator would show it as a finding
-   whose ID is "None".
-6. **Under `Priority-Ordered Recommendations`**: one pre-numbered action per
-   row in column A (`1. ...`). Put linked issues together, root cause before
-   its symptoms.
+   Give all five the **identical** font (bold, same size) and fill, and give no other column-A
+   cell that style: the generator treats any cell matching it as a block header.
+3. Under `Overall Status Counts`: one row per status (`Pass`, `Fail`, `Partial`, `Needs Review`,
+   `Not Applicable`) with its count in column B, then a `Total` row.
+4. Under `Per-Section Breakdown`: a header row
+   `Section | Pass | Fail | Partial | Needs Review | Not Applicable`, then one row per section sheet
+   with the tab name exactly as it appears.
+5. Under the two must-have blocks: a header row `ID | Section | Title | Status | Key point`, then one
+   row per item. If a block has no items, keep its header and column-header row and write no rows
+   (never a placeholder such as `None`: the deck would show it as a finding whose ID is "None").
+6. Under `Priority-Ordered Recommendations`: one pre-numbered action per row in column A (`1. ...`).
 
-Write every count as a literal number, never an Excel formula such as
-`COUNTIF`. openpyxl saves formulas without computed values, so the deck
-generator, which reads cached values, would see them as empty.
-
-Within that layout, match the existing workbook's font/fill conventions (check
-an existing header cell's font/fill before choosing styles) rather than
-imposing a new look. Color-code status cells consistently (e.g.,
-green/red/yellow-ish fills) and freeze the header rows.
+Write every count as a literal integer, never an Excel formula such as `COUNTIF`: openpyxl saves
+formulas without cached values, so the deck generator would see them as empty.
 
 ## 7. Deliver
 

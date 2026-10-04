@@ -37,6 +37,7 @@ import yaml  # noqa: E402
 
 import build_deck  # noqa: E402
 import read_checklist  # noqa: E402
+import write_summary  # noqa: E402
 
 STATUSES = build_deck.STATUS_ORDER
 EVIDENCE_REQUIRED = {"Pass", "Fail", "Partial"}
@@ -178,6 +179,25 @@ def check(workbook: Path, bundle: Path | None = None, expected: Path | None = No
                 report.structure.append("Summary has no 'Per-Section Breakdown' block the deck generator recognises.")
             if "Report generated" not in summary["bundle_metadata"]:
                 report.structure.append("Summary has no 'Report generated:' metadata row.")
+            headers = [text for _, text in read_checklist.find_section_blocks(wb["Summary"])]
+            if headers != list(write_summary.HEADERS.values()):
+                report.structure.append(
+                    f"Summary block headers read as {headers}, expected {list(write_summary.HEADERS.values())} "
+                    "(a bold cell in column A outside the five headers can split a block)."
+                )
+            tally = {s: sum(1 for it in items if it.validation_status == s) for s in STATUSES}
+            tally["Total"] = len(items)
+            if summary["overall_counts"] != tally:
+                report.structure.append(
+                    f"Summary Overall Status Counts {summary['overall_counts']} != section-sheet tally {tally}."
+                )
+            for block, wanted in (("critical_findings", {"Fail"}), ("other_must_have", {"Partial", "Needs Review"})):
+                expected_ids = {it.id for it in items if it.is_must_have and it.validation_status in wanted}
+                got_ids = {r.get("id") for r in summary[block]}
+                if got_ids != expected_ids:
+                    report.structure.append(
+                        f"Summary {block} lists {sorted(map(str, got_ids))}, expected {sorted(expected_ids)}."
+                    )
         except read_checklist.ChecklistFormatError:
             pass  # reported by collect_data_warnings below
         try:

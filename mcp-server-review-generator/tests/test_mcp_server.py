@@ -65,3 +65,20 @@ def test_analyze_checklist_returns_scaffold(checklist_factory):
 def test_analyze_checklist_missing_file_surfaces_as_tool_error(tmp_path):
     with pytest.raises(ToolError, match="Checklist file not found"):
         mcp_server.analyze_checklist(checklist_path=str(tmp_path / "nope.xlsx"))
+
+
+def test_write_summary_tool_writes_and_reports(checklist_factory):
+    path = checklist_factory()
+    res = mcp_server.write_summary(
+        checklist_path=str(path), reviewer="A. Reviewer", bundle="synthetic_bundle",
+        key_points={"ARCH-002": "Runtime DB is H2.", "ARCH-001": "Sizing unconfirmed.", "SEC-001": "MFA not enforced."},
+        recommendations=["Fix ARCH-002 first."],
+    )
+    assert res["counts"]["Total"] == 6 and res["critical_findings"] == 1 and res["other_must_have"] == 2
+
+
+def test_write_summary_tool_surfaces_input_errors_as_tool_errors(checklist_factory):
+    with pytest.raises(ToolError, match="missing a line"):
+        mcp_server.write_summary(
+            checklist_path=str(checklist_factory()), reviewer="r", bundle="b", key_points={}, recommendations=["x"],
+        )

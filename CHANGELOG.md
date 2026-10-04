@@ -10,6 +10,34 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+### Changed
+
+- `dataiku-diagnosis-checklist-review`: the version-currency check now requires an extended web search plus a
+  look for the next major; `diag.txt` (`lsblk` ROTA) is a named source for SSD checks; new calibrations make
+  GenAI feature-conditional checks Not Applicable when the feature is unused, say to search for a hinted
+  setting's leaf key before calling it absent, and treat `jekSettings.maxRunningJobs=0` as a Fail and
+  HDFS connection-detail sanity findings as Partial.
+- Default checklist template: GENAI-003 `parameter_hint` now points at
+  `generativeAISettings > llmTraceSettings > traceExplorerDefaultWebApp`.
+
+## [0.14.0] - 2026-10-03
+
+### Added
+
+- Re-synced `mcp-server-review-generator` to upstream v0.7.0: a new `write_summary` tool writes the checklist's
+  Summary sheet deterministically (metadata, block headers and their one shared style, counts, per-section
+  tallies and finding rows come from the section sheets), so its layout no longer varies with the model that
+  wrote it. Critical Findings / Other Must-Have blocks are now read with all five columns, so a Summary status
+  that disagrees with the section sheet is reported.
+
+### Changed
+
+- `dataiku-diagnosis-checklist-review` step 6 now has Claude call `write_summary` with a key point per must-have
+  finding and the ordered recommendations, instead of hand-writing the sheet. The layout stays documented as the
+  fallback if the tool is unavailable. `dataiku-review-deck-builder` notes the Summary must be written first.
+- `tests/lib/check_review_output.py` also checks the Summary's block headers, counts and finding ids against the
+  section sheets; `tests/test_contracts.py` pins the skill to `write_summary`'s parameters.
+
 ## [0.13.0] - 2026-10-02
 
 ### Added

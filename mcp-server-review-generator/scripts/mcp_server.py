@@ -206,6 +206,60 @@ def build_platform_review_deck(
 
 @mcp.tool()
 @_surface_errors
+def write_summary(
+    checklist_path: str,
+    reviewer: str,
+    bundle: str,
+    key_points: dict[str, str],
+    recommendations: list[str],
+    node_version: str = "",
+    diagnosis_generated: str = "",
+) -> dict[str, Any]:
+    """Write (or recreate) the Summary sheet of a reviewed checklist, in the exact
+    layout the deck generator reads. Call it once every item's validation_status is
+    filled in and before analyze_checklist (the narrative's checklist hash pins the
+    final file). Counts, per-section tallies and the finding rows are computed from
+    the section sheets; you supply only the judgment text.
+
+    Args:
+        checklist_path: Path to the reviewed checklist .xlsx (required). A relative
+            path is resolved against this repo's root. The file is updated in place.
+        reviewer: Reviewer name for the Reviewer: row (required).
+        bundle: Diagnosis bundle name for the Bundle: row (required).
+        key_points: {item id: one-line key point, <= 90 chars} for EVERY must-have
+            item that is Fail, Partial or Needs Review, and no others. Key order sets
+            the order within each block: Fail items listed most causally central first.
+        recommendations: Ordered actions, root cause before its symptoms. Numbering
+            ("1. ") is added for you.
+        node_version: Node / Version: row, e.g. "Design node / 14.4.3".
+        diagnosis_generated: Diagnosis generated: row (date as in the bundle).
+
+    Returns:
+        A dict with checklist_path, counts (per status and Total), sections,
+        critical_findings, other_must_have and recommendations (counts of rows written).
+        Fails with a message naming the problem (missing key point, unknown id, blank
+        status, ...) without touching the file; the saved sheet is re-read the way the
+        deck generator reads it before it replaces the file.
+    """
+    import write_summary as write_summary_lib
+
+    checklist = _resolve(checklist_path)
+    if not checklist.exists():
+        raise FileNotFoundError(f"Checklist file not found: {checklist}")
+    return write_summary_lib.write_summary(
+        checklist,
+        reviewer=reviewer,
+        bundle=bundle,
+        node_version=node_version,
+        diagnosis_generated=diagnosis_generated,
+        key_points=key_points,
+        recommendations=recommendations,
+        config=common.load_config("section_names.yaml"),
+    )
+
+
+@mcp.tool()
+@_surface_errors
 def analyze_checklist(checklist_path: str) -> dict[str, Any]:
     """Read a completed checklist and return the facts a v2 narrative must cite,
     so Claude can draft <checklist_stem>_narrative.json that validates first time.
