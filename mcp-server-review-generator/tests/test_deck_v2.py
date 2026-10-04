@@ -229,3 +229,22 @@ def test_v2_build_flags_a_missing_narrative(checklist_factory, tmp_path):
     (path.with_name(path.stem + "_narrative.json")).write_text(json.dumps({}))
     res = build_deck_v2.build_v2(path, "Acme", tmp_path / "o2.pptx", common.BRANDING_TEMPLATE)
     assert res["narrative_missing"] is False
+
+
+def test_id_list_accepts_string_or_list():
+    import build_deck_v2
+    assert build_deck_v2.id_list("SCALE-004") == ["SCALE-004"]
+    assert build_deck_v2.id_list("SCALE-006 / SCALE-012") == ["SCALE-006", "SCALE-012"]
+    assert build_deck_v2.id_list(["SCALE-004"]) == ["SCALE-004"]
+
+
+@pytest.mark.skipif(not common.BRANDING_TEMPLATE.exists(), reason="branding template not present")
+def test_v2_build_risk3_cards_accept_string_ids(checklist_factory, tmp_path):
+    """A string `ids` used to index to its first character and fail with KeyError: 'S'."""
+    import build_deck_v2
+    path = checklist_factory(sections())
+    (path.with_name(path.stem + "_narrative.json")).write_text(json.dumps({
+        "risk3": {"title": "Open items", "cards": [
+            {"heading": "Backups", "ids": "ARCH-002", "found": "Unknown", "todo": "Ask infra"}]}}))
+    res = build_deck_v2.build_v2(path, "Acme", tmp_path / "o.pptx", common.BRANDING_TEMPLATE)
+    assert res["narrative_used"].endswith("_narrative.json")

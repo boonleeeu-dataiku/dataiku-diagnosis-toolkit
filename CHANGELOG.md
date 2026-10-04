@@ -10,6 +10,13 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-10-04
+
+### Fixed
+
+- Re-synced `mcp-server-review-generator` to upstream v0.7.2: a `risk3` card whose `ids` is a string (allowed by
+  the narrative shape) no longer fails the deck build with `KeyError: 'S'`.
+
 ## [0.15.0] - 2026-10-04
 
 ### Added

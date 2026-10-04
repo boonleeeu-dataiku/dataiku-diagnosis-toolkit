@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-10-04
+
+### Fixed
+
+- A `risk3.cards[].ids` given as a string (which the narrative shape allows) failed the build with
+  `KeyError: 'S'`: the slide indexed the string's first character as a checklist ID. Card `ids` are now
+  normalised to a list, as `roadmap` and `risk1.fix` already were.
+
 ## [0.7.1] - 2026-10-04
 
 ### Fixed

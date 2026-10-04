@@ -400,6 +400,11 @@ def risk2_slide(d, a, narr):
         tb(s, 0.55, 4.4, 8.9, 0.55, [P([("Already in place: ", {"bold": True, "color": "0B6B55"}), (pos, {})], 10)], "m", name="Positive note")
 
 
+def id_list(value):
+    """A narrative `ids` field is a string or a list; always return a list of IDs."""
+    return da.ID_RE.findall(value) if isinstance(value, str) else list(value)
+
+
 def risk3_slide(d, a, narr):
     r3 = narr.get("risk3")
     caveats = set(narr.get("caveats", []))
@@ -416,6 +421,7 @@ def risk3_slide(d, a, narr):
     cards = r3["cards"][:3]
     for i, c in enumerate(cards):
         cx = 0.39 + i * 3.1
+        c = {**c, "ids": id_list(c["ids"])}
         first = a.rows[c["ids"][0]]
         st = first.status
         label = "Pass, with caveat" if st == "Pass" else st
@@ -510,7 +516,7 @@ def roadmap_slide(d, a, narr, data):
             if eff:
                 chip(s, cx + 0.16, y + 0.03, 0.3, 0.3, eff, fill=DK, color=WHITE, size=9, name=f"Roadmap effort {nm}-{j}")
             tb(s, cx + 0.58, y, 2.3, 0.4, [P(e["action"], 9.5, True)], name=f"Roadmap action {nm}-{j}")
-            ids = ", ".join(e["ids"] if isinstance(e["ids"], list) else da.ID_RE.findall(e["ids"]))
+            ids = ", ".join(id_list(e["ids"]))
             tb(s, cx + 0.58, y + 0.4, 2.3, 0.2, [P(ids, 8, False, GREY)], name=f"Roadmap ids {nm}-{j}")
             y += step
     foot = road.get("footnote") or ("Effort is indicative: S about a day, M a few days, L weeks. Owners and dates to be agreed with the customer."
