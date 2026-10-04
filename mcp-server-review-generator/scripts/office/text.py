@@ -32,41 +32,6 @@ def replace_text_run(slide_xml: str, old_text: str, new_text: str, required: boo
     return new_xml
 
 
-def replace_within_shape(slide_xml: str, anchor_text: str, edits: list[tuple[str, str]]) -> str:
-    """Find the single <p:sp>...</p:sp> shape containing the literal
-    <a:t>{anchor_text}</a:t> run, apply a sequence of (old, new)
-    replace_text_run edits scoped to just that shape's XML, and splice the
-    edited shape back into slide_xml.
-
-    Use this instead of a slide-wide replace_text_run when the same
-    placeholder text is repeated identically across several shapes on one
-    slide (e.g. repeated per-tile captions in a KPI grid) -- a slide-wide
-    call would land on the first remaining occurrence in document order,
-    which doesn't necessarily correspond to the shape you mean to edit.
-    """
-    needle = f"<a:t>{anchor_text}</a:t>"
-    for m in SP_RE.finditer(slide_xml):
-        if needle in m.group(0):
-            shape_xml = m.group(0)
-            for old, new in edits:
-                shape_xml = replace_text_run(shape_xml, old, new, required=True)
-            return slide_xml[: m.start()] + shape_xml + slide_xml[m.end() :]
-    raise ValueError(f"No <p:sp> shape containing {anchor_text!r} found")
-
-
-def remove_picture(slide_xml: str, required: bool = True) -> str:
-    """Remove the first <p:pic>...</p:pic> block (and its r:embed reference)
-    from a slide. The now-unreferenced image relationship should also be
-    dropped from the slide's .rels (see remove_relationship_by_rid below);
-    office.slides.clean_orphans() then removes the orphaned media file
-    package-wide once all structural edits are done.
-    """
-    new_xml, n = PIC_RE.subn("", slide_xml, count=1)
-    if n == 0 and required:
-        raise ValueError("No <p:pic> found in slide XML")
-    return new_xml
-
-
 def remove_graphic_frame(slide_xml: str, required: bool = True) -> str:
     """Remove the first <p:graphicFrame>...</p:graphicFrame> block (e.g. the
     master's one native <a:tbl> table) from a slide, to replace it with

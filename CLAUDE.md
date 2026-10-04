@@ -127,7 +127,7 @@ See README's "Testing" section for the three tiers.
 - **When you change a skill's wording that another component depends on** (status names,
   Summary block headers, the deck tool's return keys or error text), check
   `tests/test_contracts.py`.
-- Strict `xfail` tests mark known gaps (see `CHANGELOG.md` → Unreleased → Known issues).
+- Strict `xfail` tests mark known gaps (record any in `CHANGELOG.md` → Unreleased → Known issues; none exist currently).
   When you fix one, remove its marker. Strict mode makes it fail as an unexpected pass until
   you do.
 - Fixtures are synthetic only. The same rule as "Security / privacy" above applies: never derive

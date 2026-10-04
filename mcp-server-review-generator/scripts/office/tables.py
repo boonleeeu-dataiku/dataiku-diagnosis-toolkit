@@ -60,10 +60,6 @@ def row_template(tbl_xml: str, header_row_count: int = 1) -> str:
     return rows[header_row_count]
 
 
-def expected_column_count(template_row_xml: str) -> int:
-    return len(extract_cells(template_row_xml))
-
-
 PARA_RE = re.compile(r"<a:p>.*?</a:p>", re.DOTALL)
 
 

@@ -45,7 +45,6 @@ STATUS = {  # chip fill, text
 SEG = {"Pass": MINT, "Needs Review": BLUE, "Partial": AMBER, "Fail": RED}
 DOT = {"ok": MINT, "watch": AMBER, "neutral": "B8BFC9"}
 L_CREAM, L_DARK = "CUSTOM_5", "CUSTOM_3_1"
-EXPECTED_SLIDES_MIN = 12  # cover + 8 main + appendix divider + end card + >=1 appendix slide
 
 
 def RGB(h):
@@ -228,13 +227,9 @@ def est_lines(text, width_in, size_pt):
 
 
 # ------------------------------------------------------------ slide content
-def figure_in(row_id, a):
-    return a.rows[row_id].raw_text if row_id in a.rows else ""
-
-
 def verdict_slide(d, a, narr):
     c = a.counts
-    f, p, nr = c["Fail"], c["Partial"], c["Needs Review"]
+    f, nr = c["Fail"], c["Needs Review"]
     title = narr.get("verdict_title") or (
         f"{c['Pass']} of {a.applicable} applicable checks pass; {f} fail and {nr} need confirmation")
     s = d.dark(title, 22)
@@ -413,7 +408,6 @@ def id_list(value):
 
 def risk3_slide(d, a, narr):
     r3 = narr.get("risk3")
-    caveats = set(narr.get("caveats", []))
     if r3 is None:
         used = {i for g in a.root_causes[:1] for i in g}
         left = [r for r in a.rows.values() if r.status in ("Partial", "Needs Review") and r.id not in used]
@@ -474,7 +468,8 @@ def owners_slide(d, a, narr):
     if not g:
         return None
     total = sum(len(x["asks"]) for x in g)
-    assert total == a.counts["Needs Review"], "owner grouping must equal the Needs Review total"
+    if total != a.counts["Needs Review"]:
+        raise RuntimeError("owner grouping must equal the Needs Review total")
     s = d.cream(narr.get("owners_title") or f"What we need from you: {total} items to confirm, grouped by owner")
     n = min(len(g), 5)
     gap = 0.13

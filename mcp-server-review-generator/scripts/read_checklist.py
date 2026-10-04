@@ -295,6 +295,13 @@ def parse_section_sheet(ws, sheet_tab_name: str) -> list[ChecklistItem]:
 
 def read_checklist(xlsx_path, config: dict) -> ChecklistData:
     wb = openpyxl.load_workbook(xlsx_path, data_only=True, read_only=True)
+    try:
+        return _read_workbook(wb, xlsx_path, config)
+    finally:
+        wb.close()
+
+
+def _read_workbook(wb, xlsx_path, config: dict) -> ChecklistData:
     if "Summary" not in wb.sheetnames:
         raise ChecklistFormatError(f"{xlsx_path} has no 'Summary' sheet.")
 

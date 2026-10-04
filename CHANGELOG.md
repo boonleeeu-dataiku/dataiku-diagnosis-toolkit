@@ -10,6 +10,16 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+### Changed
+
+- Hygiene pass: removed stale reader-MCP-era wording from README / checklist-review skill description,
+  regenerated the eval mock tool schema (now all 4 tools), removed the obsolete
+  `docs/upstream-reader-spec.md`.
+- Re-synced `mcp-server-review-generator/` to upstream 0.7.4 (dead-code removal, config parsed once,
+  v2-specific manual QA checklist; see its CHANGELOG).
+- Small trims: one-server loop in `scripts/refresh-eval-tool-schemas.sh`, redundant `.gitignore` line,
+  hoisted a test import.
+
 ## [0.17.1] - 2026-10-04
 
 ### Changed

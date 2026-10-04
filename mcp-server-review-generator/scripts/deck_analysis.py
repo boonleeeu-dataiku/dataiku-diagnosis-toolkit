@@ -10,7 +10,6 @@ applied to Claude-supplied text).
 import re
 from dataclasses import dataclass, field
 
-import read_checklist
 
 STATUS_ORDER = ["Pass", "Needs Review", "Partial", "Fail"]  # stacked-bar order
 NA = "Not Applicable"
@@ -189,7 +188,8 @@ def split_by_owner(rows, owner_keywords, id_prefix_owner=None):
         groups.setdefault(owner, []).append(r.id)
     order = list(owner_keywords) + [o for o in groups if o not in owner_keywords]
     out = [(o, groups[o]) for o in order if o in groups]
-    assert sum(len(g[1]) for g in out) == len(nr), "owner grouping lost Needs Review items"
+    if sum(len(g[1]) for g in out) != len(nr):
+        raise RuntimeError("owner grouping lost Needs Review items")
     return out
 
 

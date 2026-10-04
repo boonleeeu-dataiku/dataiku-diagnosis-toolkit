@@ -1,7 +1,7 @@
 {
   "tools": [
     {
-      "description": "Generate a branded Dataiku Platform Review .pptx deck from a completed\n    checklist workbook, writing it to disk and returning its path.\n\n    Mirrors `python3 scripts/build_deck.py`. Runs the same structural\n    validation automatically afterward (see the validate_deck tool) and\n    reports any problems found, rather than requiring a separate call.\n\n    Args:\n        checklist_path: Path to a completed checklist .xlsx (required).\n            A relative path is resolved against this repo's root, not this\n            server process's working directory.\n        customer: Customer name, shown verbatim (upper-cased) on the title\n            slide (required).\n        logo_path: Optional path to a customer logo image, spliced into the\n            title slide. Omit to leave the title slide without a logo.\n        output_path: Output .pptx path. Defaults to\n            \"output/<Customer_Slug>_Platform_Review_<date>.pptx\", where\n            <date> is a YYYY-MM-DD found in the checklist filename, else\n            today's date.\n        rows_per_slide: Max table rows per findings slide. Defaults to\n            config/deck_layout.yaml's table_rows_per_slide (4 if unset).\n        include_pass_items: Also list Pass/Not-Applicable items in findings\n            tables, not just Fail/Partial/Needs Review. If omitted, uses\n            config/deck_layout.yaml's include_pass_items (default true).\n            Unlike the CLI's --include-pass-items flag (which can only turn\n            this on for a run), passing an explicit false here overrides a\n            true config default for this call.\n        base_deck_path: Base branded .pptx to build from. Defaults to\n            \"resources/Dataiku Branding Template 2026.pptx\".\n\n    Returns:\n        A dict with:\n          - output_path: absolute path to the generated .pptx\n          - structural_problems: list of structural-validation problem\n            strings (empty list means the deck passed all automated checks)\n          - data_warnings: list of checklist data inconsistencies (e.g.\n            section totals that don't match Overall Status Counts, Summary\n            rows whose ID/status disagree with the section sheets) -- the\n            deck still built, but may show wrong or missing values; fix the\n            checklist and rebuild rather than patching the deck\n          - manual_qa_checklist: guidance for the manual visual QA pass that\n            automated validation cannot perform (only present when\n            structural_problems is empty)\n          - generator_version: this tool's own version (common.VERSION) that\n            produced the deck\n    ",
+      "description": "Generate a branded Dataiku Platform Review .pptx deck from a completed\n    checklist workbook, writing it to disk and returning its path.\n\n    Mirrors `python3 scripts/build_deck.py`. Runs the same structural\n    validation automatically afterward (see the validate_deck tool) and\n    reports any problems found, rather than requiring a separate call.\n\n    Args:\n        checklist_path: Path to a completed checklist .xlsx (required).\n            A relative path is resolved against this repo's root, not this\n            server process's working directory.\n        customer: Customer name, shown verbatim (upper-cased) on the title\n            slide (required).\n        logo_path: Optional path to a customer logo image, spliced into the\n            title slide. Omit to leave the title slide without a logo.\n        output_path: Output .pptx path. Defaults to\n            \"output/<Customer_Slug>_Platform_Review_<date>.pptx\", where\n            <date> is a YYYY-MM-DD found in the checklist filename, else\n            today's date.\n        rows_per_slide: Max table rows per findings slide. Defaults to\n            config/deck_layout.yaml's table_rows_per_slide (4 if unset).\n        include_pass_items: Also list Pass/Not-Applicable items in findings\n            tables, not just Fail/Partial/Needs Review. If omitted, uses\n            config/deck_layout.yaml's include_pass_items (default true).\n            Unlike the CLI's --include-pass-items flag (which can only turn\n            this on for a run), passing an explicit false here overrides a\n            true config default for this call.\n        base_deck_path: Base branded .pptx to build from. Defaults to\n            \"resources/Dataiku Branding Template 2026.pptx\".\n        style: \"v2\" (default; the verdict-first ~20-slide storyline: verdict,\n            instance snapshot, three risks, quick wins, what we need from\n            you, roadmap, then an appendix) or \"v1\" (one findings slide per\n            few items). v2 ignores rows_per_slide/include_pass_items.\n        narrative_path: v2 only. Optional narrative.json with the\n            human-judgment text (verdict, takeaways, risks, roadmap...).\n            If omitted, a file named <checklist_stem>_narrative.json beside the\n            checklist is used when present. Every cited ID must exist and its status must support the\n            claim, or the call fails with a specific error. Omitted keys\n            fall back to text derived from checklist cells.\n\n    Returns:\n        A dict with:\n          - output_path: absolute path to the generated .pptx\n          - structural_problems: list of structural-validation problem\n            strings (empty list means the deck passed all automated checks)\n          - data_warnings: list of checklist data inconsistencies (e.g.\n            section totals that don't match Overall Status Counts, Summary\n            rows whose ID/status disagree with the section sheets) -- the\n            deck still built, but may show wrong or missing values; fix the\n            checklist and rebuild rather than patching the deck\n          - manual_qa_checklist: guidance for the manual visual QA pass that\n            automated validation cannot perform (only present when\n            structural_problems is empty)\n          - generator_version: this tool's own version (common.VERSION) that\n            produced the deck\n          - v2 adds slide_count, narrative_used (path or null),\n            narrative_missing (true when no narrative was used; the deck's\n            judgment text is then generic, derived from cells) and, when\n            missing, narrative_warning, plus applicable_count, pass_count,\n            quick_wins and owner_groups\n    ",
       "inputSchema": {
         "properties": {
           "checklist_path": {
@@ -71,6 +71,23 @@
             ],
             "default": null,
             "title": "Base Deck Path"
+          },
+          "style": {
+            "default": "v2",
+            "title": "Style",
+            "type": "string"
+          },
+          "narrative_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Narrative Path"
           }
         },
         "required": [
@@ -85,6 +102,86 @@
         "type": "object",
         "additionalProperties": true,
         "title": "build_platform_review_deckDictOutput"
+      }
+    },
+    {
+      "description": "Write (or recreate) the Summary sheet of a reviewed checklist, in the exact\n    layout the deck generator reads. Call it once every item's validation_status is\n    filled in and before analyze_checklist (the narrative's checklist hash pins the\n    final file). Counts, per-section tallies and the finding rows are computed from\n    the section sheets; you supply only the judgment text.\n\n    Args:\n        checklist_path: Path to the reviewed checklist .xlsx (required). A relative\n            path is resolved against this repo's root. The file is updated in place.\n        reviewer: Reviewer name for the Reviewer: row (required).\n        bundle: Diagnosis bundle name for the Bundle: row (required).\n        key_points: {item id: one-line key point, <= 90 chars} for EVERY must-have\n            item that is Fail, Partial or Needs Review, and no others. Key order sets\n            the order within each block: Fail items listed most causally central first.\n        recommendations: Ordered actions, root cause before its symptoms. Numbering\n            (\"1. \") is added for you.\n        node_version: Node / Version: row, e.g. \"Design node / 14.4.3\".\n        diagnosis_generated: Diagnosis generated: row (date as in the bundle).\n\n    Returns:\n        A dict with checklist_path, counts (per status and Total), sections,\n        critical_findings, other_must_have and recommendations (counts of rows written).\n        Fails with a message naming the problem (missing key point, unknown id, blank\n        status, ...) without touching the file; the saved sheet is re-read the way the\n        deck generator reads it before it replaces the file.\n    ",
+      "inputSchema": {
+        "properties": {
+          "checklist_path": {
+            "title": "Checklist Path",
+            "type": "string"
+          },
+          "reviewer": {
+            "title": "Reviewer",
+            "type": "string"
+          },
+          "bundle": {
+            "title": "Bundle",
+            "type": "string"
+          },
+          "key_points": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Key Points",
+            "type": "object"
+          },
+          "recommendations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Recommendations",
+            "type": "array"
+          },
+          "node_version": {
+            "default": "",
+            "title": "Node Version",
+            "type": "string"
+          },
+          "diagnosis_generated": {
+            "default": "",
+            "title": "Diagnosis Generated",
+            "type": "string"
+          }
+        },
+        "required": [
+          "checklist_path",
+          "reviewer",
+          "bundle",
+          "key_points",
+          "recommendations"
+        ],
+        "type": "object",
+        "title": "write_summaryArguments"
+      },
+      "name": "write_summary",
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "write_summaryDictOutput"
+      }
+    },
+    {
+      "description": "Read a completed checklist and return the facts a v2 narrative must cite,\n    so Claude can draft <checklist_stem>_narrative.json that validates first time.\n    Read-only; builds no deck. Call it after the checklist is final.\n\n    Args:\n        checklist_path: Path to a completed checklist .xlsx (required). A\n            relative path is resolved against this repo's root.\n\n    Returns:\n        A dict with checklist_sha256 (record it in the narrative), narrative_path\n        (where to save it), counts/total/applicable, per-section counts,\n        ids_by_status, root_cause_groups, quick_win_candidates,\n        remaining_fails, needs_review (each with a suggested_owner; owner\n        groups must cover them all once), not_applicable (na_groups must cover\n        them all once), open_items (Fail/Partial, with headline and action),\n        rules (the narrative's validation constraints) and warnings.\n    ",
+      "inputSchema": {
+        "properties": {
+          "checklist_path": {
+            "title": "Checklist Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "checklist_path"
+        ],
+        "type": "object",
+        "title": "analyze_checklistArguments"
+      },
+      "name": "analyze_checklist",
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "analyze_checklistDictOutput"
       }
     },
     {

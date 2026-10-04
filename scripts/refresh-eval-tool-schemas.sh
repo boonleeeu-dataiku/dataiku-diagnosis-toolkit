@@ -26,11 +26,9 @@ def tools_list(cmd):
     p.kill()
     return result
 
-for server, cmd in {
-    "dataiku-review-generator": ["mcp-server-review-generator/.venv/bin/python", "mcp-server-review-generator/scripts/mcp_server.py"],
-}.items():
-    path = f"evals/mocks/{server}/_tools.json"
-    with open(path, "w") as f:
-        f.write(json.dumps(tools_list(cmd), indent=2) + "\n")
-    print(f"wrote {path}")
+cmd = ["mcp-server-review-generator/.venv/bin/python", "mcp-server-review-generator/scripts/mcp_server.py"]
+path = "evals/mocks/dataiku-review-generator/_tools.json"
+with open(path, "w") as f:
+    f.write(json.dumps(tools_list(cmd), indent=2) + "\n")
+print(f"wrote {path}")
 EOF

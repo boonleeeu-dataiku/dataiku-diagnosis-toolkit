@@ -11,7 +11,7 @@ import yaml
 
 import check_review_output as cro
 import read_checklist
-from conftest import FIXTURES
+from conftest import FIXTURES, TEMPLATE
 
 SCENARIOS = sorted(p.stem for p in (FIXTURES / "expected").glob("*.yaml"))
 EVAL_CHECKLIST = FIXTURES / "checklists" / "eval_checklist.xlsx"
@@ -63,8 +63,6 @@ def test_expected_items_match_the_eval_checklist(scenario):
 
 
 def test_eval_checklist_is_a_subset_of_the_bundled_template():
-    from conftest import TEMPLATE
-
     template = {it.id: it for ws in openpyxl.load_workbook(TEMPLATE).worksheets
                 for it in read_checklist.parse_section_sheet(ws, ws.title)}
     for items in eval_items().values():

@@ -4,16 +4,20 @@ completed platform-review checklist (.xlsx).
 
 Usage:
     python3 scripts/build_deck.py \\
-        --checklist resources/checklist_template_reviewed_dku_diagnosis_2026-07-22.xlsx \\
+        --checklist path/to/completed_checklist.xlsx \\
         --customer "Acme Corp" \\
+        [--style v2|v1] \\
+        [--narrative path/to/<checklist_stem>_narrative.json] \\
         [--logo path/to/acme_logo.png] \\
         [--output output/Acme_Corp_Platform_Review.pptx] \\
         [--rows-per-slide 4] \\
         [--include-pass-items] \\
         [--base-deck "resources/Dataiku Branding Template 2026.pptx"]
 
-No LLM/Claude session is used at runtime -- this is a plain, rerunnable
-Python script. See CLAUDE.md and config/*.yaml for the design this follows.
+--style defaults to v2 (verdict-first). A v2 deck can take a Claude-authored
+--narrative JSON (see narrative.py); building the deck itself still needs no
+LLM session at runtime -- it is a plain, rerunnable Python script. v1 is the
+older section-by-section layout. See CLAUDE.md and config/*.yaml.
 """
 
 import argparse
@@ -1205,7 +1209,7 @@ def build_deck(checklist_path: Path, customer: str, output_path: Path, base_deck
             new_slides = make_table_slides(
                 work_dir, table_tmpl_xml, table_tmpl_rels, header_row_count=1,
                 rows_per_page=pages, after=last_inserted,
-                title_new_fn=lambda i, n: f"Other Must-Have Items" + (f" ({i}/{n})" if n > 1 else ""),
+                title_new_fn=lambda i, n: "Other Must-Have Items" + (f" ({i}/{n})" if n > 1 else ""),
                 header_values=["ID", "Title", "Status"],
                 column_widths=_fit_id_column(
                     OTHER_MUST_HAVE_WIDTHS, [r[0] for r in other_rows], OTHER_MUST_HAVE_ID_DONOR_COL,
@@ -1342,7 +1346,7 @@ def main(argv=None):
             print(f"  - {p}")
     else:
         print(f"\nGenerated: {output_path}")
-        print(validate_deck.MANUAL_QA_CHECKLIST)
+        print(validate_deck.manual_qa_checklist(args.style))
 
 
 def parser_error(message: str):

@@ -1,6 +1,5 @@
 # mcp-server-review-generator build/runtime artifacts
 mcp-server-review-generator/.venv/
-mcp-server-review-generator/**/__pycache__/
 *.pyc
 
 # 134MB, user-supplied branding asset -- see README's One-time setup

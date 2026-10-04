@@ -1,6 +1,6 @@
 """Structural self-checks for a generated .pptx, run automatically at the
-end of build_deck.py. No LibreOffice/pdftoppm is available on this machine,
-so no automated visual QA is possible -- these checks catch the failure
+end of build_deck.py. There is no automated visual QA (no LibreOffice/pdftoppm
+rendering) -- these checks catch the failure
 modes a bug in this generator could plausibly introduce (malformed XML,
 dangling relationships, leftover placeholder text), not layout/overflow
 issues. Manual visual review in PowerPoint/Keynote is still required.
@@ -93,9 +93,8 @@ def validate(pptx_path: Path) -> list[str]:
     return problems
 
 
-MANUAL_QA_CHECKLIST = """
-Automated visual QA is unavailable on this machine (no LibreOffice/pdftoppm
-installed), so please open the generated deck in PowerPoint/Keynote/Google
+MANUAL_QA_CHECKLIST_V1 = """
+Automated visual QA is not available, so please open the generated deck in PowerPoint/Keynote/Google
 Slides and manually check:
   - Card and table text is not overflowing its shape/slide (long checklist
     text was truncated to a fixed character budget, not auto-shrunk to fit
@@ -120,6 +119,30 @@ Slides and manually check:
   - The closing slide's Next Steps list and the Recommendations cards read
     sensibly and aren't duplicated confusingly.
 """.strip()
+
+MANUAL_QA_CHECKLIST_V2 = """
+Automated visual QA is not available, so please open the generated deck in
+PowerPoint/Keynote/Google Slides and manually check:
+  - Text is not overflowing its card/shape on any slide (card and table
+    sizes are estimates, not rendered-and-verified). Check the verdict,
+    risk, quick-wins, owners and roadmap slides first.
+  - Every figure on the verdict and snapshot slides matches the checklist
+    (counts, applicable total, N/A exclusions).
+  - Status colors are consistent everywhere they appear (stacked bar,
+    risk cards, appendix tables).
+  - The narrative's wording reads sensibly on each slide and every ID it
+    cites is a real checklist item.
+  - The appendix (method, passed checks, per-section findings, N/A items)
+    reads cleanly, including a page with just 1-2 rows.
+  - No placeholder text (Lorem ipsum, "Basic slide", etc.) remains anywhere.
+""".strip()
+
+# Kept for callers that don't know the deck style: the v2 deck is the default.
+MANUAL_QA_CHECKLIST = MANUAL_QA_CHECKLIST_V2
+
+
+def manual_qa_checklist(style: str = "v2") -> str:
+    return MANUAL_QA_CHECKLIST_V1 if style == "v1" else MANUAL_QA_CHECKLIST_V2
 
 
 if __name__ == "__main__":

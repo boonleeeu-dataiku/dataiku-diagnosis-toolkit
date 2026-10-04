@@ -1,8 +1,8 @@
 # Dataiku Diagnosis Toolkit
 
 A plugin for reviewing a Dataiku DSS diagnosis bundle: understanding its structure, safely
-reading files from it (including very large logs/manifests), and validating it against a
-checklist spreadsheet.
+navigating it with the reader skill and `orient.sh`, and validating it against a checklist
+spreadsheet.
 
 ## What's inside
 
@@ -35,7 +35,7 @@ checklist spreadsheet.
 ## Installation
 
 > **Note:** full deck-generation functionality needs one manual step first — the Dataiku
-> branding template can't be committed to git (140MB, over GitHub's 100MB limit). See
+> branding template can't be committed to git (134MB, over GitHub's 100MB limit). See
 > [One-time setup](#one-time-setup) below.
 
 This repo is both a plugin (`.claude-plugin/plugin.json`) and its own marketplace
@@ -61,7 +61,7 @@ The Claude desktop app has the same flow under its Claude Code panel: **+** → 
 install.
 
 Caveat: a local-path install loads live from that directory (no separate cache copy), so the
-built `dist/`/`.venv/` from [One-time setup](#one-time-setup) below persist indefinitely and
+`.venv/` from [One-time setup](#one-time-setup) below persist indefinitely and
 `/plugin marketplace update` is a no-op. A GitHub-sourced install instead caches each commit
 under `~/.claude/plugins/cache/...`; every time it's updated to a new commit, that's a **new**
 cache directory with no prior build, so the lazy-bootstrap in `.mcp.json` reruns the full

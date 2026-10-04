@@ -7,6 +7,19 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-10-04
+
+### Changed
+
+- Hygiene pass, no deck-output change. Removed unused code (`common.SAMPLE_DECK`, `EXPECTED_SLIDES_MIN`,
+  `figure_in`, `package.write_part`/`read_part`, `tables.expected_column_count`, `text.replace_within_shape`/
+  `remove_picture`, an unused import and locals). `common.load_config` now parses each YAML once per process
+  (callers still get their own copy). `read_checklist` closes its workbook. The two owner-grouping `assert`s
+  are now `RuntimeError`s so they survive `python -O`.
+- `manual_qa_checklist` is now style-aware: v2 decks (the default) get a v2 checklist instead of the v1 one
+  (TOC / KPI tiles / scorecard) that didn't apply. `validate_deck.MANUAL_QA_CHECKLIST` is kept as the v2 text.
+- Refreshed the `build_deck.py` usage docstring and `deck_layout.yaml` comments (v1-only keys noted).
+
 ## [0.7.3] - 2026-10-04
 
 ### Fixed

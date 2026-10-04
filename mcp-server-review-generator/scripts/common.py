@@ -1,5 +1,7 @@
 """Shared paths and config loading for the Dataiku Review Generator scripts."""
 
+import copy
+import functools
 from pathlib import Path
 
 import yaml
@@ -9,7 +11,6 @@ RESOURCES_DIR = REPO_ROOT / "resources"
 CONFIG_DIR = REPO_ROOT / "config"
 OUTPUT_DIR = REPO_ROOT / "output"
 
-SAMPLE_DECK = RESOURCES_DIR / "sample_platform_review_deck.pptx"
 BRANDING_TEMPLATE = RESOURCES_DIR / "Dataiku Branding Template 2026.pptx"
 
 # Single source of truth for this tool's own version (SemVer), read from the
@@ -19,8 +20,14 @@ BRANDING_TEMPLATE = RESOURCES_DIR / "Dataiku Branding Template 2026.pptx"
 VERSION = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
 
 
-def load_config(name: str) -> dict:
-    """Load a YAML config file from config/ by filename, e.g. 'deck_layout.yaml'."""
-    path = CONFIG_DIR / name
-    with open(path, "r", encoding="utf-8") as f:
+@functools.lru_cache(maxsize=None)
+def _load_config_cached(name: str) -> dict:
+    with open(CONFIG_DIR / name, "r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
+
+
+def load_config(name: str) -> dict:
+    """Load a YAML config file from config/ by filename, e.g. 'deck_layout.yaml'.
+
+    Parsed once per process; each caller gets its own copy so edits don't leak."""
+    return copy.deepcopy(_load_config_cached(name))

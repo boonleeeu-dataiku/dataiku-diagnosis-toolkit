@@ -197,10 +197,10 @@ def build_platform_review_deck(
     if built_v2:
         result.update({k: built_v2[k] for k in ("slide_count", "narrative_used", "narrative_missing", "applicable_count", "pass_count", "quick_wins", "owner_groups")})
         if built_v2["narrative_missing"]:
-            import narrative
-            result.update({"narrative_warning": narrative.MISSING_WARNING})  # v2-only key, not a base return key
+            import narrative as narrative_mod
+            result.update({"narrative_warning": narrative_mod.MISSING_WARNING})  # v2-only key, not a base return key
     if not problems:
-        result["manual_qa_checklist"] = validate_deck_lib.MANUAL_QA_CHECKLIST
+        result["manual_qa_checklist"] = validate_deck_lib.manual_qa_checklist(style)
     return result
 
 

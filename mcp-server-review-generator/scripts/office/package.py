@@ -43,15 +43,3 @@ def repack(src_dir: Path, out_pptx_path: Path) -> Path:
             arcname = path.relative_to(src_dir).as_posix()
             z.write(path, arcname)
     return out_pptx_path
-
-
-def read_part(unpacked_dir: Path, part_path: str) -> str:
-    """Read a package part (e.g. 'ppt/slides/slide1.xml') as text."""
-    return (unpacked_dir / part_path).read_text(encoding="utf-8")
-
-
-def write_part(unpacked_dir: Path, part_path: str, content: str) -> None:
-    """Write text back to a package part, creating parent dirs if needed."""
-    full_path = unpacked_dir / part_path
-    full_path.parent.mkdir(parents=True, exist_ok=True)
-    full_path.write_text(content, encoding="utf-8")
