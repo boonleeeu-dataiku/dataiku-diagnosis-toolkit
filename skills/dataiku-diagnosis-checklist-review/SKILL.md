@@ -38,11 +38,13 @@ spreadsheet, plus add/update a Summary tab.
   reader MCP server's `skill-guide`, `reference-limitations` and `reference-listings-and-manifests`
   resources instead. Use its `lookup-table` / `data-dir-config` references to find where a setting
   lives.
-- Load the reader's tools if deferred (`ToolSearch` with `select:...run_orient,...safe_read`, using
-  whatever prefix — bare or `mcp__remote-devices__` — is present in the tool list). Read bundle
-  files with `safe_read`; use the linked device's shell (`device_bash`) only for what `safe_read`
-  cannot do. If you find the reader lacks a layout fact you need, say so in your final summary
-  rather than recording it in this skill.
+- Load the reader's `run_orient` tool if deferred (`ToolSearch` with `select:...run_orient`, using
+  whatever prefix — bare or `mcp__remote-devices__` — is present in the tool list). The reader has
+  no file-reading tool: read bundle files with your normal read/search tools (or the linked
+  device's shell, `device_bash`), following the reader's `reference-limitations` ("Large-file
+  hazards") and `reference-listings-and-manifests` guidance: grep/head/wc the big files, never
+  load them whole. If you find the reader lacks a layout fact you need, say so in your final
+  summary rather than recording it in this skill.
 - Load the `xlsx` skill before reading/writing the spreadsheet.
 - If the checklist has a version-currency check, confirm a web search tool is available; it is
   needed to look up the latest Dataiku DSS release.

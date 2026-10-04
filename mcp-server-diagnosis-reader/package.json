@@ -1,6 +1,6 @@
 {
   "name": "dataiku-diagnosis-reader-mcp",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "private": true,
   "description": "Local MCP server exposing the dataiku-diagnosis-reader skill's docs and orient.sh script to MCP-compatible agents.",
   "type": "module",

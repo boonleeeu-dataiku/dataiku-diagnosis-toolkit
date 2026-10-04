@@ -63,37 +63,15 @@ Example call:
 { "name": "run_orient", "arguments": { "bundle_root": "/Users/me/Downloads/dku_diagnosis_2026-01-01" } }
 ```
 
-#### `safe_read`
-
-Reads a bounded slice of a single file inside a bundle, with hard size/line caps and optional
-regex filtering. Use this instead of trying to load whole manifest/log files — some
-(`datadir_listing.txt`, `run/*.log.N`, `run/audit/audit.log.N`) are 100MB–2.3GB.
-
-| Param | Type | Required | Notes |
-|---|---|---|---|
-| `bundle_root` | string | no | Falls back to `DATAIKU_BUNDLE_ROOT`. |
-| `relative_path` | string | yes | Relative to `bundle_root`; must resolve inside it. |
-| `pattern` | string | no | JS-flavored regex; only matching lines are returned. Required for files above `max_bytes`. |
-| `pattern_flags` | string | no | Regex flags, e.g. `i`. |
-| `max_lines` | number | no | Default 500, hard cap 2000. |
-| `max_bytes` | number | no | Default 500,000, hard cap 5,000,000. Only applies when no `pattern` is given. |
-
-Example call:
-
-```json
-{
-  "name": "safe_read",
-  "arguments": {
-    "bundle_root": "/Users/me/Downloads/dku_diagnosis_2026-01-01",
-    "relative_path": "datadir_listing.txt",
-    "pattern": "hs_err_pid"
-  }
-}
-```
+The server deliberately has no file-reading tool. After `run_orient`, the calling agent reads
+bundle files with its own read/search tools, following the size and safety guidance in the
+`limitations` and `listings-and-manifests` resources (some files are 100MB-2.3GB and must be
+grepped, never loaded whole). A guarded `safe_read` tool existed up to 0.2.x and was removed in
+0.3.0 because agents never used it; see `CHANGELOG.md`.
 
 ### Environment variables
 
-- `DATAIKU_BUNDLE_ROOT` — default `bundle_root` for both tools when the caller omits it.
+- `DATAIKU_BUNDLE_ROOT` — default `bundle_root` for `run_orient` when the caller omits it.
 - `DATAIKU_SKILL_DIR` — override for locating `dataiku-diagnosis-reader/`. Defaults to the sibling
   directory of this package (`../dataiku-diagnosis-reader` relative to
   `mcp-server-diagnosis-reader/`).
@@ -158,14 +136,11 @@ npm test
 
 This builds, then runs the `node:test` suites in `test/` and `scripts/smoke-test.mjs`, all over real
 stdio JSON-RPC against `dist/`, with no extra dependencies. The suites cover:
-- `safe-path` containment: absolute paths, `../` traversal, symlink escapes, prefix-sibling directories
-- `safe_read` caps, pattern filtering and binary refusal
 - `run_orient` output on design and automation bundles
 - that the resource list stays in sync with `references/*.md`
 
 The fixtures in `test/fixtures/bundles/` are hand-written synthetic bundles (see
-`test/fixtures/README.md`). Edge cases that need large or binary files, or symlinks, are built in a
-temp directory at test time.
+`test/fixtures/README.md`). Edge cases that need a throwaway bundle are built in a temp directory at test time.
 
 For interactive exploration, use the [MCP Inspector](https://github.com/modelcontextprotocol/inspector):
 
@@ -173,7 +148,7 @@ For interactive exploration, use the [MCP Inspector](https://github.com/modelcon
 npx @modelcontextprotocol/inspector node dist/index.js
 ```
 
-This opens a local web UI to list and call resources/tools interactively — point `safe_read`/
+This opens a local web UI to list and call resources/tools interactively — point
 `run_orient` at a real bundle under `../resources/` for local verification (never reference a
 specific bundle name in committed docs or tests).
 

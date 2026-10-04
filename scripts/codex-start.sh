@@ -24,6 +24,8 @@ if [[ "$kind" == "reader" ]]; then
   RUNTIME_SERVER="$RUNTIME_ROOT/mcp-server-diagnosis-reader"
   mkdir -p "$RUNTIME_SERVER"
   cp "$SOURCE_SERVER/package.json" "$SOURCE_SERVER/package-lock.json" "$SOURCE_SERVER/tsconfig.json" "$RUNTIME_SERVER/"
+  # Replace the source tree so files removed upstream cannot linger in a cached runtime.
+  rm -rf -- "$RUNTIME_SERVER/src"
   cp -R "$SOURCE_SERVER/src" "$RUNTIME_SERVER/"
   cp "$SOURCE_ROOT/scripts/start-reader.sh" "$RUNTIME_ROOT/scripts/"
 

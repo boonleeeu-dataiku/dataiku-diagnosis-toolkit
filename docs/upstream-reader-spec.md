@@ -26,7 +26,12 @@ Add to the reader `SKILL.md` (and so the `skill-guide` resource), as a short sec
 **Interim stopgap in the checklist skill:** a one-line pointer to the reader's guidance. Remove
 the pointer's "once shipped" caveat after re-sync.
 
-## 2. `safe_read`: structured JSON key extraction
+## 2. `safe_read`: structured JSON key extraction: WITHDRAWN (tool removed, MCP server 0.3.0)
+
+`safe_read` was removed: agents never called it and read bundle files with their own tools. The
+text below is kept only as a record. If JSON extraction or secret redaction is wanted again, it
+needs a new design (for example answer-shaped extraction tools), not a revival of this spec. Note
+that §1 (secret handling) now matters more, because bundle reads are no longer guarded by any tool.
 
 Problem: `safe_read` filters by regex per line, so it cannot pull nested keys out of
 `general-settings.json` or `connections.json`. A run therefore fell back to `device_bash` with
@@ -40,6 +45,8 @@ Proposed: new optional parameter `json_path` (or `json_keys: string[]`) on `safe
 - Same size and line caps as today; error clearly if the file is not valid JSON or too large.
 - Also useful: `count_matches: true` returning `grep -c`-style counts and first/last timestamp
   for large logs, replacing the checklist's `device_bash` `grep -c | uniq -c` advice.
+
+(End of the withdrawn §2.)
 
 ## 3. Layout facts missing from the reader docs: DONE (reader skill v0.2.0)
 
@@ -68,13 +75,12 @@ Two table rows were refined once checked against real bundles: `sanity-check.jso
 
 ## 4. Make the guide-first expectation explicit
 
-- `run_orient` already says "Read the skill-guide resource first". Add the same sentence to
-  `safe_read`'s description, naming `skill-guide` and `reference-limitations`.
-- Suggest in the reader `SKILL.md`: "Prefer `safe_read` for all bundle file reads."
+- `run_orient` already says "Read the skill-guide resource first". (The `safe_read` items that were
+  here are withdrawn with §2.)
 
 ## 5. Tests (upstream)
 
-- `safe_read` `json_path`: nested key, array wildcard, missing path, invalid JSON, redaction of
+- (Withdrawn with §2.) `safe_read` `json_path`: nested key, array wildcard, missing path, invalid JSON, redaction of
   secret-named keys, oversize file.
 - Resource list in `src/resources.ts` unchanged unless a new reference file is added.
 - Bump `mcp-server-diagnosis-reader` and skill versions per upstream CLAUDE.md.
@@ -82,6 +88,6 @@ Two table rows were refined once checked against real bundles: `sanity-check.jso
 ## After upstream ships
 
 1. Re-sync here (see CLAUDE.md). `tests/test_vendored_drift.py` confirms the copy.
-2. Update the checklist skill: reference `json_path` in step 0, drop the interim pointer caveat.
+2. Update the checklist skill: drop the interim pointer caveat for the secrets guidance.
 3. (Done) The interim allowlist in `tests/test_skill_boundaries.py` is gone; `calibrations.md` is guarded.
 4. Remind the user to run Codex (the MCP server changed).

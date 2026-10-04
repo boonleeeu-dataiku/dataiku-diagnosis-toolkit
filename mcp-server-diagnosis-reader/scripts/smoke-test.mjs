@@ -66,8 +66,8 @@ async function main() {
   const tools = await send("tools/list", {});
   const toolNames = (tools.result?.tools ?? []).map((t) => t.name).sort();
   assert(
-    JSON.stringify(toolNames) === JSON.stringify(["run_orient", "safe_read"]),
-    `tools/list returns exactly run_orient and safe_read (got ${JSON.stringify(toolNames)})`,
+    JSON.stringify(toolNames) === JSON.stringify(["run_orient"]),
+    `tools/list returns exactly run_orient (got ${JSON.stringify(toolNames)})`,
   );
 
   const orient = await send("tools/call", { name: "run_orient", arguments: { bundle_root: bundleRoot } });

@@ -5,7 +5,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { registerResources } from "./resources.js";
 import { registerRunOrientTool } from "./tools/run-orient.js";
-import { registerSafeReadTool } from "./tools/safe-read.js";
 
 // Single source of truth for the reported version: dist/index.js -> ../package.json.
 const { version } = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as {
@@ -17,7 +16,6 @@ async function main() {
 
   registerResources(server);
   registerRunOrientTool(server);
-  registerSafeReadTool(server);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

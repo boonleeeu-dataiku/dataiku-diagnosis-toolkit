@@ -12,6 +12,17 @@ package's version when `src/**` changes (tool/resource contracts, behavior); edi
 `references/*.md` or `scripts/orient.sh` in the skill package needs no version bump here, since
 those are read from disk at runtime.
 
+## [0.3.0] - 2026-10-04
+
+### Removed
+
+- **Breaking:** the `safe_read` tool (guarded, size/line-capped file read/grep), along with its
+  `safe-path` containment helper and its hard-cap constants. In real plugin runs agents never
+  called it and read bundle files with their own read/search tools instead, and it could neither
+  parse JSON nor redact secrets, so it added a tool to maintain without adding safety. The server
+  now exposes only `run_orient` plus the nine resources. Large-file guidance (grep/awk/wc, never
+  load whole) stays in the `limitations` and `listings-and-manifests` resources.
+
 ## [0.2.2] - 2026-10-02
 
 ### Fixed
@@ -51,6 +62,7 @@ Dev tooling only — no change to `src/**`, tool/resource contracts, or server b
   `run_orient` (wraps `scripts/orient.sh`) and `safe_read` (bounded, size/line-capped file
   read/grep) as tools.
 
+[0.3.0]: https://github.com/boonleeeu-dataiku/dataiku-diagnosis-reader/compare/mcp-server-diagnosis-reader-v0.2.2...mcp-server-diagnosis-reader-v0.3.0
 [0.2.2]: https://github.com/boonleeeu-dataiku/dataiku-diagnosis-reader/compare/mcp-server-diagnosis-reader-v0.2.1...mcp-server-diagnosis-reader-v0.2.2
 [0.2.1]: https://github.com/boonleeeu-dataiku/dataiku-diagnosis-reader/compare/mcp-server-diagnosis-reader-v0.2.0...mcp-server-diagnosis-reader-v0.2.1
 [0.2.0]: https://github.com/boonleeeu-dataiku/dataiku-diagnosis-reader/compare/mcp-server-v0.1.0...mcp-server-diagnosis-reader-v0.2.0

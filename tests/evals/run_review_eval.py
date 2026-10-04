@@ -39,7 +39,6 @@ PLUGIN = "dataiku-diagnosis-toolkit"
 ALLOWED_TOOLS = [
     "Read", "Write", "Edit", "Glob", "Grep", "Skill", "Bash", "TodoWrite",
     f"mcp__plugin_{PLUGIN}_dataiku-diagnosis-reader__run_orient",
-    f"mcp__plugin_{PLUGIN}_dataiku-diagnosis-reader__safe_read",
 ]
 # Web access is withheld on purpose: the version-currency calibration must then answer
 # Needs Review and say it couldn't verify, rather than guess the latest release.

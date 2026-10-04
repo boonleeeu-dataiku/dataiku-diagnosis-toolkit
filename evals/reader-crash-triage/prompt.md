@@ -1,5 +1,5 @@
 ---
-description: Reader skill triages a crash from a bundle; run_orient output and file reads are mocked from tests/fixtures/bundles/synthetic_design_baseline.
+description: Reader skill triages a crash from a bundle; run_orient output is mocked from tests/fixtures/bundles/synthetic_design_baseline.
 max_turns: 15
 allowed_tools: [Skill, Read, Glob, Grep]
 tags: [reader, smoke]

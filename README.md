@@ -20,7 +20,7 @@ checklist spreadsheet.
   a reverse proxy, automation-node existence from a design-node bundle) — see the skill's
   `references/calibrations.md`. Authored directly in this repo.
 - **`mcp-server-diagnosis-reader/`** — a local MCP server exposing `dataiku-diagnosis-reader`'s
-  docs as resources and `run_orient` / `safe_read` as tools, for MCP-compatible agents that can't
+  docs as resources and a `run_orient` tool, for MCP-compatible agents that can't
   load Claude Skills directly (Cursor, other Claude Desktop installs, etc.). It contains no
   diagnostic logic of its own — it reads `skills/dataiku-diagnosis-reader/` from disk at
   request time via the `DATAIKU_SKILL_DIR` env var set in `.mcp.json`, and shells out to
