@@ -15,6 +15,18 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 - The vendored review generator's v2 deck still builds the full v1 deck and keeps only its cover and end card.
   Refactor plan and recommendation: `TODO.md` in the upstream `dataiku-review-generator` repo.
 
+## [0.19.0] - 2026-10-04
+
+### Changed
+
+- Re-synced `skills/dataiku-diagnosis-reader/` to upstream 0.4.0: new `scripts/peek.py` (secret-masking view of
+  bundle JSON), a stricter "Handling secrets" section, and the correct `connections.json` shape
+  (`{"connections": {<name>: ...}}`). Prompted by a Codex run that guessed the shape wrong and printed a
+  plaintext internal-DB password.
+- Checklist-review skill: points to `peek.py`, and tells the agent to report plaintext credentials found in the
+  bundle (file and kind only, never the value) with a rotate recommendation.
+- Deck-builder skill: the success message now says up front that the deck needs a visual check.
+
 ## [0.18.0] - 2026-10-04
 
 ### Changed

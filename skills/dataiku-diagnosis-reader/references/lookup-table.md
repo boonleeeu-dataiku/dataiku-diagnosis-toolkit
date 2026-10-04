@@ -89,7 +89,7 @@ answering.
 | Question | Where | Notes |
 |---|---|---|
 | Users/groups/permissions | `config/users.json` | Contains hashed passwords, PII |
-| Data connections | `config/connections.json` | Who may read a connection's details: `detailsReadability` (`readableBy`, `allowedGroups`); see `references/data-dir-config.md`. Never dump whole connections — `params` can hold secrets |
+| Data connections | `config/connections.json` → `connections.<name>` | Who may read a connection's details: `detailsReadability` (`readableBy`, `allowedGroups`); see `references/data-dir-config.md`. Never dump whole connections (use `scripts/peek.py`) — `params` can hold secrets |
 | LDAP/SSO/proxy/mail/job-concurrency settings | `config/general-settings.json` | Job-concurrency limits can sit under another block (e.g. `jekSettings.maxRunningJobs`) — search the whole file for the leaf key, see `references/data-dir-config.md` |
 | Advanced security/behaviour keys (header settings, `dku.feature.*`, upload extensions) | `config/dip.properties` **or** `install.ini` **or** `config/general-settings.json` | Search all three before calling a setting absent |
 | Is an optional feature (GenAI, local Hugging Face) in use | `config/general-settings.json` → `localAIServerSettings.*UseLocal`, `generativeAISettings` | See `references/data-dir-config.md` for what is and isn't verified |

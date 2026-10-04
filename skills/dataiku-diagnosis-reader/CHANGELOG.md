@@ -9,6 +9,21 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.4.0] - 2026-10-04
+
+### Added
+
+- `scripts/peek.py`: secret-safe structural view of a bundle JSON file (keys, types, non-secret values;
+  masks passwords, tokens, keys and embedded credentials; `--path` to drill to one key).
+
+### Changed
+
+- `SKILL.md` "Handling secrets": make `peek.py` the default way to open config JSON, and name the banned
+  patterns (whole-file dumps of `general-settings.json`/`connections.json`/`users.json`, `printenv`,
+  reading user scripts in full).
+- `references/data-dir-config.md`: `connections.json` is `{"connections": {<name>: {...}}}` (spot-checked on
+  design and automation bundles). A plugin run guessed a bare name-keyed dict and had to redo its script.
+
 ## [0.3.1] - 2026-10-04
 
 ### Changed

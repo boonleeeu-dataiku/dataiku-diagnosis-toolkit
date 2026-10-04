@@ -1,7 +1,7 @@
 ---
 name: "dataiku-diagnosis-reader"
 description: "Navigate and interpret an extracted Dataiku DSS diagnosis.zip support bundle (also: DSS diagnostic export, instance diagnostic archive, a folder named dku_diagnosis_*) to answer troubleshooting questions on instance configuration, crashes/OOMs, performance, users, connections, projects, code environments, plugins and logs, without re-deriving the bundle layout. Use whenever the user provides or asks about a Dataiku diagnosis bundle or wants to diagnose a DSS instance from one."
-version: 0.3.1
+version: 0.4.0
 ---
 
 # Dataiku DSS diagnosis.zip reader
@@ -88,8 +88,13 @@ and LDAP bind passwords; `connections.json`; `install.ini`; `dip.properties`; lo
 output lands in the transcript.
 
 - Read only files you need; don't open notes or READMEs next to the bundle unless asked.
-- Extract specific keys (grep exact names, e.g. in `.ini`/`.properties`); never dump a whole settings
-  block or connection.
+- **Open any config JSON with `scripts/peek.py <file> [--path a.b.c] [--depth N]`.** It prints the
+  structure (keys, types, non-secret values) and masks passwords, tokens, keys and embedded
+  credentials. Use it first to learn a file's shape; then `--path` to one key. For `.ini`/`.properties`,
+  grep exact key names.
+- Never `cat`, `jq .`, or `print(json.load(...))` whole `general-settings.json`, `connections.json`,
+  `users.json`, `install.ini` or `dip.properties`; never run `printenv`/`env` or read user scripts in
+  full. Never dump a whole settings block or connection.
 - Never copy a secret into findings, notes, reports or decks.
 - If one is printed, say so, name the file, and tell the user to rotate it.
 

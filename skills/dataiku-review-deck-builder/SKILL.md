@@ -112,7 +112,8 @@ Don't guess a path — always get it from the user or a real error message.
   build.
 - If `structural_problems` is non-empty, don't declare success — list the problems and say the
   deck needs another look before sending it out.
-- If empty, tell the user the deck was generated (give the `output_path`), then relay
+- If empty, tell the user the deck was generated (give the `output_path`) and that it still needs a
+  visual check before sharing, then relay
   `manual_qa_checklist` verbatim as follow-up steps — automated validation only checks structure
   (malformed XML, dangling relationships, leftover placeholder text), never visual layout, so this
   checklist is the only QA pass that catches that.

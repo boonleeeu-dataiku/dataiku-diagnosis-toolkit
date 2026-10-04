@@ -60,9 +60,14 @@ hand and say so in your report.
 
 ### Secrets
 
-Follow the reader's "Handling secrets" section. In addition, never copy a secret into
-`evidence_found`, `notes`, the narrative or the deck, and if one does get printed, say so in your
-final summary, name the file, and tell the user to rotate it.
+Follow the reader's "Handling secrets" section: open config JSON with its `scripts/peek.py`, never
+dump whole files. In addition, never copy a secret into `evidence_found`, `notes`, the narrative or
+the deck, and if one does get printed, say so in your final summary, name the file, and tell the
+user to rotate it.
+
+If the bundle itself holds plaintext credentials (for example an internal-database password), report
+that too, even if you never printed the value: in your final summary, name the file and the kind of
+credential (never the value) and recommend rotating it and moving it to a secrets store.
 
 ## 1. Orient
 
