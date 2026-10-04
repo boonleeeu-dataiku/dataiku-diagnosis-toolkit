@@ -138,3 +138,27 @@ def test_regression_v015_truncated_section_name_uses_curated_display(checklist_f
     assert section == "Advanced Security Options"
     _, _, top_section = build_deck.build_top_risk(data, {}, ordered)
     assert top_section == "Advanced Security Options"
+
+
+def test_blank_status_warns_with_item_ids(checklist_factory, section_config):
+    sections = default_sections()
+    sections["Architecture, Compute & Infrast"].append(item("ARCH-004", ""))
+    warnings = _warnings(checklist_factory(sections=sections), section_config)
+    assert any("ARCH-004" in w and "blank validation_status" in w for w in warnings)
+
+
+def test_unknown_status_warning_names_items_and_describes_the_style_outcome(checklist_factory, section_config):
+    sections = default_sections()
+    sections["Architecture, Compute & Infrast"].append(item("ARCH-004", "Passed"))
+    data, ordered = _load(checklist_factory(sections=sections), section_config)
+    v1 = build_deck.check_data_consistency(data, ordered, section_config)
+    v2 = build_deck.check_data_consistency(data, ordered, section_config, style="v2")
+    assert any("['ARCH-004']" in w and "left out of status counts" in w for w in v1)
+    assert any("['ARCH-004']" in w and "counted as Needs Review" in w for w in v2)
+
+
+def test_duplicate_item_id_warns(checklist_factory, section_config):
+    sections = default_sections()
+    sections["Enterprise-grade Security, Perm"].append(item("ARCH-001", "Pass"))
+    warnings = _warnings(checklist_factory(sections=sections), section_config)
+    assert any("Duplicate item ID(s) ['ARCH-001']" in w for w in warnings)

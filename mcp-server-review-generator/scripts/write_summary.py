@@ -26,7 +26,7 @@ import read_checklist
 
 logger = logging.getLogger(__name__)
 
-STATUSES = ["Pass", "Fail", "Partial", "Needs Review", "Not Applicable"]
+STATUSES = read_checklist.STATUSES
 KEY_POINT_MAX_CHARS = 90
 FINDING_COLUMNS = ["ID", "Section", "Title", "Status", "Key point"]
 
@@ -54,7 +54,6 @@ STATUS_FILLS = {
 }
 COLUMN_WIDTHS = {"A": 46, "B": 20, "C": 44, "D": 16, "E": 90, "F": 16}
 
-_STATUS_BY_LOWER = {s.lower(): s for s in STATUSES}
 
 
 class SummaryInputError(ValueError):
@@ -62,7 +61,7 @@ class SummaryInputError(ValueError):
 
 
 def _canonical_status(raw, item_id: str) -> str:
-    status = _STATUS_BY_LOWER.get(str(raw or "").strip().lower())
+    status = read_checklist.canonical_status(raw)
     if status is None:
         raise SummaryInputError(
             f"Item {item_id} has validation_status {raw!r}; expected one of {STATUSES}. "

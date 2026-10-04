@@ -10,6 +10,8 @@ applied to Claude-supplied text).
 import re
 from dataclasses import dataclass, field
 
+import read_checklist
+
 
 # Stacked-bar order (N/A excluded). Not the checklist column order: see build_deck.STATUS_ORDER.
 STACK_ORDER = ["Pass", "Needs Review", "Partial", "Fail"]
@@ -71,11 +73,7 @@ class Analysis:
 
 
 def canonical_status(status):
-    s = (status or "").strip().lower()
-    for canon in STACK_ORDER + [NA]:
-        if canon.lower() == s:
-            return canon
-    return None
+    return read_checklist.canonical_status(status)
 
 
 def parse_notes(notes, evidence_found=""):
@@ -99,9 +97,11 @@ def build_rows(data, ordered_sections):
     rows = {}
     for sec in ordered_sections:
         for it in data.items_by_sheet.get(sec["sheet_tab_name"], []):
-            status = canonical_status(it.validation_status)
-            if status is None:
-                continue
+            # An unrecognised or blank status is counted as Needs Review (what v1 shows) rather than
+            # dropped; build_deck.check_data_consistency warns about it, naming the item.
+            status = canonical_status(it.validation_status) or "Needs Review"
+            if it.id in rows:
+                continue  # duplicate ID: keep the first occurrence (check_data_consistency warns)
             headline, evidence, action = parse_notes(it.notes, it.evidence_found)
             rows[it.id] = Row(
                 id=it.id, title=it.title, priority="Must" if it.is_must_have else "Nice", status=status,

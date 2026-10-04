@@ -675,7 +675,7 @@ def build_v2(checklist_path: Path, customer: str, output_path: Path, base_deck: 
     ordered = section_names.order_sections(data.sheet_tab_names, section_config)
     a = da.analyze(data, ordered, v2)
     narr = {}
-    warnings = build_deck.check_data_consistency(data, ordered, section_config) + list(a.warnings)
+    warnings = build_deck.check_data_consistency(data, ordered, section_config, style="v2") + list(a.warnings)
     if not narrative_path:
         found = narr_mod.default_path(checklist_path)
         narrative_path = found if found.exists() else None

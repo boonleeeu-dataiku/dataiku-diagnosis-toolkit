@@ -32,6 +32,16 @@ REQUIRED_ITEM_COLUMNS = [
 
 NON_APPLICABLE_STATUSES = {"pass", "not applicable"}
 
+# The five checklist statuses, in checklist (Summary-sheet column) order.
+STATUSES = ["Pass", "Fail", "Partial", "Needs Review", "Not Applicable"]
+_STATUS_BY_LOWER = {s.lower(): s for s in STATUSES}
+
+
+def canonical_status(raw) -> str | None:
+    """The canonical spelling of a validation_status (case/whitespace-insensitive), or None
+    if it is blank or not one of STATUSES. Callers decide whether None is an error."""
+    return _STATUS_BY_LOWER.get(str(raw or "").strip().lower())
+
 
 class ChecklistFormatError(ValueError):
     """Raised when the workbook doesn't match the expected checklist schema."""
@@ -148,7 +158,7 @@ def parse_section_breakdown(ws, start_row: int, end_row: int) -> list[dict]:
             header = [str(v).strip() if v else "" for v in vals]
             continue
         section_name = str(vals[0]).strip()
-        cols = header[1:] if header else ["Pass", "Fail", "Partial", "Needs Review", "Not Applicable"]
+        cols = header[1:] if header else STATUSES
         counts = {
             col_name: int(v)
             for col_name, v in zip(cols, vals[1:])

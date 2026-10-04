@@ -7,6 +7,22 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.6] - 2026-10-04
+
+### Fixed
+
+- A v2 deck silently dropped any item whose `validation_status` was unrecognised or blank (and a blank one got
+  no warning at all), so "X of N applicable" was computed from a shrunken N. Such items are now counted as
+  Needs Review (what v1 already showed) and the data warnings name them; blank statuses are now warned about too.
+- A duplicate item ID silently overwrote the earlier row in v2's analysis. The first occurrence is now kept and
+  a warning names the ID (v1 shows every row and warns the same way).
+
+### Changed
+
+- One shared `read_checklist.STATUSES` / `canonical_status()` replaces the three status lists and lookups in
+  `build_deck`, `deck_analysis` and `write_summary` (which still raises on an unrecognised status).
+- `check_data_consistency` takes `style` ("v1"/"v2") so its warnings describe what that deck does with the item.
+
 ## [0.7.5] - 2026-10-04
 
 ### Changed

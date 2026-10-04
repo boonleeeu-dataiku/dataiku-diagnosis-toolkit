@@ -70,7 +70,7 @@ SLIDES_CONSUMED_AS_TEMPLATES = [
 # Fail deliberately breaks from the theme's accent4 orange (reassigned to
 # Partial) into a deeper, more alarming red-orange, since it's the single
 # most important signal in a risk report and the theme has no true red.
-STATUS_ORDER = ["Pass", "Fail", "Partial", "Needs Review", "Not Applicable"]
+STATUS_ORDER = list(read_checklist.STATUSES)
 STATUS_COLORS = {
     "Pass": "3EDAB2",           # theme dk2 (brand teal-green)
     "Fail": "C0392B",           # deep red-orange, off-theme by design (see above)
@@ -341,11 +341,7 @@ def _strip_leading_number(value: str) -> str:
 
 
 def _canonical_status(status: str) -> str | None:
-    status = (status or "").strip().lower()
-    for canon in STATUS_ORDER:
-        if canon.lower() == status:
-            return canon
-    return None
+    return read_checklist.canonical_status(status)
 
 
 def format_title_metadata_lines(data: read_checklist.ChecklistData) -> list:
@@ -553,13 +549,17 @@ def build_top_risk(data: read_checklist.ChecklistData, cell_limits, ordered_sect
 
 
 def check_data_consistency(data: read_checklist.ChecklistData, ordered_sections: list,
-                           section_config: dict) -> list:
+                           section_config: dict, style: str = "v1") -> list:
     """Cross-checks between the Summary sheet and the section sheets that
     structural validation (validate_deck.py) can't see -- each one a case
     where the deck would still build and look plausible, but show wrong or
     missing numbers/labels. Returns human-readable warning strings (empty if
     everything agrees); surfaced by main() and the MCP tool so a caller is
-    told directly rather than having to spot it by rendering the deck."""
+    told directly rather than having to spot it by rendering the deck.
+
+    `style` only changes how two warnings describe the outcome: v1 leaves an
+    unrecognised-status item out of the counts, v2 counts it as Needs Review;
+    on a duplicate ID v1 shows every row, v2 keeps the first."""
     warnings = []
 
     configured = section_config.get("sections", {})
@@ -595,14 +595,35 @@ def check_data_consistency(data: read_checklist.ChecklistData, ordered_sections:
             f"{item_count} items; the deck shows {item_count}."
         )
 
+    outcome = ("are counted as Needs Review in this deck" if style == "v2"
+               else "are left out of status counts/colors")
     for sheet, items in data.items_by_sheet.items():
         unknown = sorted({it.validation_status for it in items
                           if it.validation_status and _canonical_status(it.validation_status) is None})
         if unknown:
+            ids = [it.id for it in items if it.validation_status in unknown]
             warnings.append(
-                f"Section sheet {sheet!r} uses unrecognized validation_status value(s) {unknown}; those "
-                f"items are left out of status counts/colors (expected one of {STATUS_ORDER})."
+                f"Section sheet {sheet!r} uses unrecognized validation_status value(s) {unknown} "
+                f"(items {ids}); those items {outcome} (expected one of {STATUS_ORDER})."
             )
+        blank = [it.id for it in items if not (it.validation_status or "").strip()]
+        if blank:
+            warnings.append(
+                f"Section sheet {sheet!r} has item(s) {blank} with a blank validation_status; those "
+                f"items {outcome} (expected one of {STATUS_ORDER})."
+            )
+
+    seen, dupes = set(), []
+    for items in data.items_by_sheet.values():
+        for it in items:
+            key = str(it.id).strip()
+            if key in seen and key not in dupes:
+                dupes.append(key)
+            seen.add(key)
+    if dupes:
+        shown = "only the first occurrence is used" if style == "v2" else "every row is shown"
+        warnings.append(f"Duplicate item ID(s) {dupes} appear on more than one row; {shown}. "
+                        f"Give each item a unique ID.")
 
     items_by_id = _items_by_id(data)
     for block_name, entries in (("Critical Findings", data.critical_findings),

@@ -17,6 +17,8 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ### Changed
 
+- Re-synced `mcp-server-review-generator/` to upstream 0.7.6: v2 decks no longer silently drop items with an
+  unrecognised/blank status or overwrite duplicate IDs (counted as Needs Review / first kept, with warnings).
 - Re-synced `mcp-server-review-generator/` to upstream 0.7.5 (shared leading-number stripper, `STACK_ORDER`
   rename, shared default constants; no deck-output change).
 - Hygiene pass: removed stale reader-MCP-era wording from README / checklist-review skill description,

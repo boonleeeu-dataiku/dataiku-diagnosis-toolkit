@@ -256,3 +256,24 @@ def test_risk_title_adds_prefix_only_when_missing():
     assert build_deck_v2.risk_title(2, "Risk 2: Hardening") == "Risk 2: Hardening"
     assert build_deck_v2.risk_title(3, "risk 3:  Ops") == "risk 3:  Ops"
     assert build_deck_v2.risk_title(1, "Risk 2: wrong slot") == "Risk 1: Risk 2: wrong slot"
+
+
+def _analyse(checklist_factory, section_config, secs):
+    data = read_checklist.read_checklist(checklist_factory(sections=secs), section_config)
+    return da.analyze(data, section_names.order_sections(data.sheet_tab_names, section_config), {})
+
+
+def test_unknown_or_blank_status_is_counted_as_needs_review_not_dropped(checklist_factory, section_config):
+    secs = sections()
+    secs["Architecture, Compute & Infrast"] += [item("ARCH-005", "Passed"), item("ARCH-006", "")]
+    a = _analyse(checklist_factory, section_config, secs)
+    assert a.rows["ARCH-005"].status == a.rows["ARCH-006"].status == "Needs Review"
+    assert a.total == 10 and a.counts["Needs Review"] == 4
+
+
+def test_duplicate_item_id_keeps_the_first_occurrence(checklist_factory, section_config):
+    secs = sections()
+    secs["Enterprise-grade Security, Perm"].append(item("ARCH-003", "Fail"))
+    a = _analyse(checklist_factory, section_config, secs)
+    assert a.rows["ARCH-003"].status == "Pass"
+    assert a.total == 8
