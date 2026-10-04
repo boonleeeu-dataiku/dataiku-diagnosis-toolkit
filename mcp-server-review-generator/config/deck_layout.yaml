@@ -51,11 +51,16 @@ v2:
   # Needs Review items are split by owner using these lowercase keywords in the
   # item's Action text (first owner, in this order, with a match wins).
   owner_keywords:
-    "AI platform owner": ["ai platform", "ai owner"]
-    "Infrastructure": ["infra team", "infrastructure team", "infra owner"]
-    "Security and identity": ["security owner", "security team", "identity team"]
-    "Platform team": ["platform"]
-  # Fallback owner when no keyword matches, by checklist ID prefix.
+    "AI platform owner": ["ai platform", "ai owner", "llm mesh", "genai team"]
+    "Infrastructure": ["infra team", "infrastructure team", "infra owner", "infra admin", "network team",
+                       "network admin", "sysadmin", "sre", "devops", "cloud team", "dba", "database admin"]
+    "Security and identity": ["security owner", "security team", "identity team", "iam team", "iam owner",
+                              "sso admin", "ciso", "secops"]
+    "Platform team": ["platform", "dss admin", "dataiku admin", "admin team"]
+  # Fallback owner when no keyword matches, by checklist ID prefix (the default template's prefixes).
   owner_by_id_prefix:
+    ARCH: "Infrastructure"
+    SEC: "Security and identity"
     GENAI: "AI platform owner"
+    SCALE: "Platform team"
     ADVSEC: "Security and identity"

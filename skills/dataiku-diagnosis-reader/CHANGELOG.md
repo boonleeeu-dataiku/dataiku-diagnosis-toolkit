@@ -9,6 +9,13 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.3.1] - 2026-10-04
+
+### Changed
+
+- `SKILL.md` step 7: say what to do when `scripts/orient.sh` can't run (bundle on a different machine from the
+  skill folder): orient by hand with the equivalent read-only commands and say so.
+
 ## [0.3.0] - 2026-10-04
 
 ### Added

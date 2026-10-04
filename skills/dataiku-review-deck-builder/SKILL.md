@@ -36,6 +36,15 @@ discovery (in Claude Code, `ToolSearch` with `select:<name>,...`). Names may car
 
 Only a plain script run with no LLM present may build without a narrative.
 
+**Container vs. device:** these tools run on the user's computer and read device paths only. If you
+wrote the checklist or narrative in your container, commit it to the device with `device_commit_files`
+before calling them, and re-check the narrative's `narrative_path` on the device afterwards: a build
+reads whatever file is there, and a stale copy only produces a hash warning. `analyze_checklist` and the build report `checklist_path`,
+`checklist_modified` and `narrative_modified` (UTC): compare them with what you last wrote, and recommit
+the file if they are older. Also pass an
+`output_path` in the user's own outputs folder: the default is inside the plugin directory, and a
+rebuild on the same day overwrites the same file name.
+
 ### Draft the narrative (v2)
 
 **Ownership:** the reviewer who owns the checklist owns the narrative. You draft it, the reviewer reads and
@@ -49,7 +58,9 @@ from the checklist. The judgment text is yours: write it from this checklist's r
 another customer's text. All keys are optional; omitted ones fall back to text derived from the cells.
 `analyze_checklist` returns the `shape` map with the exact keys and types (`verdict_title`, `highlights`,
 `takeaways`, `snapshot`, `risk1`-`risk3`, `quick_wins`, `owners`, `roadmap`, `na_groups`, `caveats`). Follow it
-rather than this file. `owners` must cover every Needs Review item once and `na_groups` every N/A item once.
+rather than this file. Enumerated values: `snapshot[].state` is `ok`, `watch` or `neutral` (a dot
+colour, not good/warn/risk); `takeaways[].tone` is `good`, `risk` or `win`; `effort` is `S`, `M` or
+`L`. `suggested_owner` in the scaffold is only a hint: assign owners yourself. `owners` must cover every Needs Review item once and `na_groups` every N/A item once.
 Text fields are single strings, never lists. A rejection names each wrong field by path: fix exactly those
 fields instead of reading the generator's source.
 
@@ -67,7 +78,7 @@ Call `build_platform_review_deck` with:
 - `customer` (required) — customer name, shown on the title slide. Take it from the user; if not
   given, ask. Never infer it from an old deck or file name in the same folder.
 - `logo_path` (optional) — a customer logo image for the title slide.
-- `output_path` (optional) — defaults to `output/<Customer_Slug>_Platform_Review_<date>.pptx`.
+- `output_path` (optional, but pass a device path in the user's outputs folder) — defaults to `output/<Customer_Slug>_Platform_Review_<date>.pptx`.
 - `style` — `"v2"` (the default: verdict-first, about 20 slides). Pass `"v1"` (one findings slide per few
   items) only if the user asks for the long form.
 - `narrative_path` (v2 only, optional) — a `narrative.json` you drafted above.
@@ -77,9 +88,9 @@ Call `build_platform_review_deck` with:
   (see "If the base deck isn't found" below).
 
 This already runs structural validation internally and returns
-`{output_path, structural_problems, data_warnings, manual_qa_checklist, generator_version}` (v2 adds
+`{output_path, structural_problems, data_warnings, manual_qa_checklist, generator_version, checklist_path, checklist_modified, narrative_modified}` (`narrative_modified` is v2-only; v2 adds
 `slide_count, narrative_used, narrative_missing, narrative_warning (only when missing), applicable_count, pass_count, quick_wins, owner_groups`) — no separate
-`validate_deck` call is needed for a normal run.
+`validate_deck` call is needed for a normal run (declining one is fine).
 
 ## 2. If the base deck isn't found
 

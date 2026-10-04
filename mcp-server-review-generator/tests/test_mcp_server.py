@@ -62,6 +62,16 @@ def test_analyze_checklist_returns_scaffold(checklist_factory):
     assert [r["id"] for r in res["not_applicable"]] == ["ARCH-002"]
 
 
+def test_analyze_checklist_reports_resolved_paths_and_narrative_state(checklist_factory):
+    path = checklist_factory({"Architecture, Compute & Infrast": [item("ARCH-001", "Fail")]})
+    res = mcp_server.analyze_checklist(checklist_path=str(path))
+    assert res["checklist_path"] == str(path) and res["checklist_modified"]
+    assert res["narrative_exists"] is False and res["narrative_modified"] is None
+    path.with_name(path.stem + "_narrative.json").write_text("{}")
+    res = mcp_server.analyze_checklist(checklist_path=str(path))
+    assert res["narrative_exists"] is True and res["narrative_modified"]
+
+
 def test_analyze_checklist_missing_file_surfaces_as_tool_error(tmp_path):
     with pytest.raises(ToolError, match="Checklist file not found"):
         mcp_server.analyze_checklist(checklist_path=str(tmp_path / "nope.xlsx"))

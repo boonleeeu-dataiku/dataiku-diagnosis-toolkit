@@ -18,6 +18,7 @@ import functools
 import logging
 import sys
 import zipfile
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -45,6 +46,15 @@ def _resolve(p: str) -> Path:
     working directory)."""
     path = Path(p)
     return path if path.is_absolute() else (common.REPO_ROOT / path).resolve()
+
+
+def _mtime(path) -> str | None:
+    """File modification time as UTC ISO text, or None if there is no such file. Lets a caller notice
+    that the file this server read on the device is not the one it just wrote elsewhere."""
+    try:
+        return datetime.fromtimestamp(Path(path).stat().st_mtime, timezone.utc).isoformat(timespec="seconds")
+    except OSError:
+        return None
 
 
 def _surface_errors(fn):
@@ -133,7 +143,9 @@ def build_platform_review_deck(
             structural_problems is empty)
           - generator_version: this tool's own version (common.VERSION) that
             produced the deck
-          - v2 adds slide_count, narrative_used (path or null),
+          - checklist_path, checklist_modified: the resolved path actually read and its
+            UTC modified time (compare with what you last wrote)
+          - v2 adds slide_count, narrative_used (path or null), narrative_modified (its UTC modified time or null),
             narrative_missing (true when no narrative was used; the deck's
             judgment text is then generic, derived from cells) and, when
             missing, narrative_warning, plus applicable_count, pass_count,
@@ -193,9 +205,12 @@ def build_platform_review_deck(
         "structural_problems": problems,
         "data_warnings": built_v2["warnings"] if built_v2 else build_deck.collect_data_warnings(checklist),
         "generator_version": common.VERSION,
+        "checklist_path": str(checklist),
+        "checklist_modified": _mtime(checklist),
     }
     if built_v2:
         result.update({k: built_v2[k] for k in ("slide_count", "narrative_used", "narrative_missing", "applicable_count", "pass_count", "quick_wins", "owner_groups")})
+        result["narrative_modified"] = _mtime(built_v2["narrative_used"]) if built_v2["narrative_used"] else None
         if built_v2["narrative_missing"]:
             import narrative as narrative_mod
             result.update({"narrative_warning": narrative_mod.MISSING_WARNING})  # v2-only key, not a base return key
@@ -276,7 +291,10 @@ def analyze_checklist(checklist_path: str) -> dict[str, Any]:
         remaining_fails, needs_review (each with a suggested_owner; owner
         groups must cover them all once), not_applicable (na_groups must cover
         them all once), open_items (Fail/Partial, with headline and action),
-        rules (the narrative's validation constraints) and warnings.
+        checklist_path (resolved path read), checklist_modified, narrative_exists and
+        narrative_modified (for the file at narrative_path, so a stale copy is visible), rules (the
+        narrative's validation constraints), shape (the narrative's exact keys and
+        types, with the allowed values of tone, state and effort spelled out) and warnings.
     """
     import deck_analysis
     import narrative
@@ -291,7 +309,11 @@ def analyze_checklist(checklist_path: str) -> dict[str, Any]:
     data = read_checklist.read_checklist(checklist, section_config)
     ordered = section_names.order_sections(data.sheet_tab_names, section_config)
     a = deck_analysis.analyze(data, ordered, layout_config.get("v2", {}))
-    return narrative.scaffold(a, checklist)
+    result = narrative.scaffold(a, checklist)
+    result.update(checklist_path=str(checklist), checklist_modified=_mtime(checklist),
+                  narrative_exists=Path(result["narrative_path"]).exists(),
+                  narrative_modified=_mtime(result["narrative_path"]))
+    return result
 
 
 @mcp.tool(name="validate_deck")

@@ -140,6 +140,17 @@ def test_scaffold_exposes_shape(analysis, tmp_path):
     assert narrative.scaffold(a, f)["shape"]["risk2"]["positives"] == "str"
 
 
+def test_scaffold_shape_lists_enum_values(analysis, tmp_path):
+    _, a = analysis
+    f = tmp_path / "x_review.xlsx"; f.write_bytes(b"x")
+    shape = narrative.scaffold(a, f)["shape"]
+    for field, values in ((shape["snapshot"][0]["state"], narrative.STATES),
+                          (shape["takeaways"][0]["tone"], narrative.TONES),
+                          (shape["roadmap"]["now"][0]["effort"], narrative.EFFORTS)):
+        assert all(v in field for v in values)
+    assert narrative.SHAPE["snapshot"][0]["state"] == "str"  # validation shape is unchanged
+
+
 def test_narrative_load_errors(tmp_path):
     with pytest.raises(narrative.NarrativeError, match="not found"):
         narrative.load(tmp_path / "missing.json")
@@ -192,6 +203,17 @@ def test_v2_build_autodiscovers_narrative_beside_checklist(checklist_factory, tm
     res = build_deck_v2.build_v2(path, "Acme", tmp_path / "o.pptx", common.BRANDING_TEMPLATE)
     assert res["narrative_used"].endswith("_narrative.json")
     assert any("different version" in w for w in res["warnings"])
+
+
+@pytest.mark.skipif(not common.BRANDING_TEMPLATE.exists(), reason="branding template not present")
+def test_build_tool_reports_files_it_read(checklist_factory, tmp_path):
+    mcp_server = pytest.importorskip("mcp_server")
+    path = checklist_factory(sections())
+    (path.with_name(path.stem + "_narrative.json")).write_text(json.dumps({"verdict_title": "V"}))
+    res = mcp_server.build_platform_review_deck(checklist_path=str(path), customer="Acme",
+                                                output_path=str(tmp_path / "o.pptx"))
+    assert res["checklist_path"] == str(path) and res["checklist_modified"]
+    assert res["narrative_used"].endswith("_narrative.json") and res["narrative_modified"]
 
 
 def test_scaffold_gives_every_fact_a_narrative_must_cover(analysis, tmp_path):

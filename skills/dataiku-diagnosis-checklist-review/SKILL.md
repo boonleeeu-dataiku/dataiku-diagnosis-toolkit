@@ -50,6 +50,14 @@ paths are local: request folder access to the common parent of both
 `orient.sh` and bundle reads through `device_bash`, and `device_list_dir` (recursive) to see the
 bundle's structure. At the end, write the result back with `device_commit_files` (step 7).
 
+The `dataiku-review-generator` tools (`write_summary`, `analyze_checklist`, the deck build) run on
+the user's computer, not in your container, so they only see device paths. Pass the device path as
+`checklist_path`. Anything you write in the container (checklist, narrative) must be committed
+with `device_commit_files` before you call them. After `write_summary` rewrites the checklist on
+the device, your container copy is stale: re-stage it before editing again. If `orient.sh` cannot
+be run (it lives in the plugin, not on the device), follow the reader's fallback for orienting by
+hand and say so in your report.
+
 ### Secrets
 
 Follow the reader's "Handling secrets" section. In addition, never copy a secret into
@@ -135,7 +143,8 @@ newlines, each bullet starting with `• `:
 - **Cross-references:** a final bullet such as `• See SEC-004 (root cause)`
   when items are causally linked.
 - **Needs Review:** the `Action:` bullet must say what to verify and with
-  whom (e.g. `Action: confirm with infra team`).
+  whom, naming a team so the deck can suggest an owner (e.g. `Action: confirm with infra team`,
+  `security team`, `platform team`).
 
 Good:
 

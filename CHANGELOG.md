@@ -15,8 +15,19 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 - The vendored review generator's v2 deck still builds the full v1 deck and keeps only its cover and end card.
   Refactor plan and recommendation: `TODO.md` in the upstream `dataiku-review-generator` repo.
 
+## [0.18.0] - 2026-10-04
+
 ### Changed
 
+- Re-synced `mcp-server-review-generator/` to upstream 0.8.0: `analyze_checklist`'s `shape` lists the allowed
+  `tone`/`state`/`effort` values, owner suggestions cover every default-template ID prefix and more team names,
+  and `analyze_checklist` / the build result report resolved paths and modified times.
+- Re-synced `skills/dataiku-diagnosis-reader/` to upstream 0.3.1 (what to do when `orient.sh` can't run).
+- Checklist-review and deck-builder skills: explain that the review-generator tools run on the user's
+  computer (device paths, commit files before calling, container copies go stale after `write_summary`),
+  advise passing `output_path`, list the narrative enum values (`state`, `tone`, `effort`), name a team in
+  `Action:` lines so owners can be suggested, point to the reader's by-hand orient fallback, and tell the agent to
+  compare the reported modified times against what it wrote.
 - Re-synced `mcp-server-review-generator/` to upstream 0.7.6: v2 decks no longer silently drop items with an
   unrecognised/blank status or overwrite duplicate IDs (counted as Needs Review / first kept, with warnings).
 - Re-synced `mcp-server-review-generator/` to upstream 0.7.5 (shared leading-number stripper, `STACK_ORDER`

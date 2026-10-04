@@ -7,6 +7,24 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-04
+
+### Added
+
+- `analyze_checklist` returns the resolved `checklist_path` and its `checklist_modified` time, plus
+  `narrative_exists` and `narrative_modified` for the file at `narrative_path`; the build result returns
+  `checklist_path`, `checklist_modified` and (v2) `narrative_modified`. A caller whose files live elsewhere (a
+  sandbox agent with the tools on the user's computer) can now see when the copy this server read is stale.
+
+### Changed
+
+- Needs Review owner suggestions: `owner_by_id_prefix` now covers every prefix of the default checklist template
+  (ARCH, SEC, SCALE as well as GENAI, ADVSEC), and `owner_keywords` recognise more team names (network, DBA,
+  SRE, IAM, DSS admin, ...), so fewer items fall back to "Other".
+- `analyze_checklist`'s `shape` now spells out the allowed values of `takeaways[].tone`, `snapshot[].state` and
+  `roadmap.*[].effort`, and `rules` states the 8-card snapshot limit, so a draft no longer learns them from a
+  rejected build.
+
 ## [0.7.7] - 2026-10-04
 
 ### Fixed

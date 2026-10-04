@@ -47,8 +47,25 @@ SHAPE = {
     "na_groups": [{"heading": STR, "note": STR, "ids": IDS}],
     "caveats": IDS,
 }
+# Fields whose value must come from a fixed set. Shown to the model in scaffold()'s shape so it need not
+# discover them from a rejection; validation itself still uses the plain SHAPE above.
+_ENUM_FIELDS = {("takeaways", "tone"): TONES, ("snapshot", "state"): STATES, ("roadmap", "effort"): EFFORTS}
+MAX_SNAPSHOT_CARDS = 8
 _TYPE_NAMES = {dict: "an object", list: "a list", str: "a string", int: "a number", float: "a number",
                bool: "true/false", type(None): "null"}
+
+
+def documented_shape() -> dict:
+    """SHAPE with each enumerated field spelled out, e.g. "state": "str: one of neutral, ok, watch"."""
+    def note(values):
+        return f"{STR}: one of {', '.join(sorted(values))}"
+
+    doc = json.loads(json.dumps(SHAPE))
+    for tone_parent, field in (("takeaways", "tone"), ("snapshot", "state")):
+        doc[tone_parent][0][field] = note(_ENUM_FIELDS[(tone_parent, field)])
+    for col in ("now", "next", "plan"):
+        doc["roadmap"][col][0]["effort"] = note(EFFORTS)
+    return doc
 
 
 def _shape_problems(value, spec, path, out):
@@ -230,8 +247,8 @@ def validate(narr: dict, a: Analysis):
     for i, c in enumerate(narr.get("snapshot", []), start=1):
         if c.get("state", "neutral") not in STATES:
             raise NarrativeError(f"snapshot[{i}].state must be one of {sorted(STATES)}.")
-    if len(narr.get("snapshot", [])) > 8:
-        raise NarrativeError("snapshot: at most 8 cards.")
+    if len(narr.get("snapshot", [])) > MAX_SNAPSHOT_CARDS:
+        raise NarrativeError(f"snapshot: at most {MAX_SNAPSHOT_CARDS} cards.")
 
     # soft check: numbers in free text should exist somewhere in the checklist
     known = _numbers(" ".join(r.raw_text + r.title for r in a.rows.values()))
@@ -260,7 +277,8 @@ RULES = [
     "A Pass item may be cited only if listed under caveats.",
     "Every figure on a risk1 tile must appear in the cited row's notes or evidence_found.",
     "Text fields (positives, action, body, ...) are single strings, not lists; only ids/ids-like fields take lists.",
-    "roadmap effort is S, M or L. Record checklist_sha256 (below) once the checklist is final.",
+    "roadmap effort is S, M or L. snapshot has at most 8 cards, each state ok, watch or neutral (a status dot "
+    "colour, not good/warn/risk). Record checklist_sha256 (below) once the checklist is final.",
 ]
 
 
@@ -292,6 +310,6 @@ def scaffold(a: Analysis, checklist_path) -> dict:
                            for r in a.by_status(NA)],
         "open_items": [brief(r) for r in a.rows.values() if r.status in ("Fail", "Partial")],
         "rules": RULES,
-        "shape": SHAPE,
+        "shape": documented_shape(),
         "warnings": list(a.warnings),
     }
