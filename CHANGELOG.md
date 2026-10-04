@@ -10,6 +10,8 @@ vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generato
 
 ## [Unreleased]
 
+## [0.15.2] - 2026-10-04
+
 ### Changed
 
 - `dataiku-diagnosis-checklist-review`: never print secrets (parse selected keys only, don't read stray notes
