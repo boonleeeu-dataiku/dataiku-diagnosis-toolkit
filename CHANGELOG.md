@@ -10,6 +10,11 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+### Known issues
+
+- The vendored review generator's v2 deck still builds the full v1 deck and keeps only its cover and end card.
+  Refactor plan and recommendation: `TODO.md` in the upstream `dataiku-review-generator` repo.
+
 ### Changed
 
 - Hygiene pass: removed stale reader-MCP-era wording from README / checklist-review skill description,
