@@ -19,13 +19,6 @@ checklist spreadsheet.
   check-specific calibrations (e.g. Kubernetes-conditional items, version currency, HTTPS behind
   a reverse proxy, automation-node existence from a design-node bundle) — see the skill's
   `references/calibrations.md`. Authored directly in this repo.
-- **`mcp-server-diagnosis-reader/`** — a local MCP server exposing `dataiku-diagnosis-reader`'s
-  docs as resources and a `run_orient` tool, for MCP-compatible agents that can't
-  load Claude Skills directly (Cursor, other Claude Desktop installs, etc.). It contains no
-  diagnostic logic of its own — it reads `skills/dataiku-diagnosis-reader/` from disk at
-  request time via the `DATAIKU_SKILL_DIR` env var set in `.mcp.json`, and shells out to
-  `orient.sh` — so the skill stays the single source of truth. Vendored alongside the reader
-  skill, see below.
 - **`skills/dataiku-review-deck-builder/`** — step 2 of the workflow: turns a completed checklist
   (produced by `dataiku-diagnosis-checklist-review`) into a branded, customer-facing Platform
   Review `.pptx` deck, via the `mcp-server-review-generator` tools below. Authored directly in
@@ -76,26 +69,24 @@ build/install once. Expected and harmless, just not instant like the local case.
 
 ## One-time setup
 
-Both MCP servers ship as source only — no `node_modules/`, no build output, no committed
+The MCP server ships as source only — no committed
 virtualenv — to keep the plugin small and avoid shipping a build that can drift from source.
-`.mcp.json` doesn't invoke them directly; it runs `scripts/start-reader.sh` /
-`scripts/start-review-generator.sh`, which lazily build/install on first launch (comparing a
-stamp file against `package-lock.json` / `requirements.txt` to skip that step on later launches,
-and rebuilding automatically after a dependency change) and then exec the real server. Build/
-install output goes to stderr, since MCP talks JSON-RPC over stdout.
+`.mcp.json` doesn't invoke it directly; it runs `scripts/start-review-generator.sh`,
+which lazily installs on first launch (comparing a stamp file against `requirements.txt` to skip
+that step on later launches, and reinstalling automatically after a dependency change) and then
+execs the real server. Install output goes to stderr, since MCP talks JSON-RPC over stdout.
 
-Practically: the first time either server starts after installing or updating the plugin, expect
-a delay of up to a minute or so while it builds; after that it starts instantly. Requires
-Node.js >= 18.17 and Python 3 to be on `PATH` (or under `/opt/homebrew/bin` or `/usr/local/bin`),
+Practically: the first time the server starts after installing or updating the plugin, expect
+a delay of up to a minute or so while it installs; after that it starts instantly. Requires
+Python 3 to be on `PATH` (or under `/opt/homebrew/bin` or `/usr/local/bin`),
 and `bash` on `PATH` (macOS/Linux native; Windows needs WSL or Git Bash, since `orient.sh` is also
-a shell script). If a server fails to start, check the plugin's MCP server logs for the
-underlying `npm`/`pip` error.
+a shell script). If the server fails to start, check the plugin's MCP server logs for the
+underlying `pip` error.
 
 If you'd rather not wait on the lazy build, you can still run the setup manually up front:
 
 ```sh
-cd mcp-server-diagnosis-reader && npm install && npm run build
-cd ../mcp-server-review-generator && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+cd mcp-server-review-generator && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 ```
 
 **Required for deck generation:** the Dataiku branding template — an internal Dataiku brand asset, not committed
@@ -104,14 +95,6 @@ concern from diagnosis-bundle data). Obtain it separately and place it at
 `mcp-server-review-generator/resources/Dataiku Branding Template 2026.pptx`. Until that's done,
 deck generation still works if you pass an explicit path to your own copy (the
 `dataiku-review-deck-builder` skill will ask for one if the default path is missing).
-
-## Using it elsewhere (Cursor, another Claude Desktop, etc.)
-
-`mcp-server-diagnosis-reader/` speaks plain MCP over stdio, so any MCP-compatible client can use
-it — not just Claude. Point that client's MCP config at `mcp-server-diagnosis-reader/dist/index.js`
-the same way `.mcp.json` does here, setting `DATAIKU_SKILL_DIR` to this plugin's
-`skills/dataiku-diagnosis-reader` folder (or copy that skill folder alongside the server and let
-it fall back to the sibling-directory default — see `mcp-server-diagnosis-reader/README.md`).
 
 ## Security / privacy
 
@@ -132,9 +115,9 @@ changing a skill, a calibration, or the model you use.
 
 | Tier | What | Command | Cost |
 |---|---|---|---|
-| 1. Unit | Each MCP server's own suite. Vendored from upstream: `mcp-server-review-generator/tests/` (pytest) and `mcp-server-diagnosis-reader/test/` (`node:test`) | `scripts/test.sh fast` | none |
+| 1. Unit | The review generator's own suite, vendored from upstream: `mcp-server-review-generator/tests/` (pytest) | `scripts/test.sh fast` | none |
 | 2. Toolkit | Cross-component contracts (template ↔ deck generator schema, skill ↔ tool wording), manifest consistency, vendored-copy drift against the sibling upstream checkouts, and the review-output checker | `scripts/test.sh fast` | none |
-| 3. LLM evals | The skills end to end with a real model, against synthetic bundles. `evals/` holds `claude plugin eval` cases for the reader and deck builder, with mocked MCP tools. `tests/evals/run_review_eval.py` runs the checklist-review skill and scores its workbook item by item | `scripts/test.sh eval [--model <id>] [--runs 3]` | model usage |
+| 3. LLM evals | The skills end to end with a real model, against synthetic bundles. `evals/` holds `claude plugin eval` cases for the deck builder, with mocked MCP tools. `tests/evals/run_review_eval.py` runs the checklist-review skill and scores its workbook item by item | `scripts/test.sh eval [--model <id>] [--runs 3]` | model usage |
 
 **Tiers 1–2** need the one-time setup. `scripts/test.sh` adds `pytest` to the review generator's
 `.venv` on first run. Two tests skip by design:
@@ -164,10 +147,9 @@ exists in the bundle.
 
 This plugin's own release is versioned via `.claude-plugin/plugin.json`'s top-level `version`.
 
-`skills/dataiku-diagnosis-reader/` and `mcp-server-diagnosis-reader/` are vendored from a separate
-upstream repo (`dataiku-diagnosis-reader`), which is their actual source of truth and versions
-each independently (see their own `CHANGELOG.md` files and `SKILL.md`'s `version` frontmatter /
-`mcp-server-diagnosis-reader/package.json`). `mcp-server-review-generator/` is likewise vendored,
+`skills/dataiku-diagnosis-reader/` is vendored from a separate
+upstream repo (`dataiku-diagnosis-reader`), which is its actual source of truth and versions
+it independently (see its `CHANGELOG.md` and `SKILL.md`'s `version` frontmatter). `mcp-server-review-generator/` is likewise vendored,
 from `dataiku-review-generator`, versioned independently via its own `VERSION`/`CHANGELOG.md`.
 `skills/dataiku-diagnosis-checklist-review/` and `skills/dataiku-review-deck-builder/` are
 authored directly here and have no separate version. See `CLAUDE.md` for how to re-sync this
@@ -176,7 +158,7 @@ plugin with upstream changes.
 ## Codex plugin
 
 This same repository also supports local installation in Codex. The Codex manifests (`plugin.json`,
-`mcp.json`, and `.codex-plugin/plugin.json`) reuse the three task skills and both MCP servers. The
+`mcp.json`, and `.codex-plugin/plugin.json`) reuse the three task skills and the review-generator MCP server. The
 additional `dataiku-codex-workflow` skill translates tool and file-access instructions for Codex.
 Claude's plugin manifests and launch scripts remain separate.
 
@@ -190,9 +172,8 @@ codex plugin marketplace add /absolute/path/to/this/repo
 codex plugin add dataiku-diagnosis-toolkit@dataiku-local
 ```
 
-Start a new Codex session after installation. The Codex launcher prepares the local MCP servers
-in Codex's writable plugin-data directory on first use. It needs `bash`, Node.js 18.17 or newer
-with `npm`, and Python 3. Deck generation needs the branding template described in
+Start a new Codex session after installation. The Codex launcher prepares the local MCP server
+in Codex's writable plugin-data directory on first use. It needs `bash` and Python 3. Deck generation needs the branding template described in
 [One-time setup](#one-time-setup). The template is gitignored, so a fresh GitHub install will not
 include it. Put it in the installed Codex plugin's
 `mcp-server-review-generator/resources/` directory for the default lookup, or keep it elsewhere

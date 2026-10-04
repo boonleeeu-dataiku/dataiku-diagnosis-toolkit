@@ -1,2 +1,0 @@
-[    0.000000] Linux version 5.14.0 (synthetic)
-[ 1234.5] Out of memory: Killed process 4242 (java)

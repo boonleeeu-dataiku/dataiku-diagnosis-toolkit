@@ -1,7 +1,3 @@
-# mcp-server-diagnosis-reader build artifacts
-mcp-server-diagnosis-reader/node_modules/
-mcp-server-diagnosis-reader/dist/
-
 # mcp-server-review-generator build/runtime artifacts
 mcp-server-review-generator/.venv/
 mcp-server-review-generator/**/__pycache__/

@@ -1,3 +1,0 @@
-SYNTHETIC TEST FIXTURE - not real diagnosis data.
-> uname -a
-Linux synthetic-host 5.14.0 #1 SMP x86_64 GNU/Linux

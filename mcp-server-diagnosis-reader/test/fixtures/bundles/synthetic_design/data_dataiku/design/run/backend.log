@@ -1,4 +1,0 @@
-[2026/01/01-00:00:00.000] [main] INFO  dku.startup - Synthetic backend starting
-[2026/01/01-00:00:01.000] [jek-1] ERROR dku.jobs - Synthetic job failure one
-[2026/01/01-00:00:02.000] [jek-2] WARN  dku.jobs - Synthetic warning
-[2026/01/01-00:00:03.000] [jek-3] error dku.jobs - synthetic lowercase error

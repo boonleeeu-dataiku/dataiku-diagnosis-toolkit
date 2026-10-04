@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
-# Regenerate the plugin-eval mock inputs that are derived from the real MCP servers:
-#   evals/mocks/<server>/_tools.json   each server's real tools/list response
-#   evals/reader-crash-triage/mocks/dataiku-diagnosis-reader/fixtures/orient.txt
-#                                      orient.sh output for the synthetic baseline bundle
-# Run after changing a tool's signature or orient.sh's output. Needs both servers built
-# (see README's One-time setup).
+# Regenerate the plugin-eval mock input derived from the real MCP server:
+#   evals/mocks/dataiku-review-generator/_tools.json   the server's real tools/list response
+# Run after changing a tool's signature. Needs the .venv (see README's One-time setup).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-export DATAIKU_SKILL_DIR="$PWD/skills/dataiku-diagnosis-reader"
 mcp-server-review-generator/.venv/bin/python - <<'EOF'
 import json, os, subprocess
 
@@ -32,15 +28,9 @@ def tools_list(cmd):
 
 for server, cmd in {
     "dataiku-review-generator": ["mcp-server-review-generator/.venv/bin/python", "mcp-server-review-generator/scripts/mcp_server.py"],
-    "dataiku-diagnosis-reader": ["node", "mcp-server-diagnosis-reader/dist/index.js"],
 }.items():
     path = f"evals/mocks/{server}/_tools.json"
     with open(path, "w") as f:
         f.write(json.dumps(tools_list(cmd), indent=2) + "\n")
     print(f"wrote {path}")
 EOF
-
-bundle="$PWD/tests/fixtures/bundles/synthetic_design_baseline"
-out=evals/reader-crash-triage/mocks/dataiku-diagnosis-reader/fixtures/orient.txt
-bash skills/dataiku-diagnosis-reader/scripts/orient.sh "$bundle" | sed "s#$bundle#/data/bundles/acme_diag#g" > "$out"
-echo "wrote $out"

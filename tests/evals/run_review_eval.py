@@ -35,10 +35,8 @@ sys.path.insert(0, str(REPO_ROOT / "tests" / "lib"))
 
 import check_review_output as cro  # noqa: E402
 
-PLUGIN = "dataiku-diagnosis-toolkit"
 ALLOWED_TOOLS = [
     "Read", "Write", "Edit", "Glob", "Grep", "Skill", "Bash", "TodoWrite",
-    f"mcp__plugin_{PLUGIN}_dataiku-diagnosis-reader__run_orient",
 ]
 # Web access is withheld on purpose: the version-currency calibration must then answer
 # Needs Review and say it couldn't verify, rather than guess the latest release.

@@ -31,21 +31,17 @@ which have none.
 
 ## Vendored vs. authored-here components
 
-- **`skills/dataiku-diagnosis-reader/` + `mcp-server-diagnosis-reader/`** are **vendored** from a
-  separate upstream repo, `github.com/boonleeeu-dataiku/dataiku-diagnosis-reader`, which is their
-  actual source of truth. That repo versions the two independently (SemVer in `SKILL.md`'s
-  `version` frontmatter / `mcp-server-diagnosis-reader/package.json`, each with its own
-  `CHANGELOG.md`) per its own `CLAUDE.md`. Note: upstream's directory is also named
-  `mcp-server-diagnosis-reader/` as of its rename from `mcp-server/` — both repos stay in sync on
-  the name, so re-syncing needs no path mapping.
+- **`skills/dataiku-diagnosis-reader/`** is **vendored** from a
+  separate upstream repo, `github.com/boonleeeu-dataiku/dataiku-diagnosis-reader`, which is its
+  actual source of truth. That repo versions it (SemVer in `SKILL.md`'s `version` frontmatter,
+  with its own `CHANGELOG.md`) per its own `CLAUDE.md`. The upstream repo no longer has an MCP
+  server; agents read the skill files directly and run `scripts/orient.sh` with Bash.
 
-  To re-sync after upstream changes: diff the upstream repo's `dataiku-diagnosis-reader/` and
-  `mcp-server-diagnosis-reader/` directories against this repo's `skills/dataiku-diagnosis-reader/`
-  and `mcp-server-diagnosis-reader/` copies (content, `references/*.md`, `scripts/orient.sh`,
-  `src/**`, `test/**`, `scripts/smoke-test.mjs`, `package.json`, version frontmatter,
-  `CHANGELOG.md`), and port over whatever differs.
-  Don't hand-edit content in these two directories here expecting it to persist — fix it upstream
-  and re-sync, or the next sync will silently overwrite the fix.
+  To re-sync after upstream changes: diff the upstream repo's `dataiku-diagnosis-reader/`
+  directory against this repo's `skills/dataiku-diagnosis-reader/` copy (content,
+  `references/*.md`, `scripts/orient.sh`, version frontmatter, `CHANGELOG.md`), and port over
+  whatever differs. Don't hand-edit content in this directory here expecting it to persist — fix
+  it upstream and re-sync, or the next sync will silently overwrite the fix.
 
   **How to read a bundle is owned by the reader, never by the checklist skill.** When a checklist
   or calibration change needs a new "where does X live / how do I read it safely" fact (a file
@@ -101,22 +97,17 @@ gitignored, for a third reason: it's a sample completed checklist with no custom
 runtime dependents (nothing passes it as a default `--checklist` path), so there's no reason to
 carry it in the repo. It still exists locally for anyone who has it; it's just untracked.
 
-## Working on the MCP servers
-
-Edits to `mcp-server-diagnosis-reader/src/**/*.ts` require `npm run build` (see README's one-time
-setup) before they take effect — the plugin ships TypeScript source only, no build output, no
-`node_modules/`.
+## Working on the MCP server
 
 Edits to `mcp-server-review-generator/scripts/**/*.py` take effect immediately (no build step),
 but require the one-time `.venv` setup (see README) to exist before the server can launch at all
 — the plugin ships Python source only, no committed virtualenv.
 
-Whenever Claude makes edits to `mcp-server-diagnosis-reader/` or `mcp-server-review-generator/`,
+Whenever Claude makes edits to `mcp-server-review-generator/`,
 remind the user afterward to also run Codex, so Codex can pick up the changes — Codex only
 adapts to Claude-side changes post-hoc (see `AGENTS.md`) and won't see these updates otherwise.
 
-Whenever Claude makes or discusses an update to `skills/dataiku-diagnosis-reader/` (or its
-`mcp-server-diagnosis-reader/` pair), remind the user to make the change in the upstream repo
+Whenever Claude makes or discusses an update to `skills/dataiku-diagnosis-reader/`, remind the user to make the change in the upstream repo
 (`github.com/boonleeeu-dataiku/dataiku-diagnosis-reader`, sibling checkout `../Diagnosis Reader/`)
 and re-sync it here, so the next sync doesn't silently overwrite it. Likewise remind them to run
 Codex afterward, since the skill copy is also read by Codex.

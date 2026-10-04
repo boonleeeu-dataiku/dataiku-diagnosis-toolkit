@@ -3,10 +3,9 @@
 #
 #   scripts/test.sh fast                  deterministic tests, no model calls (run on every change):
 #                                           mcp-server-review-generator pytest suite (vendored)
-#                                           mcp-server-diagnosis-reader npm test (vendored)
 #                                           toolkit-level pytest suite (tests/)
 #   scripts/test.sh eval [options]        on-demand LLM evals (cost real usage):
-#                                           claude plugin eval (evals/: reader + deck-builder cases)
+#                                           claude plugin eval (evals/: deck-builder cases)
 #                                           tests/evals/run_review_eval.py (checklist-review scenarios)
 #     --model <id>        model under test for both (default: Claude Code's default)
 #     --runs <n>          runs per case/scenario (default 3)
@@ -35,12 +34,6 @@ run_fast() {
 
   echo "== mcp-server-review-generator (pytest)"
   (cd mcp-server-review-generator && "$PY" -m pytest) || failed=1
-
-  echo "== mcp-server-diagnosis-reader (npm test)"
-  if [ ! -d mcp-server-diagnosis-reader/node_modules ]; then
-    (cd mcp-server-diagnosis-reader && npm install --silent) >&2
-  fi
-  (cd mcp-server-diagnosis-reader && DATAIKU_SKILL_DIR="$ROOT/skills/dataiku-diagnosis-reader" npm test --silent) || failed=1
 
   echo "== toolkit (pytest tests/)"
   "$PY" -m pytest tests || failed=1

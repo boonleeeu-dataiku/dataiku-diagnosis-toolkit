@@ -13,7 +13,6 @@ claude plugin eval . --model <model-id> --json evals/results/<name>.json
 
 | Case | Checks |
 |---|---|
-| `reader-crash-triage` | The reader skill calls `run_orient` first and identifies node type, version, and the memory-exhaustion crash cause. Mocks are built from `tests/fixtures/bundles/synthetic_design_baseline` |
 | `deck-missing-base` | On "Base deck not found", the deck builder relays the error and asks for the template. It doesn't retry with a guessed path |
 | `deck-data-warnings` | When the build returns `data_warnings`, the deck builder surfaces them and says to fix the checklist, not the deck |
 
@@ -22,7 +21,6 @@ output is an `.xlsx` workbook, which plugin-eval graders can't score item by ite
 custom-code graders, and the LLM judges refuse binary files. See the top-level README's Testing
 section.
 
-`mocks/<server>/_tools.json` holds each server's real `tools/list` response, so mocked tools show
-their real schemas. After changing a tool's signature, regenerate them with
-`scripts/refresh-eval-tool-schemas.sh`. If the orient output format changes, regenerate
-`reader-crash-triage/mocks/.../fixtures/orient.txt` from the same synthetic bundle the same way.
+`mocks/<server>/_tools.json` holds the server's real `tools/list` response, so mocked tools show
+their real schemas. After changing a tool's signature, regenerate it with
+`scripts/refresh-eval-tool-schemas.sh`.

@@ -1,4 +1,4 @@
-# Spec for upstream: `dataiku-diagnosis-reader` (skill + MCP server)
+# Spec for upstream: `dataiku-diagnosis-reader` (skill)
 
 Target repo: `github.com/boonleeeu-dataiku/dataiku-diagnosis-reader`. The vendored copies here are
 read-only (see CLAUDE.md), so these changes must be made upstream and re-synced.
@@ -11,7 +11,7 @@ one remaining interim stopgap.
 
 ## 1. Secret handling rule (move from the checklist skill)
 
-Add to the reader `SKILL.md` (and so the `skill-guide` resource), as a short section:
+Add to the reader `SKILL.md` , as a short section:
 
 - Bundles and neighbouring files hold live credentials: `general-settings.json` (`internalDatabase`
   password, connection and LDAP bind passwords), `connections.json`, `install.ini`,
@@ -75,19 +75,17 @@ Two table rows were refined once checked against real bundles: `sanity-check.jso
 
 ## 4. Make the guide-first expectation explicit
 
-- `run_orient` already says "Read the skill-guide resource first". (The `safe_read` items that were
-  here are withdrawn with §2.)
+- (The MCP server and its `run_orient`/`safe_read` tools were removed; nothing to do here beyond §1–3.)
 
 ## 5. Tests (upstream)
 
 - (Withdrawn with §2.) `safe_read` `json_path`: nested key, array wildcard, missing path, invalid JSON, redaction of
   secret-named keys, oversize file.
-- Resource list in `src/resources.ts` unchanged unless a new reference file is added.
-- Bump `mcp-server-diagnosis-reader` and skill versions per upstream CLAUDE.md.
+- Bump the skill version per upstream CLAUDE.md.
 
 ## After upstream ships
 
 1. Re-sync here (see CLAUDE.md). `tests/test_vendored_drift.py` confirms the copy.
 2. Update the checklist skill: drop the interim pointer caveat for the secrets guidance.
 3. (Done) The interim allowlist in `tests/test_skill_boundaries.py` is gone; `calibrations.md` is guarded.
-4. Remind the user to run Codex (the MCP server changed).
+4. Remind the user to run Codex (the skill copy changed).

@@ -1,5 +1,5 @@
 """Bundle-reading knowledge (file layout, safe extraction, log/column quirks) is owned by the
-reader (skills/dataiku-diagnosis-reader + mcp-server-diagnosis-reader). The checklist-review skill
+reader (skills/dataiku-diagnosis-reader). The checklist-review skill
 holds checklist judgment only, and must point at the reader instead of re-documenting it.
 
 A new "where/how do I read X" fact belongs in the reader's references (upstream, then re-sync), not
@@ -34,5 +34,5 @@ def test_checklist_skill_does_not_document_bundle_layout(path):
 
 def test_checklist_skill_makes_the_reader_a_prerequisite():
     text = (REVIEW_DIR / "SKILL.md").read_text(encoding="utf-8")
-    for phrase in ("load the `dataiku-diagnosis-reader` skill", "`skill-guide`", "`run_orient`", "reference-limitations"):
+    for phrase in ("load the `dataiku-diagnosis-reader` skill", "orient.sh", "limitations.md"):
         assert phrase in text, f"SKILL.md no longer says {phrase!r}"

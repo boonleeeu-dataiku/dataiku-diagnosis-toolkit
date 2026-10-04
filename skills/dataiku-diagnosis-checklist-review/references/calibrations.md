@@ -1,7 +1,7 @@
 # Known check-specific calibrations
 
 > Judgment only: this file says which status to give, never where or how to find something in the
-> bundle. That belongs to the reader (`dataiku-diagnosis-reader` skill + MCP server), which is
+> bundle. That belongs to the reader (`dataiku-diagnosis-reader` skill), which is
 > vendored from upstream. If a calibration needs a new "where/how to read" fact, add it to the
 > reader's references upstream, re-sync, and point to it from here. See `CLAUDE.md`.
 

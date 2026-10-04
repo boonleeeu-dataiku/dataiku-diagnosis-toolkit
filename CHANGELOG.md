@@ -5,10 +5,26 @@ All notable changes to the `dataiku-diagnosis-toolkit` plugin are documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/). This tracks the plugin's own
 top-level version (`.claude-plugin/plugin.json`), independent of the versions carried by
-vendored components (`mcp-server-diagnosis-reader/`, `mcp-server-review-generator/`) — see
+vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-generator/`) — see
 `CLAUDE.md`.
 
 ## [Unreleased]
+
+## [0.16.0] - 2026-10-04
+
+### Removed
+
+- `mcp-server-diagnosis-reader/` (and `scripts/start-reader.sh`, the `reader` Codex launcher, the
+  `dataiku-diagnosis-reader` entries in `.mcp.json`/`mcp.json`/`.codex-plugin/plugin.json`, and the
+  `reader-crash-triage` plugin eval). It only re-exposed the reader skill's docs as MCP resources
+  and `orient.sh` as a `run_orient` tool; the skill and `scripts/orient.sh` (run with Bash) cover both.
+  The plugin no longer needs Node.js/npm. Removed upstream too.
+
+### Changed
+
+- `dataiku-diagnosis-checklist-review`: orient step runs the reader's `scripts/orient.sh` instead of
+  `run_orient`; the no-skills fallback reads the reader's `SKILL.md` and `references/` directly.
+- Re-synced `skills/dataiku-diagnosis-reader/CHANGELOG.md` (dropped the MCP versioning note).
 
 ## [0.15.3] - 2026-10-04
 

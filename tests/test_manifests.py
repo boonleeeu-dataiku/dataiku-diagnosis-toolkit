@@ -45,7 +45,7 @@ def _expand(value: str) -> str:
 @pytest.mark.parametrize("manifest", [".mcp.json", "mcp.json", ".codex-plugin/plugin.json"])
 def test_mcp_server_paths_exist(manifest):
     servers = load(manifest)["mcpServers"]
-    assert set(servers) == {"dataiku-diagnosis-reader", "dataiku-review-generator"}
+    assert set(servers) == {"dataiku-review-generator"}
     for name, cfg in servers.items():
         for arg in cfg.get("args", []):
             if "/" in arg:

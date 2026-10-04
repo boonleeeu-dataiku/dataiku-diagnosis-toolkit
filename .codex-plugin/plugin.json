@@ -1,18 +1,12 @@
 {
   "name": "dataiku-diagnosis-toolkit",
-  "version": "0.15.3",
+  "version": "0.16.0",
   "description": "Review Dataiku DSS diagnosis bundles against checklists and generate Platform Review decks.",
   "author": {
     "name": "Boon Lee Eu"
   },
   "skills": ["./skills/", "./codex-skills/"],
   "mcpServers": {
-    "dataiku-diagnosis-reader": {
-      "type": "stdio",
-      "command": "bash",
-      "args": ["${PLUGIN_ROOT}/scripts/codex-start.sh", "reader"],
-      "cwd": "${PLUGIN_ROOT}"
-    },
     "dataiku-review-generator": {
       "type": "stdio",
       "command": "bash",

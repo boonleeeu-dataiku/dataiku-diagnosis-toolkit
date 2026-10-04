@@ -30,7 +30,6 @@ VENDORED = [
     (REVIEW_GENERATOR, "requirements-dev.txt", "mcp-server-review-generator/requirements-dev.txt"),
     (REVIEW_GENERATOR, "pytest.ini", "mcp-server-review-generator/pytest.ini"),
     (DIAGNOSIS_READER, "dataiku-diagnosis-reader", "skills/dataiku-diagnosis-reader"),
-    (DIAGNOSIS_READER, "mcp-server-diagnosis-reader", "mcp-server-diagnosis-reader"),
 ]
 
 

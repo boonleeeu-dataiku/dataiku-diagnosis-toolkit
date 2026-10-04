@@ -35,14 +35,13 @@ spreadsheet, plus add/update a Summary tab.
   read/write it, and `device_list_dir` (recursive) on the bundle to see its structure.
 - **How to read the bundle comes from the reader, not from this skill.** Before touching the
   bundle, load the `dataiku-diagnosis-reader` skill. If skills can't be loaded here, read the
-  reader MCP server's `skill-guide`, `reference-limitations` and `reference-listings-and-manifests`
-  resources instead. Use its `lookup-table` / `data-dir-config` references to find where a setting
+  reader's `SKILL.md` and its `references/limitations.md` and `references/listings-and-manifests.md`
+  files directly. Use its `lookup-table` / `data-dir-config` references to find where a setting
   lives.
-- Load the reader's `run_orient` tool if deferred (`ToolSearch` with `select:...run_orient`, using
-  whatever prefix — bare or `mcp__remote-devices__` — is present in the tool list). The reader has
-  no file-reading tool: read bundle files with your normal read/search tools (or the linked
-  device's shell, `device_bash`), following the reader's `reference-limitations` ("Large-file
-  hazards") and `reference-listings-and-manifests` guidance: grep/head/wc the big files, never
+- The reader ships `scripts/orient.sh`; run it with Bash (or the linked device's shell,
+  `device_bash`). Read bundle files with your normal read/search tools (or `device_bash`),
+  following the reader's `limitations.md` ("Large-file hazards") and `listings-and-manifests.md`
+  guidance: grep/head/wc the big files, never
   load them whole. If you find the reader lacks a layout fact you need, say so in your final
   summary rather than recording it in this skill.
 - Load the `xlsx` skill before reading/writing the spreadsheet.
@@ -58,7 +57,7 @@ rotate it. (The reader's guidance is being added upstream; see `docs/upstream-re
 
 ## 1. Orient
 
-Run `run_orient` on the bundle root first. It reports node type/version, the
+Run the reader's `scripts/orient.sh <bundle_root>` first. It reports node type/version, the
 largest files, and which key troubleshooting files are present. This
 tells you what evidence is realistically available before you plan reads.
 

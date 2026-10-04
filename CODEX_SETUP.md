@@ -1,12 +1,12 @@
 # Codex setup
 
-This repository can be installed as a local Codex plugin while keeping its Claude plugin files intact. Codex uses the root `plugin.json` and `mcp.json`; `.codex-plugin/plugin.json` is a compatibility manifest. Both configurations reuse the existing scripts and MCP servers.
+This repository can be installed as a local Codex plugin while keeping its Claude plugin files intact. Codex uses the root `plugin.json` and `mcp.json`; `.codex-plugin/plugin.json` is a compatibility manifest. Both configurations load the task skills and run the review-generator MCP server.
 
 ## Install
 
 From this repository, run `codex plugin marketplace list`. Codex may already discover the existing `dataiku-local` marketplace from `.claude-plugin/marketplace.json`. If it does not, run `codex plugin marketplace add /absolute/path/to/this/repo`. Then run `codex plugin add dataiku-diagnosis-toolkit@dataiku-local` and start a new Codex session.
 
-The plugin launches two local stdio MCP servers. It needs `bash`, Node.js 18.17 or newer with `npm`, and Python 3. The Codex launcher mirrors only the server source into Codex's writable `PLUGIN_DATA` directory and runs the existing launch scripts there. The first launch installs dependencies in that directory.
+The plugin launches one local stdio MCP server (the review generator). It needs `bash` and Python 3. The Codex launcher mirrors only the server source into Codex's writable `PLUGIN_DATA` directory and runs the existing launch script there. The first launch installs dependencies in that directory.
 
 ## Branding template
 
@@ -24,6 +24,6 @@ The cache can be replaced when you reinstall or update the plugin. For a durable
 
 ## Verify
 
-In a new session, ask Codex to use `dataiku-diagnosis-reader` on an extracted test bundle. It should have the `run_orient` tool and nine reader resources; Codex reads bundle files with its normal read/search tools. To check the bundled checklist fallback, ask for a diagnosis review without supplying a checklist, then confirm that Codex offers the default template, saves a completed workbook outside the plugin directory, and uses `write_summary` to populate its Summary sheet. For a completed checklist and branding template, ask it to use `dataiku-review-deck-builder`; it should have `analyze_checklist`, `build_platform_review_deck`, and `validate_deck`. Confirm that Codex analyzes the final checklist, saves the narrative beside it, and reports a populated `narrative_used` after the v2 build. The `dataiku-codex-workflow` companion explains Codex-specific tool and file-access differences without changing the original task skills.
+In a new session, ask Codex to use `dataiku-diagnosis-reader` on an extracted test bundle. There is no reader MCP server: Codex should read the skill's `SKILL.md` and `references/` directly, run `scripts/orient.sh <bundle_root>` with the shell for triage, and read bundle files with its normal read/search tools. To check the bundled checklist fallback, ask for a diagnosis review without supplying a checklist, then confirm that Codex offers the default template, saves a completed workbook outside the plugin directory, and uses `write_summary` to populate its Summary sheet. For a completed checklist and branding template, ask it to use `dataiku-review-deck-builder`; it should have `analyze_checklist`, `build_platform_review_deck`, and `validate_deck`. Confirm that Codex analyzes the final checklist, saves the narrative beside it, and reports a populated `narrative_used` after the v2 build. The `dataiku-codex-workflow` companion explains Codex-specific tool and file-access differences without changing the original task skills.
 
 Local plugins install into a Codex cache. Refresh or reinstall the plugin after changing this repository, then use a new session to load the updated skills and tools.
