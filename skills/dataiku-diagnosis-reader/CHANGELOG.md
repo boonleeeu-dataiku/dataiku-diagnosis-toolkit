@@ -9,6 +9,14 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.4.1] - 2026-10-05
+
+### Changed
+
+- `SKILL.md` step 7: when `orient.sh` can't run where the bundle is, pipe it there (`bash -s -- <root>` with the
+  script on stdin) before falling back to the by-hand commands. A plugin run on a linked computer had oriented
+  by hand because the script lived in the plugin, not on the user's machine.
+
 ## [0.4.0] - 2026-10-04
 
 ### Added

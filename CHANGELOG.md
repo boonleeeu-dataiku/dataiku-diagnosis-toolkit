@@ -10,6 +10,13 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.21.2] - 2026-10-05
+
+### Changed
+
+- Re-synced the vendored reader skill to 0.4.1: when `orient.sh` can't run where the bundle is, pipe it there
+  (`bash -s -- <root>`) before orienting by hand.
+
 ## [0.21.1] - 2026-10-05
 
 ### Changed

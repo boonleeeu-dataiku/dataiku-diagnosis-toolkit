@@ -1,7 +1,7 @@
 ---
 name: "dataiku-diagnosis-reader"
 description: "Navigate and interpret an extracted Dataiku DSS diagnosis.zip support bundle (also: DSS diagnostic export, instance diagnostic archive, a folder named dku_diagnosis_*) to answer troubleshooting questions on instance configuration, crashes/OOMs, performance, users, connections, projects, code environments, plugins and logs, without re-deriving the bundle layout. Use whenever the user provides or asks about a Dataiku diagnosis bundle or wants to diagnose a DSS instance from one."
-version: 0.4.0
+version: 0.4.1
 ---
 
 # Dataiku DSS diagnosis.zip reader
@@ -61,7 +61,10 @@ as a structural model, not a byte-identical layout guaranteed across every bundl
    like): node type, version, mirror path, biggest files, and presence of key troubleshooting files.
    If the script can't run (it lives in the skill folder, which may be on a different machine from
    the bundle, e.g. a sandbox agent with the bundle on a linked computer), don't skip orientation.
-   Do the same by hand with read-only commands run where the bundle is: `find <root> -maxdepth 6 -name
+   First choice: pipe the script to the machine that holds the bundle. It is read-only,
+   self-contained and ~4.5KB, so run `bash -s -- <root>` there with the script body on stdin (e.g. a
+   quoted heredoc: `bash -s -- <root> <<'ORIENT'` ... `ORIENT`). If stdin can't be passed, do the
+   same by hand with read-only commands run where the bundle is: `find <root> -maxdepth 6 -name
    install.ini` (the mirror is its directory), `grep -m1 DKU_NODE_TYPE <root>/diag.txt` and
    `<mirror>/dss-version.json` for node type and version, `find <root> -type f -size +50M -exec ls -lh {} +`
    for the biggest files, and `ls` for `diag.txt`, `dmesg.txt`, `<mirror>/run/` and
