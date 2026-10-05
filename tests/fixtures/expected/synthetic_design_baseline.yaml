@@ -30,8 +30,8 @@ items:
   SEC-006:    # plain HTTP in install.ini -> Needs Review (reverse proxy can't be ruled out)
     status: [Needs Review]
     mentions: [proxy]
-  SCALE-007:  # recurring OutOfMemoryError in backend.log
-    status: [Fail]
+  SCALE-007:  # ERROR entries in backend.log -> Needs Review (never Fail/Partial)
+    status: [Needs Review]
     mentions: [backend.log]
   SCALE-008:  # 2g heap on a 64GB host; sizing judgement varies
     status: [Fail, Partial, Needs Review]
@@ -47,4 +47,9 @@ items:
   ADVSEC-006: # no custom post-logout redirect configured
     status: [Not Applicable]
   ARCH-008:   # no Kubernetes cluster attached -> Not Applicable
+    status: [Not Applicable]
+  GENAI-001:  # a non-internal code env is the RAG default -> Needs Review
+    status: [Needs Review]
+    mentions: [custom_rag_env]
+  GENAI-009:  # no Agent Hub installed -> Not Applicable
     status: [Not Applicable]

@@ -63,9 +63,8 @@ one — add each as its own bullet rather than overwriting prior ones.
   behind (0 if current). Keep `notes` short (e.g. `Bundle 13.x vs latest GA 14.x (date) — 1 major
   behind`); put the full source citation in `evidence_found`.
 
-- **Feature-conditional GenAI checks (Cobuild default LLMs, Agent Hub
-  permissions / service account / impersonation groups, Bring-your-own-LLM
-  mode, local Hugging Face):** first confirm the feature is actually in use
+- **Feature-conditional GenAI checks (Cobuild default LLMs, Bring-your-own-LLM
+  mode, local Hugging Face; Agent Hub has its own rule below):** first confirm the feature is actually in use
   (the reader's `data-dir-config` reference lists the signals it has verified
   and which it has not). If it isn't, mark the check **Not Applicable**, not
   Fail or Needs Review. A
@@ -83,10 +82,34 @@ one — add each as its own bullet rather than overwriting prior ones.
   are not oversized; (5) no `OutOfMemoryError` in the backend logs. State which of these you
   checked in `evidence_found`; never assume a tier from RAM alone.
 
-- **Log-error review (e.g. a backend log-error check):** the bundle usually holds only a few hours of backend
-  log. Quote counts with their window (e.g. `214 in ~2.6h`) in both `evidence_found` and `notes`,
-  and group by message pattern (digits and ids normalised), not by raw line. The reader's
-  `data-dir-runtime-and-codeenvs` reference says how to count and get the window.
+- **Log-error review (e.g. a backend log-error check):** the status is mechanical, so every run gives
+  the same one:
+  - Any ERROR, FATAL or WARN entries in the backend logs: **Needs Review**, however few or however
+    benign-looking. Never Fail or Partial.
+  - No errors and no warnings at all: **Pass**.
+  - Logs missing from the bundle: **Needs Review** (the checklist's `insufficient_evidence_handling`).
+
+  Still make the finding useful to a reviewer. The bundle usually holds only a few hours of backend
+  log, so quote counts with their window (e.g. `214 in ~2.6h`) in both `evidence_found` and `notes`,
+  and group by message pattern (digits and ids normalised), not by raw line. When one pattern
+  dominates (for example repeated rejected WebSocket sessions that were not logged in), say so in
+  `notes` with its share of the count, and put the `Action:` on the real failures (for example failing
+  API calls). The reader's `data-dir-runtime-and-codeenvs` reference says how to count and get the
+  window.
+
+- **Internal code environments for LLM Mesh (e.g. RAG, document extraction, PII detection):** judge only
+  whether the internal code envs are in use:
+  - **Pass** when the defaults are the internal code envs (the reader's `data-dir-config` and
+    `data-dir-runtime-and-codeenvs` references say how to tell). Do not downgrade for a container
+    execution mode of `INHERIT` when no container config exists, and do not require separate evidence for
+    each of the three categories.
+  - **Needs Review** when a non-internal code env is used for any of them.
+  - **Fail** when nothing is set up.
+  Say in `notes` which envs you saw.
+
+- **Agent Hub deployer permissions:** the bundle cannot conclusively verify who may deploy, so do not try
+  to infer it from the project owner or group grants. Agent Hub installed (the reader's `data-dir-config`
+  reference lists the signal): **Needs Review**. Not installed: **Not Applicable**. Never Pass or Fail.
 
 - **A hinted setting is not proof of absence:** a checklist `parameter_hint` is a pointer,
   not a guarantee of where the setting lives. Before marking a setting absent or Fail, look for it
@@ -166,8 +189,3 @@ one — add each as its own bullet rather than overwriting prior ones.
 - **An inferred limit is not evidence (e.g. a connection pool vs. an internal-database limit that the
   bundle does not record):** don't mark Pass or Fail from an assumed default. Mark **Needs Review**,
   state the inference in `notes` as an inference, and ask for the real value.
-
-- **A dominant benign-looking log pattern (backend log-error review):** still apply the log-error rule
-  above and report the status it gives, but when one pattern dominates (for example repeated rejected
-  WebSocket sessions that were not logged in) say so in `notes` with its share of the count, so a
-  reviewer can judge whether the errors are real.

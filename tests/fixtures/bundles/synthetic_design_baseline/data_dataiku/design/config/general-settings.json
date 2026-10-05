@@ -13,6 +13,12 @@
   "deployerClientSettings": {
     "mode": "LOCAL"
   },
+  "generativeAISettings": {
+    "defaultRetrievableKnowledgeCodeEnv": "custom_rag_env",
+    "defaultRetrievableKnowledgeContainerExecSelection": {
+      "containerMode": "NONE"
+    }
+  },
   "maxRunningActivities": 0,
   "maxRunningActivitiesPerJob": 0,
   "jekSettings": {

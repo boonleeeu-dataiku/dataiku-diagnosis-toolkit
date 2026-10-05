@@ -33,13 +33,15 @@ EVAL_ITEM_IDS = [
     "ARCH-013",   # cluster config -> Kubernetes-conditional
     "SEC-004",    # cgroups memory limit
     "SEC-006",    # HTTPS -> reverse-proxy calibration
-    "SCALE-007",  # backend.log error review
+    "SCALE-007",  # backend.log error review -> any ERROR/WARN is Needs Review, clean is Pass
     "SCALE-008",  # backend Xmx sizing
     "SCALE-009",  # flow limits -> causal chain with OOM evidence
     "SCALE-011",  # filesystem_root connection
     "ARCH-008",   # Spark validation worded for Kubernetes -> Not Applicable without a cluster
     "ADVSEC-003", # session timeouts are real keys, 0 = unlimited
     "ADVSEC-006", # no custom post-logout redirect -> Not Applicable
+    "GENAI-001",  # internal LLM Mesh code envs -> Pass internal, Needs Review non-internal
+    "GENAI-009",  # Agent Hub deployer -> Needs Review when installed, Not Applicable when not
 ]
 
 FIXTURE_MARKER = "SYNTHETIC TEST FIXTURE - not real diagnosis data."
@@ -121,6 +123,8 @@ backend.xmx = 2g
         "containerSettings": {"executionConfigs": []},
         "sparkSettings": {"executionConfigs": []},
         "deployerClientSettings": {"mode": "LOCAL"},
+        "generativeAISettings": {"defaultRetrievableKnowledgeCodeEnv": "custom_rag_env",
+                                 "defaultRetrievableKnowledgeContainerExecSelection": {"containerMode": "NONE"}},
         "maxRunningActivities": 0,
         "maxRunningActivitiesPerJob": 0,
         "jekSettings": {"maxRunningJobs": 0},
@@ -193,6 +197,10 @@ backend.xmx = 8g
         },
         "sparkSettings": {"executionConfigs": [{"name": "spark-standard",
                                                 "conf": [{"key": "spark.executor.memory", "value": "4g"}]}]},
+        "generativeAISettings": {
+            "defaultRetrievableKnowledgeCodeEnv": "INTERNAL_retrieval_augmented_generation_v1",
+            "defaultRetrievableKnowledgeContainerExecSelection": {"containerMode": "INHERIT"},
+        },
         "deployerClientSettings": {"mode": "REMOTE", "nodeUrl": "https://deployer.synthetic.example:11200"},
         "maxRunningActivities": 10,
         "maxRunningActivitiesPerJob": 4,
@@ -208,6 +216,11 @@ backend.xmx = 8g
         "id": "eks-main", "type": "managed", "architecture": "KUBERNETES",
         "params": {"config": {"clusterId": "synthetic-eks"}},
     })
+    write(m / "code-envs" / "desc" / "python" / "INTERNAL_retrieval_augmented_generation_v1" / "desc.json",
+          {"envName": "INTERNAL_retrieval_augmented_generation_v1", "owner": "INTERNAL"})
+    write(m / "config" / "plugins" / "agent-hub" / "settings.json", {"id": "agent-hub"})
+    write(m / "config" / "projects" / "AGENT_HUB" / "params.json", {"projectKey": "AGENT_HUB", "owner": "svc_agents"})
+    write(m / "config" / "projects" / "AGENT_HUB" / "web_apps" / "synthetic1.json", {"name": "Agent_Hub"})
 
 
 SCENARIOS = {

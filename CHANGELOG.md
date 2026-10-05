@@ -10,6 +10,15 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-10-05
+
+### Changed
+
+- Checklist-review calibrations now give fixed statuses for the three items that flipped between repeat runs
+  on the same bundle (SCALE-007, GENAI-001, GENAI-009): any backend-log ERROR/WARN is Needs Review (clean is
+  Pass); internal LLM Mesh code envs are Pass (non-internal Needs Review, nothing set up Fail); Agent Hub
+  installed is Needs Review (not installed is Not Applicable). Eval fixtures and expected answers extended to match.
+
 ## [0.23.0] - 2026-10-05
 
 ### Changed
