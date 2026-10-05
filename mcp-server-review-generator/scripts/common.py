@@ -3,6 +3,7 @@
 import copy
 import functools
 import re
+from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -44,3 +45,10 @@ def load_config(name: str) -> dict:
 
     Parsed once per process; each caller gets its own copy so edits don't leak."""
     return copy.deepcopy(_load_config_cached(name))
+
+
+def default_output_path(checklist_path: Path, customer: str) -> Path:
+    slug = re.sub(r"[^A-Za-z0-9]+", "_", customer).strip("_") or "deck"
+    m = re.search(r"(\d{4}-\d{2}-\d{2})", checklist_path.stem)
+    date_suffix = m.group(1) if m else datetime.now().strftime("%Y-%m-%d")
+    return OUTPUT_DIR / f"{slug}_Platform_Review_{date_suffix}.pptx"

@@ -36,6 +36,7 @@ import openpyxl  # noqa: E402
 import yaml  # noqa: E402
 
 import build_deck  # noqa: E402
+import data_checks  # noqa: E402
 import read_checklist  # noqa: E402
 import write_summary  # noqa: E402
 
@@ -201,7 +202,7 @@ def check(workbook: Path, bundle: Path | None = None, expected: Path | None = No
         except read_checklist.ChecklistFormatError:
             pass  # reported by collect_data_warnings below
         try:
-            for w in build_deck.collect_data_warnings(workbook):
+            for w in data_checks.collect_data_warnings(workbook):
                 report.structure.append(f"data_warning: {w}")
         except read_checklist.ChecklistFormatError as e:
             report.structure.append(f"Summary sheet unreadable by the deck generator: {e}")

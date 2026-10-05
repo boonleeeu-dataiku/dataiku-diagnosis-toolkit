@@ -16,7 +16,7 @@ from conftest import REPO_ROOT, RG_DIR, TEMPLATE
 REVIEW_SKILL = (REPO_ROOT / "skills" / "dataiku-diagnosis-checklist-review" / "SKILL.md").read_text(encoding="utf-8")
 DECK_SKILL = (REPO_ROOT / "skills" / "dataiku-review-deck-builder" / "SKILL.md").read_text(encoding="utf-8")
 MCP_SERVER = (RG_DIR / "scripts" / "mcp_server.py").read_text(encoding="utf-8")
-BUILD_DECK_SRC = (RG_DIR / "scripts" / "build_deck.py").read_text(encoding="utf-8")
+DECK_SHARED_SRC = (RG_DIR / "scripts" / "deck_shared.py").read_text(encoding="utf-8")  # the cover code reads the metadata labels
 
 
 @pytest.fixture(scope="module")
@@ -88,7 +88,7 @@ def test_review_skill_anchor_header_matches_exact_text_lookup():
 def test_review_skill_metadata_labels_are_the_ones_the_deck_reads():
     for label in ("Bundle:", "Node / Version:", "Report generated:"):
         assert f"`{label}`" in REVIEW_SKILL, label
-        assert label.rstrip(":") in BUILD_DECK_SRC, f"build_deck.py no longer reads {label!r}"
+        assert label.rstrip(":") in DECK_SHARED_SRC, f"deck_shared.py no longer reads {label!r}"
 
 
 def test_deck_skill_lists_the_tools_return_keys():

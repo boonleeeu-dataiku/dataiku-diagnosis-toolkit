@@ -1,10 +1,11 @@
-"""End-to-end golden snapshot: build a deck from a fixed synthetic checklist
-and compare a text-level summary of it (slide order + every text run per
-slide) against tests/golden/deck_summary.json.
+"""End-to-end golden snapshots, one per deck style: build a deck from a fixed
+synthetic checklist and compare a text-level summary of it (slide order + every
+text run per slide) against tests/golden/deck_summary_<style>.json. A new style
+adds its own case to CASES and its own golden file, so it can't disturb another's.
 
 Needs the branding template, which is gitignored (134MB), so this skips
 wherever it isn't present. After an intended output change, refresh with:
-    python3 -m pytest tests/test_golden_deck.py --update-golden
+    python3 -m pytest tests/test_golden_deck.py --update-golden  (all styles; add -k v2 for one)
 and review the JSON diff before committing it.
 """
 
@@ -14,12 +15,13 @@ import zipfile
 
 import pytest
 
-import build_deck
 import common
+import styles
 import validate_deck
 from conftest import item
 
-GOLDEN = common.REPO_ROOT / "tests" / "golden" / "deck_summary.json"
+GOLDEN_DIR = common.REPO_ROOT / "tests" / "golden"
+NARRATIVE = common.REPO_ROOT / "tests" / "fixtures" / "narrative_example.json"
 
 pytestmark = pytest.mark.skipif(
     not common.BRANDING_TEMPLATE.exists(),
@@ -60,24 +62,45 @@ def summarize(pptx_path):
     return out
 
 
-def test_golden_deck(tmp_path, request):
+def v2_sections():
+    from test_deck_v2 import sections  # the synthetic checklist narrative_example.json is written against
+    return sections()
+
+
+# style -> (checklist sections, extra BuildRequest fields). v2 gets the example narrative so its
+# golden covers narrative-driven text rather than the generic fallback.
+CASES = {
+    "v1": (golden_sections, {"rows_per_slide": 4, "include_pass_items": True}),
+    "v2": (v2_sections, {"narrative_path": NARRATIVE}),
+}
+
+
+def test_every_registered_style_has_a_golden_case():
+    assert set(CASES) == set(styles.STYLES)
+
+
+@pytest.mark.parametrize("style", sorted(CASES))
+def test_golden_deck(style, tmp_path, request):
     from conftest import build_checklist
 
-    checklist = build_checklist(tmp_path / "golden_2026-07-22.xlsx", golden_sections())
-    output = build_deck.build_deck(
+    make_sections, extra = CASES[style]
+    golden = GOLDEN_DIR / f"deck_summary_{style}.json"
+    checklist = build_checklist(tmp_path / "golden_2026-07-22.xlsx", make_sections())
+    built = styles.build(style, styles.BuildRequest(
         checklist_path=checklist, customer="Golden Test Co", output_path=tmp_path / "deck.pptx",
-        base_deck=common.BRANDING_TEMPLATE, logo_path=None, rows_per_slide=4, include_pass_items=True,
-    )
+        base_deck=common.BRANDING_TEMPLATE, **extra,
+    ))
+    output = built["output_path"]
 
     assert validate_deck.validate(output) == []
-    assert build_deck.collect_data_warnings(checklist) == []
+    assert built["warnings"] == [] or style == "v2"  # v2 also reports analysis/narrative notes
 
     summary = summarize(output)
-    if request.config.getoption("--update-golden") or not GOLDEN.exists():
-        GOLDEN.parent.mkdir(parents=True, exist_ok=True)
-        GOLDEN.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        pytest.skip(f"golden file written to {GOLDEN}; review and commit it")
+    if request.config.getoption("--update-golden") or not golden.exists():
+        golden.parent.mkdir(parents=True, exist_ok=True)
+        golden.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        pytest.skip(f"golden file written to {golden}; review and commit it")
 
-    expected = json.loads(GOLDEN.read_text(encoding="utf-8"))
+    expected = json.loads(golden.read_text(encoding="utf-8"))
     assert [s["texts"][:1] for s in summary] == [s["texts"][:1] for s in expected], "slide order/titles changed"
     assert summary == expected

@@ -27,7 +27,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
 import common
-import build_deck
+import styles
 import validate_deck as validate_deck_lib
 
 from mcp.server.mcpserver import MCPServer
@@ -85,7 +85,7 @@ def build_platform_review_deck(
     rows_per_slide: int | None = None,
     include_pass_items: bool | None = None,
     base_deck_path: str | None = None,
-    style: str = "v2",
+    style: str = styles.DEFAULT_STYLE,
     narrative_path: str | None = None,
 ) -> dict[str, Any]:
     """Generate a branded Dataiku Platform Review .pptx deck from a completed
@@ -164,7 +164,7 @@ def build_platform_review_deck(
         include_pass_items if include_pass_items is not None
         else layout_config.get("include_pass_items", False)
     )
-    resolved_output = _resolve(output_path) if output_path else build_deck.default_output_path(checklist, customer)
+    resolved_output = _resolve(output_path) if output_path else common.default_output_path(checklist, customer)
 
     if not checklist.exists():
         raise FileNotFoundError(f"Checklist file not found: {checklist}")
@@ -173,27 +173,18 @@ def build_platform_review_deck(
     if logo is not None and not logo.exists():
         raise FileNotFoundError(f"Logo file not found: {logo}")
 
-    if style not in ("v1", "v2"):
-        raise ValueError(f"style must be 'v1' or 'v2', got {style!r}")
+    styles.get_style(style)  # unknown style -> ValueError naming the valid ones
     narrative = _resolve(narrative_path) if narrative_path else None
-    if narrative is not None and style != "v2":
-        raise ValueError("narrative_path only applies to style='v2'")
+    if narrative is not None and not styles.get_style(style).accepts_narrative:
+        raise ValueError(f"narrative_path does not apply to style={style!r}")
 
-    built_v2 = None
-    if style == "v2":
-        import build_deck_v2
-        built_v2 = build_deck_v2.build_v2(checklist, customer, resolved_output, base_deck, logo, narrative)
-        resolved_output = built_v2["output_path"]
-    else:
-        resolved_output = build_deck.build_deck(
-            checklist_path=checklist,
-            customer=customer,
-            output_path=resolved_output,
-            base_deck=base_deck,
-            logo_path=logo,
-            rows_per_slide=effective_rows_per_slide,
-            include_pass_items=effective_include_pass_items,
-        )
+    built = styles.build(style, styles.BuildRequest(
+        checklist_path=checklist, customer=customer, output_path=resolved_output, base_deck=base_deck,
+        logo_path=logo, narrative_path=narrative, rows_per_slide=effective_rows_per_slide,
+        include_pass_items=effective_include_pass_items,
+    ))
+    resolved_output = built["output_path"]
+    extras = {k: v for k, v in built.items() if k not in ("output_path", "warnings")}
 
     try:
         problems = validate_deck_lib.validate(resolved_output)
@@ -203,17 +194,18 @@ def build_platform_review_deck(
     result = {
         "output_path": str(resolved_output),
         "structural_problems": problems,
-        "data_warnings": built_v2["warnings"] if built_v2 else build_deck.collect_data_warnings(checklist),
+        "data_warnings": built["warnings"],
         "generator_version": common.VERSION,
         "checklist_path": str(checklist),
         "checklist_modified": _mtime(checklist),
     }
-    if built_v2:
-        result.update({k: built_v2[k] for k in ("slide_count", "narrative_used", "narrative_missing", "applicable_count", "pass_count", "quick_wins", "owner_groups")})
-        result["narrative_modified"] = _mtime(built_v2["narrative_used"]) if built_v2["narrative_used"] else None
-        if built_v2["narrative_missing"]:
+    if extras:
+        result.update(extras)
+        if "narrative_used" in extras:
+            result["narrative_modified"] = _mtime(extras["narrative_used"]) if extras["narrative_used"] else None
+        if extras.get("narrative_missing"):
             import narrative as narrative_mod
-            result.update({"narrative_warning": narrative_mod.MISSING_WARNING})  # v2-only key, not a base return key
+            result.update({"narrative_warning": narrative_mod.MISSING_WARNING})  # not a base return key
     if not problems:
         result["manual_qa_checklist"] = validate_deck_lib.manual_qa_checklist(style)
     return result

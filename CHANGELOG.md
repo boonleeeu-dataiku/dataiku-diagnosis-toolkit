@@ -10,10 +10,13 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
-### Known issues
+### Changed
 
-- The vendored review generator's v2 deck still builds the full v1 deck and keeps only its cover and end card.
-  Refactor plan and recommendation: `TODO.md` in the upstream `dataiku-review-generator` repo.
+- Re-synced the vendored review generator to 0.9.0: deck styles are a registry, and the v2 deck no longer builds
+  the full v1 deck to get its cover and end card. Deck output is unchanged. `tests/test_contracts.py` and
+  `tests/lib/check_review_output.py` follow the helpers that moved (`data_checks`, `deck_shared`). The generator's
+  `requirements.txt` already listed `python-pptx`; an existing `.venv` needs `pip install -r
+  mcp-server-review-generator/requirements.txt`.
 
 ## [0.19.0] - 2026-10-04
 

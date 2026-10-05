@@ -3,8 +3,9 @@
 from pathlib import Path
 
 import build_deck
-import read_checklist
 import common
+import deck_shared
+import read_checklist
 import section_names
 
 
@@ -52,9 +53,9 @@ def test_strip_leading_number():
 
 
 def test_format_month_year():
-    assert build_deck.format_month_year("2026-07-22 10:00") == "Jul 2026"
-    assert build_deck.format_month_year("2026-07-22 08:21 UTC") == "Jul 2026"
-    assert build_deck.format_month_year("") == ""
+    assert deck_shared.format_month_year("2026-07-22 10:00") == "Jul 2026"
+    assert deck_shared.format_month_year("2026-07-22 08:21 UTC") == "Jul 2026"
+    assert deck_shared.format_month_year("") == ""
 
 
 def test_format_priority():
@@ -63,7 +64,7 @@ def test_format_priority():
 
 
 def test_default_output_path_uses_checklist_date():
-    path = build_deck.default_output_path(Path("dku_diagnosis_2026-07-22_review.xlsx"), "Acme Corp!")
+    path = common.default_output_path(Path("dku_diagnosis_2026-07-22_review.xlsx"), "Acme Corp!")
     assert path == common.OUTPUT_DIR / "Acme_Corp_Platform_Review_2026-07-22.pptx"
 
 

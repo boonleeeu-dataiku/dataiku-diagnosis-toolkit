@@ -7,6 +7,30 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-05
+
+### Changed
+
+- Deck styles are now a registry (`scripts/styles.py`). The CLI `--style` choices, the MCP `style` check and the
+  manual-QA lookup read it, so adding a v3 is one module plus one entry. No deck output changes: the v1 golden
+  and the v2 cover/end pin pass unchanged.
+- The v2 deck no longer runs the whole v1 build and throws most of it away. Its cover and end card come from
+  `deck_shared.build_cover_and_end_deck()`, and `build_deck_v2` no longer imports `build_deck`. The v1-only
+  config keys therefore no longer affect v2 runs.
+- `check_data_consistency`, `collect_data_warnings`, `build_scorecard_rows` and `items_by_id` moved from
+  `build_deck.py` to `data_checks.py`; `default_output_path` moved to `common.py`; the cover code moved to
+  `deck_shared.py`.
+- Golden snapshots are per style: `tests/golden/deck_summary.json` is now `deck_summary_v1.json`, plus a new
+  `deck_summary_v2.json`.
+
+### Added
+
+- Tests: `test_v2_cover_end.py` (pins v2's cover and end slides, including rels and notes) and `test_styles.py`.
+
+### Fixed
+
+- Docs: the checklist schema is 27 columns (`statement_short` follows `statement`), not 26.
+
 ## [0.8.0] - 2026-10-04
 
 ### Added

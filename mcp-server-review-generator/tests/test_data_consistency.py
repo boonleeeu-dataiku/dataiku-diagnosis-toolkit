@@ -6,6 +6,7 @@ and looks plausible but shows wrong numbers or labels."""
 import pytest
 
 import build_deck
+import data_checks
 import read_checklist
 import section_names
 from conftest import STATUSES, default_sections, item
@@ -18,11 +19,11 @@ def _load(path, section_config):
 
 def _warnings(path, section_config):
     data, ordered = _load(path, section_config)
-    return build_deck.check_data_consistency(data, ordered, section_config)
+    return data_checks.check_data_consistency(data, ordered, section_config)
 
 
 def test_self_consistent_checklist_has_no_warnings(checklist_factory):
-    assert build_deck.collect_data_warnings(checklist_factory()) == []
+    assert data_checks.collect_data_warnings(checklist_factory()) == []
 
 
 def test_uncurated_section_name_warns(checklist_factory, section_config):
@@ -90,9 +91,9 @@ def test_regression_v014_tab_name_with_trailing_whitespace(checklist_factory, se
     data, ordered = _load(checklist_factory(sections=sections), section_config)
 
     assert ordered[0]["display"] == "Advanced Security Options"
-    rows = build_deck.build_scorecard_rows(data, ordered)
+    rows = data_checks.build_scorecard_rows(data, ordered)
     assert rows[0] == ["Advanced Security Options", "1", "1", "0", "0", "0"]
-    assert build_deck.check_data_consistency(data, ordered, section_config) == []
+    assert data_checks.check_data_consistency(data, ordered, section_config) == []
 
 
 def test_regression_v014_summary_blocks_without_title_status_columns(checklist_factory, section_config):
@@ -118,7 +119,7 @@ def test_regression_v015_no_total_row(checklist_factory, section_config):
     data, ordered = _load(checklist_factory(include_total=False), section_config)
     assert "Total" not in data.overall_counts
     assert sum(len(v) for v in data.items_by_sheet.values()) == 6
-    assert build_deck.check_data_consistency(data, ordered, section_config) == []
+    assert data_checks.check_data_consistency(data, ordered, section_config) == []
 
 
 def test_regression_v015_critical_findings_without_section_column(checklist_factory, section_config):
@@ -151,8 +152,8 @@ def test_unknown_status_warning_names_items_and_describes_the_style_outcome(chec
     sections = default_sections()
     sections["Architecture, Compute & Infrast"].append(item("ARCH-004", "Passed"))
     data, ordered = _load(checklist_factory(sections=sections), section_config)
-    v1 = build_deck.check_data_consistency(data, ordered, section_config)
-    v2 = build_deck.check_data_consistency(data, ordered, section_config, style="v2")
+    v1 = data_checks.check_data_consistency(data, ordered, section_config)
+    v2 = data_checks.check_data_consistency(data, ordered, section_config, style="v2")
     assert any("['ARCH-004']" in w and "left out of status counts" in w for w in v1)
     assert any("['ARCH-004']" in w and "counted as Needs Review" in w for w in v2)
 

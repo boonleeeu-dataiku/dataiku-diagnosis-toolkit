@@ -26,8 +26,9 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
 
-import build_deck
 import common
+import data_checks
+import deck_shared
 import deck_analysis as da
 import narrative as narr_mod
 import read_checklist
@@ -692,7 +693,7 @@ def build_v2(checklist_path: Path, customer: str, output_path: Path, base_deck: 
     ordered = section_names.order_sections(data.sheet_tab_names, section_config)
     a = da.analyze(data, ordered, v2)
     narr = {}
-    warnings = build_deck.check_data_consistency(data, ordered, section_config, style="v2") + list(a.warnings)
+    warnings = data_checks.check_data_consistency(data, ordered, section_config, style="v2") + list(a.warnings)
     if not narrative_path:
         found = narr_mod.default_path(checklist_path)
         narrative_path = found if found.exists() else None
@@ -704,13 +705,9 @@ def build_v2(checklist_path: Path, customer: str, output_path: Path, base_deck: 
         warnings += narr_mod.staleness_warnings(narr, hashlib.sha256(Path(checklist_path).read_bytes()).hexdigest())
 
     with tempfile.TemporaryDirectory(prefix="deckv2_") as tmp:
-        v1_path = Path(tmp) / "v1.pptx"
-        build_deck.build_deck(
-            checklist_path=checklist_path, customer=customer, output_path=v1_path, base_deck=base_deck,
-            logo_path=logo_path, rows_per_slide=layout_config.get("table_rows_per_slide", common.DEFAULT_ROWS_PER_SLIDE),
-            include_pass_items=False,
-        )
-        prs = Presentation(str(v1_path))
+        base_path = Path(tmp) / "cover_end.pptx"
+        deck_shared.build_cover_and_end_deck(base_deck, data, customer, logo_path, base_path)
+        prs = Presentation(str(base_path))
         old_ids = list(prs.slides._sldIdLst)
         keep_cover, keep_end = old_ids[0], old_ids[-1]
         d = Deck(prs)

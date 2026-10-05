@@ -1,0 +1,363 @@
+{
+  "no_logo": {
+    "cover": {
+      "shapes": [
+        {
+          "name": "Google Shape;348;p40",
+          "type": "AUTO_SHAPE (1)",
+          "text": ""
+        },
+        {
+          "name": "Google Shape;349;p40",
+          "type": "PLACEHOLDER (14)",
+          "text": "ACME CORP"
+        },
+        {
+          "name": "Google Shape;350;p40",
+          "type": "PLACEHOLDER (14)",
+          "text": "Platform Review — Jul 2026"
+        },
+        {
+          "name": "Google Shape;351;p40",
+          "type": "LINE (9)",
+          "text": null
+        },
+        {
+          "name": "Bundle metadata",
+          "type": "TEXT_BOX (17)",
+          "text": "Node / version: Design node / 14.4.3\nBundle: synthetic_bundle_2026-07-22\nReport date: 2026-07-22 10:00"
+        }
+      ],
+      "rels": [
+        [
+          "notesSlide",
+          "internal"
+        ],
+        [
+          "slideLayout",
+          "internal"
+        ]
+      ],
+      "notes": ""
+    },
+    "end": {
+      "shapes": [
+        {
+          "name": "Google Shape;1118;p87",
+          "type": "AUTO_SHAPE (1)",
+          "text": ""
+        },
+        {
+          "name": "Google Shape;1119;p87",
+          "type": "LINE (9)",
+          "text": null
+        },
+        {
+          "name": "Google Shape;1120;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "©2026 Dataiku Inc."
+        },
+        {
+          "name": "Google Shape;1121;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "dataiku.com"
+        },
+        {
+          "name": "Google Shape;1122;p87",
+          "type": "LINE (9)",
+          "text": null
+        },
+        {
+          "name": "Google Shape;1123;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "contact@dataiku.com"
+        },
+        {
+          "name": "Google Shape;1124;p87",
+          "type": "LINE (9)",
+          "text": null
+        },
+        {
+          "name": "Google Shape;1125;p87",
+          "type": "LINE (9)",
+          "text": null
+        },
+        {
+          "name": "Google Shape;1126;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "X"
+        },
+        {
+          "name": "Google Shape;1127;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "LinkedIn"
+        },
+        {
+          "name": "Google Shape;1128;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "Youtube"
+        },
+        {
+          "name": "Google Shape;1129;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "Facebook"
+        },
+        {
+          "name": "Google Shape;1130;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "Connecting people, intelligence and governance"
+        },
+        {
+          "name": "Google Shape;1131;p87",
+          "type": "PICTURE (13)",
+          "text": null
+        },
+        {
+          "name": "Google Shape;1132;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "The Platform for AI Success"
+        }
+      ],
+      "rels": [
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "image",
+          "internal"
+        ],
+        [
+          "notesSlide",
+          "internal"
+        ],
+        [
+          "slideLayout",
+          "internal"
+        ]
+      ],
+      "notes": ""
+    }
+  },
+  "logo": {
+    "cover": {
+      "shapes": [
+        {
+          "name": "Google Shape;348;p40",
+          "type": "AUTO_SHAPE (1)",
+          "text": ""
+        },
+        {
+          "name": "Google Shape;349;p40",
+          "type": "PLACEHOLDER (14)",
+          "text": "ACME CORP"
+        },
+        {
+          "name": "Google Shape;350;p40",
+          "type": "PLACEHOLDER (14)",
+          "text": "Platform Review — Jul 2026"
+        },
+        {
+          "name": "Google Shape;351;p40",
+          "type": "LINE (9)",
+          "text": null
+        },
+        {
+          "name": "Bundle metadata",
+          "type": "TEXT_BOX (17)",
+          "text": "Node / version: Design node / 14.4.3\nBundle: synthetic_bundle_2026-07-22\nReport date: 2026-07-22 10:00"
+        },
+        {
+          "name": "Uploaded Logo",
+          "type": "PICTURE (13)",
+          "text": null
+        }
+      ],
+      "rels": [
+        [
+          "image",
+          "internal"
+        ],
+        [
+          "notesSlide",
+          "internal"
+        ],
+        [
+          "slideLayout",
+          "internal"
+        ]
+      ],
+      "notes": ""
+    },
+    "end": {
+      "shapes": [
+        {
+          "name": "Google Shape;1118;p87",
+          "type": "AUTO_SHAPE (1)",
+          "text": ""
+        },
+        {
+          "name": "Google Shape;1119;p87",
+          "type": "LINE (9)",
+          "text": null
+        },
+        {
+          "name": "Google Shape;1120;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "©2026 Dataiku Inc."
+        },
+        {
+          "name": "Google Shape;1121;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "dataiku.com"
+        },
+        {
+          "name": "Google Shape;1122;p87",
+          "type": "LINE (9)",
+          "text": null
+        },
+        {
+          "name": "Google Shape;1123;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "contact@dataiku.com"
+        },
+        {
+          "name": "Google Shape;1124;p87",
+          "type": "LINE (9)",
+          "text": null
+        },
+        {
+          "name": "Google Shape;1125;p87",
+          "type": "LINE (9)",
+          "text": null
+        },
+        {
+          "name": "Google Shape;1126;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "X"
+        },
+        {
+          "name": "Google Shape;1127;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "LinkedIn"
+        },
+        {
+          "name": "Google Shape;1128;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "Youtube"
+        },
+        {
+          "name": "Google Shape;1129;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "Facebook"
+        },
+        {
+          "name": "Google Shape;1130;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "Connecting people, intelligence and governance"
+        },
+        {
+          "name": "Google Shape;1131;p87",
+          "type": "PICTURE (13)",
+          "text": null
+        },
+        {
+          "name": "Google Shape;1132;p87",
+          "type": "TEXT_BOX (17)",
+          "text": "The Platform for AI Success"
+        }
+      ],
+      "rels": [
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "hyperlink",
+          "external"
+        ],
+        [
+          "image",
+          "internal"
+        ],
+        [
+          "notesSlide",
+          "internal"
+        ],
+        [
+          "slideLayout",
+          "internal"
+        ]
+      ],
+      "notes": ""
+    }
+  }
+}

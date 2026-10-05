@@ -141,8 +141,10 @@ PowerPoint/Keynote/Google Slides and manually check:
 MANUAL_QA_CHECKLIST = MANUAL_QA_CHECKLIST_V2
 
 
-def manual_qa_checklist(style: str = "v2") -> str:
-    return MANUAL_QA_CHECKLIST_V1 if style == "v1" else MANUAL_QA_CHECKLIST_V2
+def manual_qa_checklist(style: str | None = None) -> str:
+    """The manual visual-QA text for a registered style (default: styles.DEFAULT_STYLE)."""
+    import styles
+    return styles.get_style(style or styles.DEFAULT_STYLE).qa_checklist()
 
 
 if __name__ == "__main__":

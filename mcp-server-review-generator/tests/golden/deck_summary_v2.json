@@ -1,0 +1,306 @@
+[
+  {
+    "slide": 1,
+    "texts": [
+      "GOLDEN TEST CO",
+      "Platform Review — Jul 2026",
+      "Node / version: Design node / 14.4.3",
+      "Bundle: synthetic_bundle_2026-07-22",
+      "Report date: 2026-07-22 10:00"
+    ]
+  },
+  {
+    "slide": 2,
+    "texts": [
+      "Example verdict sentence",
+      "2 of 7",
+      "applicable checks pass",
+      "1 of 8 items are N/A and excluded",
+      "2",
+      "Pass",
+      "2",
+      "Needs Review",
+      "1",
+      "Partial",
+      "2",
+      "Fail",
+      "Scalable Performance, Stability: 2 fail",
+      "What is sound",
+      "Example body.",
+      "What is at risk",
+      "Example body.",
+      "Quick wins",
+      "Example body."
+    ]
+  },
+  {
+    "slide": 3,
+    "texts": [
+      "Instance snapshot",
+      "NODE / VERSION",
+      "Design node / 14.4.3",
+      "BUNDLE",
+      "synthetic_bundle_2026-07-22",
+      "ARCHITECTURE, COMPUTE...",
+      "1 of 3 pass",
+      "0 fail, 0 partial",
+      "ENTERPRISE-GRADE...",
+      "1 of 2 pass",
+      "0 fail, 1 partial",
+      "SCALABLE PERFORMANCE,...",
+      "0 of 2 pass",
+      "2 fail, 0 partial",
+      "in line with guidance",
+      "worth attention",
+      "context"
+    ]
+  },
+  {
+    "slide": 4,
+    "texts": [
+      "Risk 1: example",
+      "98",
+      "example",
+      "SEC-001: example",
+      "One root cause",
+      "1 checks, one sequence of fixes.",
+      "SCALE-009",
+      "Risk",
+      "Example.",
+      "Fix, in this order",
+      "1",
+      "Example step",
+      "SCALE-009"
+    ]
+  },
+  {
+    "slide": 5,
+    "texts": [
+      "Risk 2: 1 failing checks in Scalable Performance, Stability",
+      "Item",
+      "Setting",
+      "Today",
+      "Target",
+      "Priority",
+      "SCALE-010",
+      "Title of SCALE-010",
+      "Stacks visible",
+      "Set true after confirming support flow",
+      "Must have"
+    ]
+  },
+  {
+    "slide": 6,
+    "texts": [
+      "Risk 3: open items still to close",
+      "Title of ARCH-001",
+      "ARCH-001",
+      "Needs Review",
+      "WHAT WE FOUND",
+      "Automation node unconfirmed",
+      "WHAT TO DO",
+      "Confirm with platform team",
+      "Title of ARCH-002",
+      "ARCH-002",
+      "Needs Review",
+      "WHAT WE FOUND",
+      "Backups unknown",
+      "WHAT TO DO",
+      "Ask infra team for the schedule"
+    ]
+  },
+  {
+    "slide": 7,
+    "texts": [
+      "Quick wins: one change window closes 1 of the 2 fails",
+      "Item",
+      "Setting",
+      "Change",
+      "Confirm first",
+      "SCALE-010",
+      "hideErrorStacks",
+      "false",
+      "  →  ",
+      "true",
+      "Confirm support flow",
+      "FAILS AFTER THE WINDOW",
+      "2",
+      "  →  ",
+      "1",
+      "Remaining fails:",
+      "SCALE-009"
+    ]
+  },
+  {
+    "slide": 8,
+    "texts": [
+      "What we need from you: 2 items to confirm, grouped by owner",
+      "Infrastructure",
+      "1",
+      "ARCH-002",
+      "Ask infra team for the schedule",
+      "Platform team",
+      "1",
+      "ARCH-001",
+      "Confirm with platform team"
+    ]
+  },
+  {
+    "slide": 9,
+    "texts": [
+      "Roadmap: what to do now, next and later",
+      "NOW",
+      "This month",
+      "S",
+      "Example",
+      "SCALE-010",
+      "NEXT",
+      "This quarter",
+      "PLAN",
+      "Next two quarters",
+      "Effort is indicative: S about a day, M a few days, L weeks. Owners and dates to be agreed with the customer."
+    ]
+  },
+  {
+    "slide": 10,
+    "texts": [
+      "Appendix",
+      "How the review was done",
+      "Passed checks",
+      "Findings by section",
+      "Not applicable items"
+    ]
+  },
+  {
+    "slide": 11,
+    "texts": [
+      "How the review was done",
+      "1",
+      "Diagnostic bundle",
+      "Exported from the DSS instance",
+      "2",
+      "Standard checklist",
+      "8 items across 3 sections: Architecture, Enterprise-grade, Scalable.",
+      "3",
+      "Status per item",
+      "Each item is scored from the evidence in the bundle. No live checks were run.",
+      "Pass",
+      "Evidence shows the item is met.",
+      "Partial",
+      "Met in part; some evidence shows a gap.",
+      "Fail",
+      "Evidence shows the item is not met.",
+      "Needs Review",
+      "Cannot be verified from the bundle; needs customer confirmation.",
+      "Not Applicable",
+      "Not relevant to this deployment."
+    ]
+  },
+  {
+    "slide": 12,
+    "texts": [
+      "Passed checks: 2 items already meet guidance",
+      "Architecture, Compute &amp; Infrastructure",
+      "1 pass",
+      "ARCH-003  ",
+      "Title of ARCH-003",
+      "Enterprise-grade Security, Permissions",
+      "1 pass",
+      "SEC-009  ",
+      "Title of SEC-009"
+    ]
+  },
+  {
+    "slide": 13,
+    "texts": [
+      "Architecture, Compute &amp; Infrastructure: 2 needs review",
+      "ID",
+      "Item",
+      "Pri.",
+      "Status",
+      "Finding",
+      "Action",
+      "ARCH-001",
+      "Title of ARCH-001",
+      "Must",
+      "Needs Review",
+      "Automation node unconfirmed",
+      "Confirm with platform team",
+      "ARCH-002",
+      "Title of ARCH-002",
+      "Must",
+      "Needs Review",
+      "Backups unknown",
+      "Ask infra team for the schedule"
+    ]
+  },
+  {
+    "slide": 14,
+    "texts": [
+      "Enterprise-grade Security, Permissions: 1 partial",
+      "ID",
+      "Item",
+      "Pri.",
+      "Status",
+      "Finding",
+      "Action",
+      "SEC-001",
+      "Title of SEC-001",
+      "Must",
+      "Partial",
+      "Shared ceiling",
+      "98 memory kills",
+      "Size limits; see SCALE-009"
+    ]
+  },
+  {
+    "slide": 15,
+    "texts": [
+      "Scalable Performance, Stability: 2 fail",
+      "ID",
+      "Item",
+      "Pri.",
+      "Status",
+      "Finding",
+      "Action",
+      "SCALE-009",
+      "Title of SCALE-009",
+      "Must",
+      "Fail",
+      "Uncapped jobs",
+      "maxRunningJobs=0",
+      "Set finite cap; see SEC-001",
+      "SCALE-010",
+      "Title of SCALE-010",
+      "Must",
+      "Fail",
+      "Stacks visible",
+      "hideErrorStacks=false",
+      "Set true after confirming support flow"
+    ]
+  },
+  {
+    "slide": 16,
+    "texts": [
+      "Not applicable: 1 items that do not apply to this deployment",
+      "Architecture, Compute &amp; Infrastructure",
+      "1",
+      "Not relevant to this deployment.",
+      "ARCH-004"
+    ]
+  },
+  {
+    "slide": 17,
+    "texts": [
+      "©2026 Dataiku Inc.",
+      "dataiku.com",
+      "contact@dataiku.com",
+      "X",
+      "LinkedIn",
+      "Youtube",
+      "Facebook",
+      "Connecting people, intelligence and governance",
+      "The Platform for AI Success"
+    ]
+  }
+]
