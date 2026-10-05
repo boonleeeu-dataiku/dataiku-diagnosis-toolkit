@@ -149,10 +149,18 @@ usually visible only in `datadir_listing.txt`.
 - Advanced security and behaviour keys (header settings, `dku.feature.*`, upload extensions) can
   live in `dip.properties` (`key=value`) or `install.ini` instead of `general-settings.json`.
   Search all three before calling a setting absent.
+- **Session and link settings are in `general-settings.json` → `security`**, not only in the UI:
+  `sessionsMaxTotalTimeMinutes` and `sessionsMaxIdleTimeMinutes` (`0` = no limit), `forceSingleSessionPerUser`,
+  `ipBoundSessions`, and `disableDataTableLinks` (the equivalent of the `dku.feature.dataTableLinks.enabled`
+  property). Present in both a design and an automation sample; check there before calling one UI-only.
+- **Webapp API-ticket groups**: `config/users.json` → `groups[]` entries carry
+  `canObtainAPITicketFromCookiesForGroupsRegex` (a regex, empty when not granted), the "allowed groups" for
+  webapp impersonation.
 - **Is an optional feature in use?** GenAI/Hugging Face signals seen: `localAIServerSettings.*UseLocal`
   (booleans such as `prepareAICompletionUseLocal`, `aiGenerateSQLUseLocal`), and
-  `generativeAISettings`. Not observed in any sample, so unverified: `agentBuildingSettings`,
-  Agent Hub projects/webapps, and an `INTERNAL_huggingface` code env.
+  `generativeAISettings`. **Agent Hub**: an `agent-hub` directory under `config/plugins/`, an `AGENT_HUB`
+  project under `config/projects/` with a `web_apps/` entry (and `agent-tools/`), seen in one design sample.
+  Still unverified: `agentBuildingSettings` and an `INTERNAL_huggingface` code env.
 
 ## Connections (`connections.json`) of interest
 

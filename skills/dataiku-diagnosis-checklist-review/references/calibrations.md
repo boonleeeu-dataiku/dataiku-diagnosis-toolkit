@@ -140,3 +140,34 @@ one — add each as its own bullet rather than overwriting prior ones.
   3. **Otherwise:** state in `notes` that there is no definitive
      configuration in the bundle indicating whether an automation node is
      deployed, and that this needs further verification with the customer.
+
+- **Session-management and clickable-link checks (session expiry, single session per user, links in data
+  tables):** these settings are captured in the bundle (the reader's `data-dir-config` reference says
+  where), so judge them from the value, never **Needs Review** because a checklist hint calls them
+  UI-only. A timeout of `0` means unlimited: **Fail** when both session timeouts are `0`, **Pass** when
+  either is finite. A single-session or disable-links toggle that is off is **Fail**; on is **Pass**.
+  Needs Review only when the settings block itself is missing from the bundle.
+
+- **Custom post-logout redirect (e.g. a "custom URL after logout" check):** this is optional hardening,
+  and the checklist itself says the default logout page is not a security concern. When no custom
+  redirect is configured, mark it **Not Applicable** (not Fail or Needs Review) and say the default page
+  is in use. **Pass** when a valid http/https redirect is configured; **Fail** only when one is
+  configured but invalid.
+
+- **Spark validation checks on a non-Kubernetes estate (e.g. a "functional Spark validation" check):**
+  these are worded for Spark on Kubernetes (executor pods). If no Kubernetes cluster is attached and Spark
+  runs on YARN/Hadoop, treat them under the Kubernetes-conditional rule above: **Not Applicable**.
+
+- **Version-gated checks (e.g. a check that needs a newer DSS than the bundle runs):** compare the
+  check's stated minimum version with the bundle's `product_version`. If the bundle is older, mark it
+  **Needs Review** (the capability can't exist yet, so Fail would be unfair) and say which version
+  introduces it.
+
+- **An inferred limit is not evidence (e.g. a connection pool vs. an internal-database limit that the
+  bundle does not record):** don't mark Pass or Fail from an assumed default. Mark **Needs Review**,
+  state the inference in `notes` as an inference, and ask for the real value.
+
+- **A dominant benign-looking log pattern (backend log-error review):** still apply the log-error rule
+  above and report the status it gives, but when one pattern dominates (for example repeated rejected
+  WebSocket sessions that were not logged in) say so in `notes` with its share of the count, so a
+  reviewer can judge whether the errors are real.

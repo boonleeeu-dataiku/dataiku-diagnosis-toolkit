@@ -92,7 +92,9 @@ answering.
 | Data connections | `config/connections.json` → `connections.<name>` | Who may read a connection's details: `detailsReadability` (`readableBy`, `allowedGroups`); see `references/data-dir-config.md`. Never dump whole connections (use `scripts/peek.py`) — `params` can hold secrets |
 | LDAP/SSO/proxy/mail/job-concurrency settings | `config/general-settings.json` | Job-concurrency limits can sit under another block (e.g. `jekSettings.maxRunningJobs`) — search the whole file for the leaf key, see `references/data-dir-config.md` |
 | Advanced security/behaviour keys (header settings, `dku.feature.*`, upload extensions) | `config/dip.properties` **or** `install.ini` **or** `config/general-settings.json` | Search all three before calling a setting absent |
-| Is an optional feature (GenAI, local Hugging Face) in use | `config/general-settings.json` → `localAIServerSettings.*UseLocal`, `generativeAISettings` | See `references/data-dir-config.md` for what is and isn't verified |
+| Session timeouts, single-session, disabled table links | `config/general-settings.json` → `security.sessionsMaxTotalTimeMinutes`, `sessionsMaxIdleTimeMinutes`, `forceSingleSessionPerUser`, `disableDataTableLinks` | `0` minutes means no limit; not UI-only, see `references/data-dir-config.md` |
+| Which groups may get webapp API tickets | `config/users.json` → `groups[].canObtainAPITicketFromCookiesForGroupsRegex` | Regex; empty = none |
+| Is an optional feature (GenAI, local Hugging Face, Agent Hub) in use | `config/general-settings.json` → `localAIServerSettings.*UseLocal`, `generativeAISettings` | See `references/data-dir-config.md` for what is and isn't verified |
 | JVM heap per component | `install.ini` → `[javaopts]` (`backend.xmx`; other `*.xmx` keys only when set) and `diag.txt` → `printenv` `DKU_*_JAVA_OPTS` | Size of `config/` for heap-vs-config checks: sum `config_listing.txt` — see `references/listings-and-manifests.md` |
 | License/entitlements | `config/license.json` | May be an opaque signed blob |
 | API keys | `config/personal-apikeys.json`, `config/public-apikeys.json` | |

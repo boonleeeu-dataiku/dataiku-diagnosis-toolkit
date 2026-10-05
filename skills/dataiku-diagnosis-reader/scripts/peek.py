@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """Secret-safe structural view of a JSON file from a Dataiku diagnosis bundle.
 
-Usage: peek.py <file.json> [--path a.b.c] [--depth N]
+Usage: peek.py <file.json> [--path a.b.c] [--depth N] [--max-items N] [--keys]
 
 Prints one line per node: the dotted path, the type, and (for scalars) the value.
-Values whose key looks sensitive (password, secret, token, key, credential, ...) are
-shown as <redacted>, as are strings that embed credentials (password=..., user:pass@host).
+String values whose key looks sensitive (password, secret, token, key, credential, apiKey, ...)
+are shown as <redacted> (booleans and numbers under such a key, e.g. hashApiKeys, are shown), as are strings that embed credentials (password=..., user:pass@host).
 Long strings are truncated. Read-only; no network calls; Python 3 stdlib only.
 
 --path walks into the file first (dict keys, or list indexes as integers). Connection
 and user names can contain dots, so quote the path in the shell and, if a key itself
 contains a dot, pass it with --path-sep to use another separator.
 --depth caps how deep to descend below the starting point (default 3).
+--max-items caps keys listed per object (default 40; a big file such as general-settings.json has
+more than 100 top-level keys, so raise it or use --keys).
+--keys prints only the key names of each object (no values at all), as many as --max-items allows.
 Redaction is by key name and value shape, so it is a guardrail, not a guarantee:
 still never `cat` or `jq .` the files named in SKILL.md "Handling secrets".
 """
@@ -32,10 +35,14 @@ EMBEDDED_SECRET = re.compile(
 )
 MAX_STR = 80
 MAX_ITEMS = 40
+SENSITIVE_KEY_EXTRA = re.compile(r"api[-_]?key", re.IGNORECASE)
 
 
 def describe_scalar(key, value):
-    if key is not None and str(key) not in SAFE_KEYS and SENSITIVE_KEY.search(str(key)):
+    # Only strings can hold a secret: a boolean or number under a key-ish name (hashApiKeys,
+    # trustAllSSLCertificates) is a setting, so show it.
+    if (isinstance(value, str) and key is not None and str(key) not in SAFE_KEYS
+            and (SENSITIVE_KEY.search(str(key)) or SENSITIVE_KEY_EXTRA.search(str(key)))):
         return "<redacted>"
     if isinstance(value, str):
         if EMBEDDED_SECRET.search(value):
@@ -45,25 +52,27 @@ def describe_scalar(key, value):
     return json.dumps(value)
 
 
-def walk(node, path, key, depth, out):
+def walk(node, path, key, depth, out, max_items=MAX_ITEMS, keys_only=False):
     label = path or "(root)"
     if isinstance(node, dict):
         out.append(f"{label}: object, {len(node)} keys")
         if depth == 0:
             return
         for i, (k, v) in enumerate(node.items()):
-            if i >= MAX_ITEMS:
-                out.append(f"{label}: ... {len(node) - MAX_ITEMS} more keys")
+            if i >= max_items:
+                out.append(f"{label}: ... {len(node) - max_items} more keys")
                 break
-            walk(v, f"{path}.{k}" if path else str(k), k, depth - 1, out)
+            walk(v, f"{path}.{k}" if path else str(k), k, depth - 1, out, max_items, keys_only)
     elif isinstance(node, list):
         out.append(f"{label}: array, {len(node)} items")
         if depth == 0 or not node:
             return
         for i, v in enumerate(node[:3]):
-            walk(v, f"{label}[{i}]", key, depth - 1, out)
+            walk(v, f"{label}[{i}]", key, depth - 1, out, max_items, keys_only)
         if len(node) > 3:
             out.append(f"{label}: ... {len(node) - 3} more items")
+    elif keys_only:
+        out.append(f"{label}: {type(node).__name__}")
     else:
         out.append(f"{label}: {type(node).__name__} = {describe_scalar(key, node)}")
 
@@ -86,6 +95,8 @@ def main():
     ap.add_argument("--path", default="")
     ap.add_argument("--path-sep", default=".")
     ap.add_argument("--depth", type=int, default=3)
+    ap.add_argument("--max-items", type=int, default=MAX_ITEMS)
+    ap.add_argument("--keys", action="store_true", help="print key names and types only, no values")
     args = ap.parse_args()
 
     try:
@@ -97,7 +108,7 @@ def main():
     parts = [p for p in args.path.split(args.path_sep) if p] if args.path else []
     node, key = descend(data, parts)
     out = []
-    walk(node, args.path, key, args.depth, out)
+    walk(node, args.path, key, args.depth, out, args.max_items, args.keys)
     print("\n".join(out))
 
 

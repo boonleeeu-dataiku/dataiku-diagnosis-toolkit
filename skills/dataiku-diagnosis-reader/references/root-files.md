@@ -203,8 +203,9 @@ Cross-reference the project/activity against `config/projects/<KEY>/`
 
 ### `dmesg.txt`
 
-Kernel ring-buffer log from boot (`[seconds-since-boot]` timestamps — convert using the boot time
-implied by `uptime`/`date` in `diag.txt`). The single highest-value grep:
+Kernel ring-buffer log from boot (`[seconds-since-boot]` timestamps, e.g. `[1442818.22]` is about 16.7 days
+after boot — convert using the boot time implied by `uptime`/`date` in `diag.txt`, or just quote the span as an
+elapsed-seconds window). The single highest-value grep:
 
 ```sh
 grep -i 'oom-kill\|oom_reaper\|killed process' dmesg.txt

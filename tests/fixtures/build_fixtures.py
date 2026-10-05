@@ -37,6 +37,9 @@ EVAL_ITEM_IDS = [
     "SCALE-008",  # backend Xmx sizing
     "SCALE-009",  # flow limits -> causal chain with OOM evidence
     "SCALE-011",  # filesystem_root connection
+    "ARCH-008",   # Spark validation worded for Kubernetes -> Not Applicable without a cluster
+    "ADVSEC-003", # session timeouts are real keys, 0 = unlimited
+    "ADVSEC-006", # no custom post-logout redirect -> Not Applicable
 ]
 
 FIXTURE_MARKER = "SYNTHETIC TEST FIXTURE - not real diagnosis data."
@@ -121,6 +124,8 @@ backend.xmx = 2g
         "maxRunningActivities": 0,
         "maxRunningActivitiesPerJob": 0,
         "jekSettings": {"maxRunningJobs": 0},
+        "security": {"sessionsMaxTotalTimeMinutes": 0, "sessionsMaxIdleTimeMinutes": 0,
+                     "forceSingleSessionPerUser": False, "disableDataTableLinks": False},
     })
     write(m / "config" / "connections.json", {
         "filesystem_root": {"type": "Filesystem", "params": {"root": "/"}, "allowWrite": True,
@@ -192,6 +197,8 @@ backend.xmx = 8g
         "maxRunningActivities": 10,
         "maxRunningActivitiesPerJob": 4,
         "jekSettings": {"maxRunningJobs": 5},
+        "security": {"sessionsMaxTotalTimeMinutes": 480, "sessionsMaxIdleTimeMinutes": 30,
+                     "forceSingleSessionPerUser": True, "disableDataTableLinks": True},
     })
     write(m / "config" / "connections.json", {
         "warehouse_pg": {"type": "PostgreSQL", "params": {"host": "pg.synthetic.example", "db": "dwh"},

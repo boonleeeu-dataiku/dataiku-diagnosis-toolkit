@@ -1,7 +1,7 @@
 ---
 name: "dataiku-diagnosis-reader"
 description: "Navigate and interpret an extracted Dataiku DSS diagnosis.zip support bundle (also: DSS diagnostic export, instance diagnostic archive, a folder named dku_diagnosis_*) to answer troubleshooting questions on instance configuration, crashes/OOMs, performance, users, connections, projects, code environments, plugins and logs, without re-deriving the bundle layout. Use whenever the user provides or asks about a Dataiku diagnosis bundle or wants to diagnose a DSS instance from one."
-version: 0.4.1
+version: 0.5.0
 ---
 
 # Dataiku DSS diagnosis.zip reader
@@ -63,7 +63,9 @@ as a structural model, not a byte-identical layout guaranteed across every bundl
    the bundle, e.g. a sandbox agent with the bundle on a linked computer), don't skip orientation.
    First choice: pipe the script to the machine that holds the bundle. It is read-only,
    self-contained and ~4.5KB, so run `bash -s -- <root>` there with the script body on stdin (e.g. a
-   quoted heredoc: `bash -s -- <root> <<'ORIENT'` ... `ORIENT`). If stdin can't be passed, do the
+   quoted heredoc: `bash -s -- <root> <<'ORIENT'` ... `ORIENT`). Pipe the whole script verbatim, not a
+   condensed copy, so the output matches what the script prints elsewhere (it needs `bash` plus
+   standard `find`/`du`/`grep`; on Windows run it where the bundle is, in WSL or Git Bash). If stdin can't be passed, do the
    same by hand with read-only commands run where the bundle is: `find <root> -maxdepth 6 -name
    install.ini` (the mirror is its directory), `grep -m1 DKU_NODE_TYPE <root>/diag.txt` and
    `<mirror>/dss-version.json` for node type and version, `find <root> -type f -size +50M -exec ls -lh {} +`
@@ -94,10 +96,20 @@ output lands in the transcript.
 - **Open any config JSON with `scripts/peek.py <file> [--path a.b.c] [--depth N]`.** It prints the
   structure (keys, types, non-secret values) and masks passwords, tokens, keys and embedded
   credentials. Use it first to learn a file's shape; then `--path` to one key. For `.ini`/`.properties`,
-  grep exact key names.
+  grep exact key names. A file has more than 40 keys at some level (`general-settings.json` has over
+  100 at the top)? Add `--keys` (names only) or `--max-items 200`; don't fall back to a raw dump.
 - Never `cat`, `jq .`, or `print(json.load(...))` whole `general-settings.json`, `connections.json`,
   `users.json`, `install.ini` or `dip.properties`; never run `printenv`/`env` or read user scripts in
   full. Never dump a whole settings block or connection.
+- Don't open user project code to look for keys: a scenario or recipe script can hold a literal API key
+  in its first lines, and `head`/`cat`/`sed -n` prints it. Count instead:
+  `grep -rlE "DSSClient\([^)]*[\"'][A-Za-z0-9_-]{20,}[\"']" <mirror>/config/projects/*/scenarios/ | wc -l`
+  (`-l` lists file names only; `-c` counts). Report file names and counts, never the matching lines.
+- Never print a whole sub-object (`json.dumps(settings["deployerClientSettings"])`, a truncated
+  `str(block)[:200]`): encrypted `e:AES:` blobs and keys sit inside them. Use `peek.py --path`, or print
+  named non-secret leaves only. Don't print a secret's length or prefix either.
+- Don't list or print customer-internal metadata you don't need (the full connection list, hostnames, proxy
+  details, `install.ini`): summarise in code (counts, names of the few items that matter) before printing.
 - Never copy a secret into findings, notes, reports or decks.
 - If one is printed, say so, name the file, and tell the user to rotate it.
 

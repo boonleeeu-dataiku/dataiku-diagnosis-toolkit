@@ -10,6 +10,23 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-10-05
+
+### Changed
+
+- Re-synced the vendored reader skill to 0.5.0: `peek.py` gains `--keys` / `--max-items`, redacts only string
+  values and masks `apiKey`; stricter secrets rules (don't `head`/`cat` user scripts, never print a
+  sub-object, a secret's length or broad metadata); new verified reference facts (session/link settings under
+  `security`, webapp API-ticket groups, Agent Hub signals, `sanity-check.json` has no last-run timestamp, dmesg
+  boot-relative times); pipe `orient.sh` verbatim.
+- Bundled checklist template regenerated from checklist generator 0.3.0: ADVSEC-003/004/011 now point at the
+  `general-settings.json` keys instead of saying UI-only, ARCH-008 notes it is worded for Kubernetes, GENAI-003
+  keeps its hand-fixed path (now a tracked correction upstream, so the template is no longer hand-edited).
+- `calibrations.md`: session/link checks judged from the value, custom post-logout redirect (Not Applicable when
+  unset), Spark validation without Kubernetes, version-gated checks, inferred limits, dominant benign log patterns.
+- Eval fixtures cover ARCH-008, ADVSEC-003 and ADVSEC-006; `READER_OWNED_TERMS` extended.
+- Codex companion files adapted to the template-fallback and `orient.sh` piping changes.
+
 ## [0.22.0] - 2026-10-05
 
 ### Added

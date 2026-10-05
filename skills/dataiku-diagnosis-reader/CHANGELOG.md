@@ -9,6 +9,26 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.5.0] - 2026-10-05
+
+### Added
+
+- `scripts/peek.py`: `--keys` (key names and types only) and `--max-items N` (the default 40 hid 64 of 104
+  top-level keys in `general-settings.json`).
+- Reference facts, spot-checked against the design and automation samples: `general-settings.json` →
+  `security.sessionsMax*Minutes`, `forceSingleSessionPerUser`, `ipBoundSessions`, `disableDataTableLinks`
+  (not UI-only); `users.json` → `groups[].canObtainAPITicketFromCookiesForGroupsRegex`; Agent Hub signals
+  (`config/plugins/agent-hub`, `AGENT_HUB` project with a web app); `sanity-check.json` has no
+  `lastRunTimestamp` (mtime only); `dmesg` timestamps are seconds since boot; logs can end after `diag.txt`'s date.
+
+### Changed
+
+- `peek.py` redacts only string values under a sensitive key name (booleans and numbers such as `hashApiKeys`
+  are shown) and now also masks any `apiKey`.
+- `SKILL.md` "Handling secrets": don't `head`/`cat` user scripts (a `grep -l` recipe counts hard-coded keys
+  instead), never print a sub-object, a secret's length or prefix, or broad customer metadata.
+- `SKILL.md` step 7: pipe `orient.sh` verbatim, not a condensed copy; note it needs bash (WSL/Git Bash on Windows).
+
 ## [0.4.1] - 2026-10-05
 
 ### Changed

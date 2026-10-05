@@ -17,5 +17,11 @@
   "maxRunningActivitiesPerJob": 0,
   "jekSettings": {
     "maxRunningJobs": 0
+  },
+  "security": {
+    "sessionsMaxTotalTimeMinutes": 0,
+    "sessionsMaxIdleTimeMinutes": 0,
+    "forceSingleSessionPerUser": false,
+    "disableDataTableLinks": false
   }
 }

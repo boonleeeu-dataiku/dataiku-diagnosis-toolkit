@@ -37,3 +37,9 @@ items:
   SCALE-011:
     status: [Pass]
     mentions: [filesystem_root]
+  ADVSEC-003: # both session timeouts are 0 (unlimited) in the baseline; finite in the healthy bundle
+    status: [Pass]
+  ADVSEC-006: # no custom post-logout redirect configured
+    status: [Not Applicable]
+  ARCH-008:   # cluster attached with a Spark config: judgement varies, never Not Applicable
+    status: [Pass, Partial, Needs Review]
