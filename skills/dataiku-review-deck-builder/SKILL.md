@@ -116,6 +116,8 @@ Don't guess a path — always get it from the user or a real error message.
   visual check before sharing, then relay
   `manual_qa_checklist` verbatim as follow-up steps — automated validation only checks structure
   (malformed XML, dangling relationships, leftover placeholder text), never visual layout, so this
-  checklist is the only QA pass that catches that.
+  checklist is the only QA pass that catches that. If a renderer is available (e.g. LibreOffice:
+  `soffice --headless --convert-to pdf <deck>`, then `pdftoppm -png` and look at the images), render
+  the deck and check the slides yourself, and say so if no renderer was available.
 - Any other tool error (missing checklist, bad logo path, schema mismatch in the checklist) comes
   through as a real, specific message — relay it as-is rather than paraphrasing.

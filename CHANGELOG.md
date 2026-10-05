@@ -10,6 +10,12 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+### Changed
+
+- Checklist-review skill: linked-computer guidance now covers retrying a failed folder-access request, the
+  stage/edit/commit/call/re-stage loop, and redacting values (not key names) in staged configs.
+- Deck-builder skill: concrete render-to-image recipe for the visual check.
+
 ## [0.21.0] - 2026-10-05
 
 ### Changed

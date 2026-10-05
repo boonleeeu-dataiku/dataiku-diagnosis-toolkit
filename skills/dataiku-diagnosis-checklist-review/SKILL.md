@@ -46,7 +46,8 @@ spreadsheet, plus add/update a Summary tab.
 
 Only when this session is linked to the user's computer (remote-devices tools present) and the
 paths are local: request folder access to the common parent of both
-(`device_request_folder_access`), `device_stage_files` the checklist into the container, run
+(`device_request_folder_access`; if the first request doesn't take effect, repeat it once before
+asking the user), `device_stage_files` the checklist into the container, run
 `orient.sh` and bundle reads through `device_bash`, and `device_list_dir` (recursive) to see the
 bundle's structure. At the end, write the result back with `device_commit_files` (step 7).
 
@@ -57,6 +58,12 @@ with `device_commit_files` before you call them. After `write_summary` rewrites 
 the device, your container copy is stale: re-stage it before editing again. If `orient.sh` cannot
 be run (it lives in the plugin, not on the device), follow the reader's fallback for orienting by
 hand and say so in your report.
+
+The loop, in order: (1) stage the checklist into the container; (2) edit it and write the
+narrative there; (3) `device_commit_files` both back; (4) call the generator tools with device
+paths; (5) re-stage the checklist before any further edit. If you stage config files into the
+container to analyse them, redact values only, never key names (masking keys hides the setting you
+are sizing), and sanity-check the numbers you extract afterwards.
 
 ### Secrets
 
