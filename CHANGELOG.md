@@ -10,6 +10,8 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.21.1] - 2026-10-05
+
 ### Changed
 
 - Checklist-review skill: linked-computer guidance now covers retrying a failed folder-access request, the
