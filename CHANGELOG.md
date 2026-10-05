@@ -10,6 +10,8 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-10-05
+
 ### Changed
 
 - Re-synced the vendored review generator to 0.9.0: deck styles are a registry, and the v2 deck no longer builds
