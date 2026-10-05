@@ -45,11 +45,19 @@ spreadsheet, plus add/update a Summary tab.
 ### Files on a linked computer
 
 Only when this session is linked to the user's computer (remote-devices tools present) and the
-paths are local: request folder access to the common parent of both
-(`device_request_folder_access`; if the first request doesn't take effect, repeat it once before
-asking the user), `device_stage_files` the checklist into the container, run
+paths are local: call `get_device_info` first. If both paths already sit under its
+`connectedFolders`, skip the access request; otherwise request folder access to the common parent
+of both (`device_request_folder_access`; if the first request doesn't take effect, repeat it once
+before asking the user). Then `device_stage_files` a user-supplied checklist into the container, run
 `orient.sh` and bundle reads through `device_bash`, and `device_list_dir` (recursive) to see the
 bundle's structure. At the end, write the result back with `device_commit_files` (step 7).
+
+**Bundled default template:** it lives in the container (this skill's `resources/`), so there is
+nothing to stage. Copy it to a scratch file, fill it in there, then copy the finished file to
+`/mnt/user-data/outputs/<name>` and `device_commit_files` it by `stagedPath`. That first commit
+creates the file on the device. Connected folders show up in `device_bash` as
+`$HOME/mnt/<last path segment>` but the generator tools want the real path, so use the real path
+for `device_commit_files` and the tool calls.
 
 The `dataiku-review-generator` tools (`write_summary`, `analyze_checklist`, the deck build) run on
 the user's computer, not in your container, so they only see device paths. Pass the device path as
@@ -58,6 +66,16 @@ with `device_commit_files` before you call them. After `write_summary` rewrites 
 the device, your container copy is stale: re-stage it before editing again. If `orient.sh` cannot
 be run (it lives in the plugin, not on the device), follow the reader's fallback for orienting by
 hand and say so in your report.
+
+**Verify every commit.** `device_commit_files` can report `written` while the device keeps the old
+bytes, especially when the same `stagedPath` is committed a second time (observed in every test run:
+the deck was then built from stale narrative text). The sync is asynchronous. After each commit, read
+the device file back with `device_bash` (`wc -c`, or `grep` for a phrase you just changed) and compare
+it with the container copy before calling a generator tool. If it is stale, commit again under a
+**new staged filename** (e.g. `narrative_rev2.json`) to the same device path, and verify again. The
+same applies to `device_stage_files` (also async): wait for the size or mtime to change instead of
+sleeping a fixed time. Use explicit paths, never a glob over the outputs parent, so sibling run
+folders are not listed.
 
 The loop, in order: (1) stage the checklist into the container; (2) edit it and write the
 narrative there; (3) `device_commit_files` both back; (4) call the generator tools with device
@@ -93,7 +111,9 @@ Keep at least `id`, `priority`, `check_type`, `statement`, `parameter_hint`, `op
 `insufficient_evidence_handling` and `ambiguity_notes` when present. Note the exact result-column
 headers and their column positions per sheet (they may differ sheet to sheet).
 
-`priority` is `must_have` or `nice_to_have`. "Must-have" below means `priority == must_have`.
+`priority` is `must_have` or `nice_to_have`. "Must-have" below means `priority == must_have`. Read
+it from the `priority` column; never infer it from the wording of the statement (a row that sounds
+mandatory can be `nice_to_have`, and `write_summary` rejects a `key_points` entry for one).
 
 ## 3. Plan evidence gathering by theme, not by row
 
@@ -233,7 +253,8 @@ user's linked computer, write the result back to the same path via
 `device_commit_files` as well, and say so in one line. If you used the
 bundled default template instead of a user-supplied checklist, there is no
 original path to write back to — just name the output after the diagnosis
-bundle (e.g. `<bundle-name>_checklist_review.xlsx`) and send it back to the
+bundle (e.g. `<bundle-name>_checklist_review.xlsx`; if the user names the output, use that name,
+and the deck's narrative then follows it as `<checklist_stem>_narrative.json`) and send it back to the
 conversation. Give a short summary of headline results (counts + the 1-3
 most important findings) rather than repeating the whole checklist back in
 chat.

@@ -38,8 +38,12 @@ Only a plain script run with no LLM present may build without a narrative.
 
 **Container vs. device:** these tools run on the user's computer and read device paths only. If you
 wrote the checklist or narrative in your container, commit it to the device with `device_commit_files`
-before calling them, and re-check the narrative's `narrative_path` on the device afterwards: a build
-reads whatever file is there, and a stale copy only produces a hash warning. `analyze_checklist` and the build report `checklist_path`,
+before calling them, and verify it on the device afterwards (`device_bash`: `wc -c` or `grep` for a
+phrase you just changed, compared with the container copy): `device_commit_files` can report `written`
+while the device keeps the old bytes (the sync is asynchronous, and a second commit of the same
+`stagedPath` is the usual culprit). A build reads whatever file is there, and a stale copy only
+produces a hash warning. If it is stale, commit again under a **new staged filename** to the same
+device path and verify again before rebuilding. `analyze_checklist` and the build report `checklist_path`,
 `checklist_modified` and `narrative_modified` (UTC): compare them with what you last wrote, and recommit
 the file if they are older. Also pass an
 `output_path` in the user's own outputs folder: the default is inside the plugin directory, and a
@@ -70,6 +74,25 @@ verbatim from the cells and do not state counts you tallied yourself (e.g. "nine
 rejects them, so rephrase without the number or use one the cells carry; never cite a Pass item as a problem unless it is
 under `caveats`; effort is indicative. If the tool rejects the narrative, fix the narrative (or the
 checklist), not the tool.
+
+**Length budgets.** `validate_deck` checks structure, never layout, and the generator does not shrink or
+clip narrative text, so text that is too long overlaps its neighbour on the slide (every test run had to
+shorten the roadmap, owners, fix-list and takeaway text after a render). Write to these budgets, derived
+from the slide's text-box sizes, and treat them as ceilings (characters, spaces included):
+
+| Field | Budget |
+|---|---|
+| `takeaways[].heading` | 26, one line |
+| `takeaways[].body` | 150 |
+| `highlights` | 170 |
+| `risk1.risk` | 130 |
+| `risk1.fix[].text` | 35, one line; at most 5 steps |
+| `risk1.tiles[].label` | 30; `note` 60 (the id is prepended) |
+| `roadmap.*[].action` | 55; at most 4 items per column (5 only if every action fits one line, about 30) |
+| `owners.groups[].asks[].ask` | 40 when the owner has up to 5 asks, else 20 (one line); owner `notes` 100 |
+
+Put the detail in the checklist's `notes` and `evidence_found`, which the deck's appendix carries, not in
+these cards. If a render still shows overlap, shorten the narrative string rather than editing the deck.
 
 ### Build the deck
 

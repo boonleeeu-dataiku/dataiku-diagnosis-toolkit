@@ -10,6 +10,18 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-10-05
+
+### Changed
+
+- Skill guidance from three repeat test runs (no generator or reader changes). Checklist-review and
+  deck-builder: verify every `device_commit_files` by reading the device file back, and recommit under a new
+  staged filename if stale (a repeat commit of the same `stagedPath` could report `written` but keep the old
+  bytes); explicit paths, never a glob over the outputs parent. Deck-builder: per-field character budgets for
+  the narrative, since neither the generator nor `validate_deck` catches slide text overflow. Checklist-review:
+  document the bundled-template workflow, check `get_device_info` before requesting folder access, read
+  `priority` from its column, and note the output/narrative naming convention.
+
 ## [0.24.0] - 2026-10-05
 
 ### Changed
