@@ -48,6 +48,8 @@ STATUS = {  # chip fill, text
 SEG = {"Pass": MINT, "Needs Review": BLUE, "Partial": AMBER, "Fail": RED}
 DOT = {"ok": MINT, "watch": AMBER, "neutral": "B8BFC9"}
 L_CREAM, L_DARK = "CUSTOM_5", "CUSTOM_3_1"
+STANDARD_LAYOUT = "Title Only"  # python-pptx default template; stands in for both layouts above
+STANDARD_SLIDE_SIZE = (10, 5.625)  # inches; same 16:9 page as the branding master, which the v2 coordinates assume
 
 
 def RGB(h):
@@ -56,19 +58,32 @@ def RGB(h):
 
 # ---------------------------------------------------------------- helpers
 class Deck:
-    def __init__(self, prs):
+    """Adds the v2 body slides. With `standard=True` the prs is the plain python-pptx base from
+    build_standard_base(): both layout names resolve to its "Title Only" layout, and the dark
+    background and title styling the branding master's CUSTOM_3_1 layout would supply are applied here."""
+
+    def __init__(self, prs, standard=False):
         self.prs = prs
+        self.standard = standard
         self.layouts = {l.name: l for l in prs.slide_layouts}
+        if standard:
+            self.layouts[L_CREAM] = self.layouts[L_DARK] = self.layouts[STANDARD_LAYOUT]
 
     def cream(self, title, size=20):
         s = self.prs.slides.add_slide(self.layouts[L_CREAM])
         bg = s.background.fill; bg.solid(); bg.fore_color.rgb = RGB(BG)
         set_title(s, title, size)
+        if self.standard:
+            style_standard_title(s, DK)
         return s
 
     def dark(self, title, size=22, w=9.22):
         s = self.prs.slides.add_slide(self.layouts[L_DARK])
+        if self.standard:
+            bg = s.background.fill; bg.solid(); bg.fore_color.rgb = RGB(DK)
         set_title(s, title, size, w=w)
+        if self.standard:
+            style_standard_title(s, WHITE)
         return s
 
 
@@ -153,6 +168,16 @@ def set_title(slide, text, size=20, w=9.22):
     for para in tf.paragraphs:
         for r in para.runs:
             r.font.size = Pt(size)
+
+
+def style_standard_title(slide, color):
+    """Left-aligned bold title for the standard (unbranded) deck, whose layout is plain python-pptx."""
+    tf = slide.shapes.title.text_frame
+    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    for para in tf.paragraphs:
+        para.alignment = PP_ALIGN.LEFT
+        for r in para.runs:
+            r.font.name = "Roboto"; r.font.bold = True; r.font.color.rgb = RGB(color)
 
 
 def chip(slide, x, y, w, h, text, status=None, fill=None, color=None, size=8, name=None):
@@ -687,9 +712,52 @@ def edit_cover(slide, data):
                     para._p.getparent().remove(para._p)  # includes the generator-version line
 
 
+def build_standard_base(data, customer: str, logo_path: Path | None, output_path: Path) -> Path:
+    """Write the two-slide cover + closing .pptx build_v2 starts from when there is no branding
+    template: plain python-pptx, the v2 palette, and no Dataiku logo or brand claim. The cover says so."""
+    prs = Presentation()
+    prs.slide_width, prs.slide_height = Inches(STANDARD_SLIDE_SIZE[0]), Inches(STANDARD_SLIDE_SIZE[1])
+    layout = {l.name: l for l in prs.slide_layouts}[STANDARD_LAYOUT]
+
+    def dark_slide(title, size):
+        s = prs.slides.add_slide(layout)
+        bg = s.background.fill; bg.solid(); bg.fore_color.rgb = RGB(DK)
+        t = s.shapes.title
+        t.left, t.top, t.width, t.height = Inches(0.39), Inches(1.3), Inches(8.2), Inches(1.4)
+        t.text_frame.word_wrap = True
+        t.text_frame.text = title
+        for r in t.text_frame.paragraphs[0].runs:
+            r.font.size = Pt(size)
+        style_standard_title(s, WHITE)
+        return s
+
+    report_date = data.bundle_metadata.get("Report generated") or data.bundle_metadata.get("Diagnosis generated")
+    cover = dark_slide(customer.upper(), 32)
+    subtitle = f"Platform Review — {deck_shared.format_month_year(report_date)}" if report_date else "Platform Review"
+    tb(cover, 0.39, 2.8, 8.2, 0.4, [P(subtitle, 16, False, PALE)], name="Subtitle")
+    lines = deck_shared.format_title_metadata_lines(data)
+    tb(cover, 0.39, 4.45, 8.2, 0.75, [P(l, 9, False, "8A93A3") for l in lines], name="Bundle metadata")
+    tb(cover, 0.39, 3.3, 8.2, 0.3, [P("Standard layout (Dataiku branding template not applied)", 10, False, MINT)],
+       name="Layout note")
+    if logo_path:
+        logger.info("Adding customer logo: %s", logo_path)
+        from PIL import Image
+        with Image.open(logo_path) as im:
+            ratio = im.width / im.height
+        h = 0.6
+        cover.shapes.add_picture(str(logo_path), Inches(0.39), Inches(0.45), height=Inches(h), width=Inches(h * ratio))
+
+    end = dark_slide("Questions and discussion", 28)
+    tb(end, 0.39, 2.9, 8.2, 0.4, [P("Prepared with the Dataiku Review Generator", 12, False, PALE)], name="End note")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    prs.save(str(output_path))
+    return output_path
+
+
 # ------------------------------------------------------------ orchestration
-def build_v2(checklist_path: Path, customer: str, output_path: Path, base_deck: Path,
-             logo_path: Path | None = None, narrative_path: Path | None = None) -> dict:
+def build_v2(checklist_path: Path, customer: str, output_path: Path, base_deck: Path | None,
+             logo_path: Path | None = None, narrative_path: Path | None = None,
+             standard_deck: bool = False) -> dict:
     section_config = common.load_config("section_names.yaml")
     layout_config = common.load_config("deck_layout.yaml")
     v2 = layout_config.get("v2", {})
@@ -710,11 +778,14 @@ def build_v2(checklist_path: Path, customer: str, output_path: Path, base_deck: 
 
     with tempfile.TemporaryDirectory(prefix="deckv2_") as tmp:
         base_path = Path(tmp) / "cover_end.pptx"
-        deck_shared.build_cover_and_end_deck(base_deck, data, customer, logo_path, base_path)
+        if standard_deck:
+            build_standard_base(data, customer, logo_path, base_path)
+        else:
+            deck_shared.build_cover_and_end_deck(base_deck, data, customer, logo_path, base_path)
         prs = Presentation(str(base_path))
         old_ids = list(prs.slides._sldIdLst)
         keep_cover, keep_end = old_ids[0], old_ids[-1]
-        d = Deck(prs)
+        d = Deck(prs, standard=standard_deck)
         edit_cover(prs.slides[0], data)
 
         narrative_slides = [(verdict_slide, ()), (snapshot_slide, (data,)), (risk1_slide, ()), (risk2_slide, ()),
@@ -753,6 +824,7 @@ def build_v2(checklist_path: Path, customer: str, output_path: Path, base_deck: 
     logger.info("Wrote v2 deck (%d slides): %s", slide_count, output_path)
     return {
         "output_path": output_path, "slide_count": slide_count, "warnings": warnings,
+        "base_deck_used": "standard" if standard_deck else "template", "branded": not standard_deck,
         "narrative_used": str(narrative_path) if narrative_path else None,
         "narrative_missing": not narrative_path,
         "applicable_count": a.applicable, "pass_count": a.counts["Pass"],

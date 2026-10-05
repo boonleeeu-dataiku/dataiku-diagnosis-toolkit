@@ -94,7 +94,8 @@ here (134MB, and not customer data — see "Security / privacy" below for why th
 concern from diagnosis-bundle data). Obtain it separately and place it at
 `mcp-server-review-generator/resources/Dataiku Branding Template 2026.pptx`. Until that's done,
 deck generation still works if you pass an explicit path to your own copy (the
-`dataiku-review-deck-builder` skill will ask for one if the default path is missing).
+`dataiku-review-deck-builder` skill will ask for one if the default path is missing). If you have no template at
+all, the skill falls back to a standard, unbranded v2 deck (`allow_standard_deck`) and says so.
 
 ## Security / privacy
 

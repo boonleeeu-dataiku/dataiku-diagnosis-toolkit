@@ -7,6 +7,22 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-05
+
+### Added
+
+- `allow_standard_deck` on `build_platform_review_deck` (v2 only, default false). With the branding template
+  missing it builds a standard, unbranded deck (plain python-pptx cover and closing slide, the v2 palette and
+  slides, cover note "Standard layout (Dataiku branding template not applied)") instead of failing. A wrong
+  explicit `base_deck_path` is still an error. The result carries `base_deck_used` (`template`/`standard`) and
+  `branded`, and the manual QA text says the deck is not branded.
+- `tests/test_standard_deck.py`.
+
+### Changed
+
+- The "Base deck not found" error now names both remedies (`base_deck_path`, `allow_standard_deck`); style v1
+  says it has no unbranded fallback.
+
 ## [0.9.1] - 2026-10-05
 
 ### Fixed

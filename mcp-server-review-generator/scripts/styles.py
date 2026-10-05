@@ -19,11 +19,12 @@ class BuildRequest:
     checklist_path: Path
     customer: str
     output_path: Path
-    base_deck: Path
+    base_deck: Path | None
     logo_path: Path | None = None
     narrative_path: Path | None = None
     rows_per_slide: int = 4
     include_pass_items: bool = False
+    standard_deck: bool = False  # build without the branding template (v2 only; see build_deck_v2.build_standard_base)
 
 
 @dataclass(frozen=True)
@@ -48,6 +49,9 @@ def _qa_v2() -> str:
 def _build_v1(req: BuildRequest) -> dict:
     import build_deck
     import data_checks
+    if req.standard_deck:
+        raise ValueError("style 'v1' has no standard (unbranded) deck: it edits the branding template's own slides. "
+                         "Use style 'v2', or supply the branding template via base_deck_path.")
     output = build_deck.build_deck(
         checklist_path=req.checklist_path, customer=req.customer, output_path=req.output_path,
         base_deck=req.base_deck, logo_path=req.logo_path, rows_per_slide=req.rows_per_slide,
@@ -60,6 +64,7 @@ def _build_v2(req: BuildRequest) -> dict:
     import build_deck_v2
     return build_deck_v2.build_v2(
         req.checklist_path, req.customer, req.output_path, req.base_deck, req.logo_path, req.narrative_path,
+        standard_deck=req.standard_deck,
     )
 
 

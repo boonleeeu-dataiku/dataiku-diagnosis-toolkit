@@ -105,6 +105,12 @@ def test_deck_skill_error_phrase_matches_server_message():
     assert 'f"Base deck not found: ' in MCP_SERVER
 
 
+def test_deck_skill_fallback_flag_exists_on_the_tool():
+    """The skill's last-resort step passes allow_standard_deck; the tool must accept it."""
+    assert "allow_standard_deck" in DECK_SKILL
+    assert "allow_standard_deck: bool = False" in MCP_SERVER
+
+
 def test_deck_skill_requires_a_narrative_when_an_llm_runs_it():
     """The narrative is the judgment text the tool can't derive; skipping it gives a generic deck."""
     for phrase in ("Order of work (required", "checklist_sha256", "narrative_used", "Do not skip this step"):

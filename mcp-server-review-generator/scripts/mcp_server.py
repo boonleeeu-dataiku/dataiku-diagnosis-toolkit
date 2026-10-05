@@ -87,6 +87,7 @@ def build_platform_review_deck(
     base_deck_path: str | None = None,
     style: str = styles.DEFAULT_STYLE,
     narrative_path: str | None = None,
+    allow_standard_deck: bool = False,
 ) -> dict[str, Any]:
     """Generate a branded Dataiku Platform Review .pptx deck from a completed
     checklist workbook, writing it to disk and returning its path.
@@ -127,6 +128,12 @@ def build_platform_review_deck(
             checklist is used when present. Every cited ID must exist and its status must support the
             claim, or the call fails with a specific error. Omitted keys
             fall back to text derived from checklist cells.
+        allow_standard_deck: v2 only. When the branding template is missing,
+            build a standard, UNBRANDED deck (same slides, plain cover, no
+            Dataiku template) instead of failing. Default false: pass true
+            only after asking the user for the template and being told there
+            is none. Ignored when the template is found, and when base_deck_path is given
+            (a wrong explicit path is an error, not a fallback).
 
     Returns:
         A dict with:
@@ -141,6 +148,8 @@ def build_platform_review_deck(
           - manual_qa_checklist: guidance for the manual visual QA pass that
             automated validation cannot perform (only present when
             structural_problems is empty)
+          - base_deck_used ("template" or "standard") and branded (false for a
+            standard deck): say so when handing the deck over
           - generator_version: this tool's own version (common.VERSION) that
             produced the deck
           - checklist_path, checklist_modified: the resolved path actually read and its
@@ -168,8 +177,18 @@ def build_platform_review_deck(
 
     if not checklist.exists():
         raise FileNotFoundError(f"Checklist file not found: {checklist}")
+    standard_deck = False
     if not base_deck.exists():
-        raise FileNotFoundError(f"Base deck not found: {base_deck}")
+        if not (allow_standard_deck and style == "v2" and not base_deck_path):
+            hint = (
+                "Supply the Dataiku Branding Template with base_deck_path, or call again with "
+                "allow_standard_deck=true for a standard unbranded deck (style v2 only)."
+                if style == "v2" else
+                "Supply the Dataiku Branding Template with base_deck_path; style v1 has no unbranded fallback "
+                "(style v2 does)."
+            )
+            raise FileNotFoundError(f"Base deck not found: {base_deck}. {hint}")
+        standard_deck = True
     if logo is not None and not logo.exists():
         raise FileNotFoundError(f"Logo file not found: {logo}")
 
@@ -181,7 +200,7 @@ def build_platform_review_deck(
     built = styles.build(style, styles.BuildRequest(
         checklist_path=checklist, customer=customer, output_path=resolved_output, base_deck=base_deck,
         logo_path=logo, narrative_path=narrative, rows_per_slide=effective_rows_per_slide,
-        include_pass_items=effective_include_pass_items,
+        include_pass_items=effective_include_pass_items, standard_deck=standard_deck,
     ))
     resolved_output = built["output_path"]
     extras = {k: v for k, v in built.items() if k not in ("output_path", "warnings")}
@@ -199,6 +218,10 @@ def build_platform_review_deck(
         "checklist_path": str(checklist),
         "checklist_modified": _mtime(checklist),
     }
+    result.update({
+        "base_deck_used": "standard" if standard_deck else "template",
+        "branded": not standard_deck,
+    })
     if extras:
         result.update(extras)
         if "narrative_used" in extras:
@@ -208,6 +231,11 @@ def build_platform_review_deck(
             result.update({"narrative_warning": narrative_mod.MISSING_WARNING})  # not a base return key
     if not problems:
         result["manual_qa_checklist"] = validate_deck_lib.manual_qa_checklist(style)
+        if standard_deck:
+            result["manual_qa_checklist"] += (
+                "\nThis is the standard layout, not the Dataiku-branded deck: do not present it as branded. "
+                "To brand it, supply the template and rebuild from the same checklist and narrative."
+            )
     return result
 
 

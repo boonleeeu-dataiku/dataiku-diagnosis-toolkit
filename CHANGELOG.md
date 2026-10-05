@@ -10,6 +10,20 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-10-05
+
+### Added
+
+- Missing branding template no longer ends a run with no deck. The deck-builder skill now asks the user for the
+  template first; if none is available (or the run is unattended) it calls the generator with
+  `allow_standard_deck=true` for a standard, unbranded v2 deck and says plainly that it is not branded.
+  Never a stub base deck.
+
+### Changed
+
+- Re-synced the vendored review generator to 0.10.0 (adds `allow_standard_deck`, and the `base_deck_used` and
+  `branded` result keys; the "Base deck not found" error now names both remedies).
+
 ## [0.21.2] - 2026-10-05
 
 ### Changed
