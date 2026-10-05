@@ -10,6 +10,14 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-10-05
+
+### Changed
+
+- Re-synced the vendored review generator to 0.9.1: the default v2 deck now has speaker notes. Its Findings slides
+  carry each item's full Statement, Evidence and Notes, so text the table clips is still available. v1 output is
+  unchanged. `finding_note_lines()` moved to `deck_shared.py`.
+
 ## [0.20.0] - 2026-10-05
 
 ### Changed

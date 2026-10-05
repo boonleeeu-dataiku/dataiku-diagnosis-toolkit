@@ -30,7 +30,7 @@ import common
 import data_checks
 import styles
 from deck_shared import (
-    CONTACT_SLIDE, TITLE_SLIDE, build_cover, truncate,
+    CONTACT_SLIDE, TITLE_SLIDE, build_cover, finding_note_lines, truncate,
 )
 import read_checklist
 import section_names
@@ -330,22 +330,6 @@ def _finding_cell_text(item) -> str:
     empty, e.g. an older or hand-filled checklist, so a finding never
     silently loses all its text."""
     return (item.notes or item.evidence_found or "").strip()
-
-
-def _finding_note_lines(item) -> list:
-    """Full, untruncated Statement/Evidence/Notes for one checklist item,
-    as speaker-notes paragraphs (a trailing "" is a blank-paragraph
-    separator before the next item). Shared by both a section's card layout
-    and its table fallback -- see build_section_detail_slides -- so every
-    findings slide's notes read the same way regardless of which layout its
-    visible content ended up using."""
-    return [
-        f"{item.id}: {item.title}",
-        f"Statement: {(item.statement or '—').strip()}",
-        f"Evidence: {(item.evidence_found or '—').strip()}",
-        f"Notes: {(item.notes or '—').strip()}",
-        "",
-    ]
 
 
 def build_findings_rows(items: list) -> list:
@@ -723,7 +707,7 @@ def build_section_detail_slides(work_dir: Path, template_xml: str, template_rels
             )
             parts.append(card_xml)
             y += CARD_HEIGHT_CRITICAL + CARD_GAP
-            note_lines += _finding_note_lines(it)
+            note_lines += finding_note_lines(it)
         slide_xml = text.insert_shape(slide_xml, "".join(parts))
         new_filename = slides.duplicate_slide_from_xml(work_dir, slide_xml, template_rels, after=after)
         notes.add_notes(work_dir, new_filename, note_lines)
@@ -752,7 +736,7 @@ def build_section_detail_slides(work_dir: Path, template_xml: str, template_rels
         slide_xml = text.insert_shape(slide_xml, status_xml)
         slide_xml = tables.set_graphic_frame_bounds(slide_xml, CONTENT_LEFT, table_top, CONTENT_WIDTH, CONTENT_BOTTOM - table_top)
         slide_path.write_text(slide_xml, encoding="utf-8")
-        note_lines = [line for it in page_items for line in _finding_note_lines(it)]
+        note_lines = [line for it in page_items for line in finding_note_lines(it)]
         notes.add_notes(work_dir, filename, note_lines)
     return new_filenames
 

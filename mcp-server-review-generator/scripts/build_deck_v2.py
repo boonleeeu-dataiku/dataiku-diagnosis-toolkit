@@ -591,7 +591,8 @@ def passed_slide(d, a, v2):
         tb(s, cx, 1.92, w - 0.1, 3.2, paras, name=f"Passed list {k + 1}")
 
 
-def detail_slides(d, a, v2):
+def detail_slides(d, a, v2, data):
+    raw_items = data_checks.items_by_id(data)
     order = {"Fail": 0, "Partial": 1, "Needs Review": 2}
     widths = [0.85, 1.75, 0.5, 0.8, 3.3, 2.0]
     top, bottom, hdr = 1.1, 5.0, 0.28
@@ -631,6 +632,9 @@ def detail_slides(d, a, v2):
                 find = [P(r.headline, 8.5, True, INK, after=1)] + [P(e, 8, False, GREY) for e in r.evidence]
                 body.append([[P(r.id, 8, True, DK)], [P(r.title, 8.5)], [P(r.priority, 8, r.priority == "Must")],
                              [P(r.status, 8, True, STATUS[r.status][1])], find, [P(r.action or "-", 8)]])
+            # the table clips and reshapes text; the notes carry each item's raw fields in full
+            notes_lines = [line for r, _ in ch if r.id in raw_items for line in deck_shared.finding_note_lines(raw_items[r.id])]
+            s.notes_slide.notes_text_frame.text = "\n".join(notes_lines).strip()
             tbl = table(s, 0.39, top, widths, ["ID", "Item", "Pri.", "Status", "Finding", "Action"], body,
                         [h for _, h in ch], hdr, name="Detail table")
             for i, (r, _) in enumerate(ch, start=1):
@@ -728,7 +732,7 @@ def build_v2(checklist_path: Path, customer: str, output_path: Path, base_deck: 
         appendix_divider(d)
         method_slide(d, a, data)
         passed_slide(d, a, v2)
-        detail_slides(d, a, v2)
+        detail_slides(d, a, v2, data)
         na_slide(d, a, narr)
 
         lst = prs.slides._sldIdLst

@@ -27,6 +27,22 @@ TITLE_FOOTER_WIDTH = 6506100  # matches slide15's title/subtitle box width
 TITLE_FOOTER_HEIGHT = 550000
 
 
+def finding_note_lines(item) -> list:
+    """Full, untruncated Statement/Evidence/Notes for one checklist item,
+    as speaker-notes paragraphs (a trailing "" is a blank-paragraph
+    separator before the next item). Shared by both a section's card layout
+    and its table fallback -- see build_deck.build_section_detail_slides -- so every
+    findings slide's notes read the same way regardless of which layout its
+    visible content ended up using."""
+    return [
+        f"{item.id}: {item.title}",
+        f"Statement: {(item.statement or '—').strip()}",
+        f"Evidence: {(item.evidence_found or '—').strip()}",
+        f"Notes: {(item.notes or '—').strip()}",
+        "",
+    ]
+
+
 def truncate(value, limit: int) -> str:
     value = (value or "").strip()
     if len(value) <= limit:

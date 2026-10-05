@@ -92,8 +92,8 @@ def test_findings_row_shows_notes_only_and_keeps_evidence_in_speaker_notes():
     it = _finding()
     it.evidence_found, it.notes = "a/b.json: key=1", "Headline\n• point"
     assert build_deck.build_findings_rows([it])[0][5] == "Headline\n• point"
-    assert "Evidence: a/b.json: key=1" in build_deck._finding_note_lines(it)
-    assert "Notes: Headline\n• point" in build_deck._finding_note_lines(it)
+    assert "Evidence: a/b.json: key=1" in deck_shared.finding_note_lines(it)
+    assert "Notes: Headline\n• point" in deck_shared.finding_note_lines(it)
 
 
 def test_findings_row_falls_back_to_evidence_when_notes_empty():

@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-10-05
+
+### Fixed
+
+- The default v2 deck had no speaker notes. Its Findings slides now carry each item's full Statement, Evidence and
+  Notes in the notes pane, so text the table clips is still available. v1 output is unchanged.
+
+### Changed
+
+- `finding_note_lines()` moved from `build_deck.py` to `deck_shared.py` so every style can use it.
+- `tests/test_speaker_notes.py` runs over the style registry and fails for any style without full-text notes.
+
 ## [0.9.0] - 2026-10-05
 
 ### Changed
