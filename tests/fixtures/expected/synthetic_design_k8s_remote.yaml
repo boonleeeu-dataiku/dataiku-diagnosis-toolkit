@@ -75,5 +75,8 @@ items:
   SEC-009:    # LDAP enabled with two authorized groups -> Pass
     status: [Pass]
     mentions_any: [authorizedGroups, authorized groups]
+  SEC-010:    # SSO and LDAP both enabled -> Pass
+    status: [Pass]
+    mentions_any: [sso]
   SCALE-010:  # all default connection/format/engine preferences blank -> Pass
     status: [Pass]

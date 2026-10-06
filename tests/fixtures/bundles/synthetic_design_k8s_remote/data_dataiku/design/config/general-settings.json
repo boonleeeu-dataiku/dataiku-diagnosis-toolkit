@@ -115,6 +115,10 @@
     "mode": "REMOTE",
     "nodeUrl": "https://deployer.synthetic.example:11200"
   },
+  "ssoSettings": {
+    "enabled": true,
+    "protocol": "SAML"
+  },
   "ldapSettings": {
     "enabled": true,
     "authenticationEnabled": true,

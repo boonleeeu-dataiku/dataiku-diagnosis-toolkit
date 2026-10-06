@@ -79,5 +79,8 @@ items:
     mentions_any: [installid, install id, instance id]
   SEC-009:    # LDAP switched off -> Not Applicable
     status: [Not Applicable]
+  SEC-010:    # SSO explicitly disabled -> Fail (even with LDAP off)
+    status: [Fail]
+    mentions_any: [sso]
   SCALE-010:  # inherits the baseline's non-blank upload connection -> Needs Review
     status: [Needs Review]

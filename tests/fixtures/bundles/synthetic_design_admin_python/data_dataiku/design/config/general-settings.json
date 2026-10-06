@@ -67,5 +67,8 @@
     "sessionsMaxIdleTimeMinutes": 0,
     "forceSingleSessionPerUser": false,
     "disableDataTableLinks": false
+  },
+  "ssoSettings": {
+    "enabled": false
   }
 }

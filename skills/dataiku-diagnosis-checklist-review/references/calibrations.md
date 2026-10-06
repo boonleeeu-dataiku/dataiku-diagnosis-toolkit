@@ -117,6 +117,11 @@ matches. Add each new one as its own entry under the right heading; don't overwr
   Enabled with one or more authorized groups: **Pass** (give the count, never the names). Enabled with
   none: **Fail**. LDAP not enabled: **Not Applicable**.
 
+- **SSO enablement (SEC-010):** judge from `facts.py` `sso_and_ldap` (SSO and LDAP enabled flags; give the
+  protocol, never any secret). Check in this order: SSO disabled: **Fail** (whatever LDAP is), with an
+  `Action:` in `notes` to discuss the benefits of SSO with the customer. SSO and LDAP both enabled: **Pass**.
+  SSO enabled but LDAP disabled, or either setting missing from the bundle: **Needs Review**.
+
 - **UIF (SEC-002):** impersonation enabled with at least one user or group rule (the reader's lookup
   table says where): **Pass**. Whether the OS identities exist is a live check (`notes` only).
   Disabled: **Fail**.
@@ -295,3 +300,4 @@ and the row together.
 | SEC-004 | CGroups Enabled with Memory Limit per Sizing Heuristic |
 | SEC-006 | HTTPS Access Configured for DSS |
 | SEC-009 | LDAP Authorized Groups Configured |
+| SEC-010 | SSO Enablement Reviewed |

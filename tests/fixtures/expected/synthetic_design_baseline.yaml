@@ -79,6 +79,9 @@ items:
   SEC-009:    # LDAP enabled but authorized groups empty -> Fail
     status: [Fail]
     mentions_any: [authorizedGroups, authorized groups]
+  SEC-010:    # no ssoSettings in the bundle -> Needs Review (settings missing)
+    status: [Needs Review]
+    mentions_any: [sso]
   SCALE-010:  # non-blank default upload connection -> Needs Review (ask whether a use case justifies it)
     status: [Needs Review]
     mentions_any: [filesystem_managed, preferedUploadConnection, upload connection]

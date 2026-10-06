@@ -10,6 +10,12 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.28.1] - 2026-10-06
+
+### Added
+
+- Calibration for **SEC-010** (SSO enablement): SSO disabled = Fail (whatever LDAP is), SSO and LDAP both enabled = Pass, SSO enabled with LDAP off or either setting missing = Needs Review. Uses the reader's existing `facts.py` `sso_and_ldap`; no reader change. Fixtures and expected answers cover all three outcomes.
+
 ## [0.28.0] - 2026-10-06
 
 ### Added

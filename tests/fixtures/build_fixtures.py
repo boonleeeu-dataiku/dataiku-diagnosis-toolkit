@@ -53,6 +53,7 @@ EVAL_ITEM_IDS = [
     "GENAI-007",  # Cobuild on a pre-gate DSS -> Needs Review (version gate beats feature gate)
     "SEC-001",    # instance id present in the bundle -> Pass; missing -> Fail
     "SEC-009",    # LDAP authorized groups: set -> Pass; empty -> Fail; LDAP off -> Not Applicable
+    "SEC-010",    # SSO + LDAP enabled -> Pass; SSO disabled -> Fail; SSO enabled/LDAP off or settings missing -> Needs Review
     "SCALE-010",  # any non-blank default connection/format/engine preference -> Needs Review; all blank -> Pass
 ]
 
@@ -247,6 +248,7 @@ backend.xmx = 8g
             "defaultRetrievableKnowledgeContainerExecSelection": {"containerMode": "INHERIT"},
         },
         "deployerClientSettings": {"mode": "REMOTE", "nodeUrl": "https://deployer.synthetic.example:11200"},
+        "ssoSettings": {"enabled": True, "protocol": "SAML"},
         "ldapSettings": {"enabled": True, "authenticationEnabled": True,
                          "authorizedGroups": ["dss-users", "dss-admins"]},
         "defaultDatasetCreationSettings": {"allowUploadsWithoutConnection": True, "virtualizable": False},
@@ -284,13 +286,14 @@ def admin_python_bundle(root: Path) -> None:
     """The baseline bundle plus an `ADMINISTRATIONPROJECT` (no fixed admin project name) whose only
     scenario is an active, scheduled `custom_python` one: housekeeping can't be confirmed without
     reading its script, so SCALE-004 is Needs Review. It also has no instance id in install.ini
-    (SEC-001 Fail) and LDAP switched off (SEC-009 Not Applicable)."""
+    (SEC-001 Fail), LDAP switched off (SEC-009 Not Applicable) and SSO explicitly disabled (SEC-010 Fail)."""
     baseline_bundle(root)
     design = root / "data_dataiku" / "design"
     ini = design / "install.ini"
     ini.write_text("".join(ln for ln in ini.read_text().splitlines(True) if not ln.startswith("installid")))
     settings = json.loads((design / "config" / "general-settings.json").read_text())
     settings["ldapSettings"] = {"enabled": False, "authenticationEnabled": False, "authorizedGroups": []}
+    settings["ssoSettings"] = {"enabled": False}
     write(design / "config" / "general-settings.json", settings)
     p = root / "data_dataiku" / "design" / "config" / "projects" / "ADMINISTRATIONPROJECT"
     write(p / "params.json", {"projectKey": "ADMINISTRATIONPROJECT", "owner": "admin"})
