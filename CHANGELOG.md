@@ -10,6 +10,12 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.28.3] - 2026-10-06
+
+### Added
+
+- `skills/dataiku-diagnosis-checklist-review/scripts/run_step.py`: runs the reader's `orient.sh` and `facts.py` and records each in a `<stem>_run_manifest.json` (exit status, time, output hash; `facts` output saved as `<stem>_facts.json`), and a `verify` command that checks both steps ran, a fresh `facts.py` run matches the recorded hash, the Summary is present and current, and (with `--deck`) the narrative and deck exist. The skill runs both and reports the `RUN VERIFY` line. Tests in `tests/test_run_step.py`.
+
 ## [0.28.2] - 2026-10-06
 
 ### Changed

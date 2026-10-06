@@ -62,15 +62,17 @@ dump whole files). Also:
 
 ## 1. Orient
 
-Run the reader's `scripts/orient.sh <bundle_root>` first. It reports node type/version, the
+Run the reader's `orient.sh` first, through this skill's `scripts/run_step.py run orient <bundle_root>
+--manifest <stem>_run_manifest.json` (it passes the output through unchanged and records that the step ran;
+`<stem>` is the review workbook's name without `.xlsx`; keep the manifest beside it). It reports node type/version, the
 largest files, and which key troubleshooting files are present. This
 tells you what evidence is realistically available before you plan reads.
 
 If it shows a node type the reader hasn't verified (e.g. `deployer`) or no data-dir mirror, say what
 the bundle cannot support and mark the rows that depend on it **Needs Review**, not Fail.
 
-Then run the reader's `scripts/facts.py <bundle_root>` once and save its JSON output to the working
-file. It prints the values many checks depend on (heap sizes, host memory, config folder size, database
+Then run `scripts/run_step.py run facts <bundle_root> --manifest <stem>_run_manifest.json` once (it runs the
+reader's `facts.py` and saves the JSON beside the manifest as `<stem>_facts.json`). It prints the values many checks depend on (heap sizes, host memory, config folder size, database
 host, concurrency limits, SSO, user isolation, cgroups, connections, GenAI and plugin presence), each with
 its `source`, and an explicit `ABSENT` for a setting that isn't in the bundle. This replaces hand-reading
 the big settings files, which repeat runs have mis-stated or missed. If it can't run or errors, say so in
@@ -220,7 +222,10 @@ texts `Overall Status Counts`, `Per-Section Breakdown`,
 
 ## 7. Deliver
 
-Before delivering, check: every id has one of the five statuses; each `notes` is within budget with
+Before delivering, run `scripts/run_step.py verify <bundle_root> --manifest <stem>_run_manifest.json
+--checklist <review.xlsx>` (add `--deck <deck.pptx>` when a deck was built) and put its one `RUN VERIFY` line in your
+final summary. On FAIL, fix the named problem (usually a skipped step or a stale Summary) and run it again. If the
+bundle sits on a separate computer the scripts can't reach, say the run could not be verified. Then check: every id has one of the five statuses; each `notes` is within budget with
 no file paths or secrets; the Summary was written after the last edit.
 
 Send the updated file to the conversation. If the source came from the user's linked computer, also
