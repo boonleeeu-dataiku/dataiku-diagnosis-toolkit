@@ -6,8 +6,12 @@
 > upstream, re-sync, and point to it from here. See `CLAUDE.md`.
 
 These interpretations come directly from the user and override a literal reading of a checklist's
-`expected_value`/evidence text. Match an entry by item id first, then by what the check is about.
-Add each new one as its own entry under the right heading; don't overwrite prior ones.
+`expected_value`/evidence text. **Match an entry by what the check is about (its title and statement).**
+The item ids cited here are pointers into the bundled default checklist, and a different or newer
+checklist may renumber, split, merge or drop checks. The "Check anchors" table at the end records the
+title each id had when its entry was written. If a row's id and title disagree with an entry's anchor,
+trust the topic, not the id, and say so in `notes`. Never apply an entry to a row just because the id
+matches. Add each new one as its own entry under the right heading; don't overwrite prior ones.
 
 ## General principles (apply to every check)
 
@@ -230,3 +234,40 @@ Add each new one as its own entry under the right heading; don't overwrite prior
   the one found (e.g. "Dataiku DSS 15 release notes"). Take the highest GA version confirmed by an
   official Dataiku source (release notes, changelog, docs.dataiku.com). If results are links only,
   `WebFetch` the official release-notes page for the newest major. Never answer from training knowledge.
+
+## Check anchors
+
+The title each cited id had in the bundled default checklist when its entry was written.
+`tests/test_calibration_ids.py` fails when the checklist no longer matches this table; update the entry
+and the row together.
+
+| Id | Title when written |
+|---|---|
+| ADVSEC-003 | Expiring sessions |
+| ADVSEC-004 | Forcing a single session per user |
+| ADVSEC-006 | Redirecting to a custom URL after logout |
+| ADVSEC-008 | Restricting exports |
+| ADVSEC-009 | Setting security-related HTTP headers |
+| ADVSEC-011 | Preventing links to be clickable in data tables |
+| ARCH-001 | Separation of Design and Automation Nodes |
+| ARCH-002 | Regular DSS Version Upgrades |
+| ARCH-006 | Baseline Spark Configuration Set (High/Standard/Large-memory/High I/O) |
+| ARCH-007 | Kubernetes Namespace and Auth Recommendations for Spark |
+| ARCH-008 | Functional Validation of Spark Execution (Recipe & Notebook) |
+| ARCH-010 | Valid Containerized Execution Configuration |
+| ARCH-011 | Baseline Container Execution Configs (Standard, Webapp) and Namespace Settings |
+| ARCH-013 | Valid Cluster Configuration for Elastic Compute |
+| GENAI-001 | Internal Code Environments for RAG, Document Extraction, PII Detection |
+| GENAI-007 | Cobuild Default LLM Configuration |
+| GENAI-009 | Agent Hub Deployment Required Permissions |
+| SCALE-001 | External PostgreSQL Runtime Database |
+| SCALE-002 | Appropriate Metastore Configured |
+| SCALE-003 | Graphics Export (PDF/Image) Configuration |
+| SCALE-004 | Admin Project for Garbage Collection |
+| SCALE-007 | Backend.log Error Review |
+| SCALE-008 | Backend Xmx Sizing |
+| SCALE-009 | Flow Limits Sizing (Max Jobs, Max Activities) |
+| SCALE-012 | Cloud Object Storage Configuration (Details Readable By, HDFS Interface) |
+| SEC-002 | User Isolation Framework (UIF) Enabled with Appropriate Impersonation Rules |
+| SEC-004 | CGroups Enabled with Memory Limit per Sizing Heuristic |
+| SEC-006 | HTTPS Access Configured for DSS |

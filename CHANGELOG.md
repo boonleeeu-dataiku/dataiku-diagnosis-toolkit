@@ -10,6 +10,13 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.27.2] - 2026-10-06
+
+### Changed
+
+- Calibrations no longer depend on check ids staying the same. `calibrations.md` (and the checklist-review `SKILL.md`) now say to match an entry by what the check is about; the ids are pointers into the bundled checklist, and an entry is never applied just because an id matches. A new "Check anchors" table records the title each cited id had when its entry was written.
+- `tests/test_calibration_ids.py` fails when an id cited in `calibrations.md` is missing from the table, or when the bundled checklist no longer has that id with that title (renumbered, renamed or removed), listing each stale entry. `CLAUDE.md` documents the maintenance step. No calibration outcome changes.
+
 ## [0.27.1] - 2026-10-06
 
 ### Changed

@@ -102,7 +102,9 @@ re-derive such a value by hand, and never contradict it from memory. `ABSENT` is
 the reader's "Finding a setting reliably" before calling a setting absent. For a check it doesn't cover,
 read the bundle the normal way.
 
-First read `references/calibrations.md` in full and apply it to every matching row. Where a row's
+First read `references/calibrations.md` in full and apply it to every matching row. Match by what the
+check is about, not by id alone: ids can change between checklists, so if a row's id matches an entry but
+its title is about something else, don't apply the entry. Where a row's
 `insufficient_evidence_handling` says what to do when the bundle lacks the evidence, follow it; a
 matching calibration overrides it.
 

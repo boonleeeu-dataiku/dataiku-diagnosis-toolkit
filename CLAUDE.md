@@ -118,6 +118,10 @@ See README's "Testing" section for the three tiers.
 - **Before handing back any change**, run `scripts/test.sh fast`. It makes no model calls.
 - After re-syncing from upstream, `tests/test_vendored_drift.py` confirms the copies match. It
   skips if the sibling upstream checkouts aren't on disk.
+- **When the bundled checklist's checks change** (a renumbered, split, merged or removed check), run
+  `scripts/test.sh fast`. `tests/test_calibration_ids.py` lists each stale entry in `calibrations.md` (checked
+  against its "Check anchors" table). Fix those entries and the table together, then update `EVAL_ITEM_IDS` and
+  `tests/fixtures/expected/*.yaml` if an eval item moved.
 - **When you add or change a calibration** in `skills/dataiku-diagnosis-checklist-review/references/calibrations.md`,
   extend the eval fixtures to cover it (see `tests/fixtures/README.md`):
   1. Add the item to `EVAL_ITEM_IDS` in `tests/fixtures/build_fixtures.py`.
