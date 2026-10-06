@@ -73,6 +73,8 @@ DIP_HOME=/data/dataiku/design
 > free -m
               total        used        free      shared  buff/cache   available
 Mem:          {mem_total_mb}       {mem_total_mb - 4000}        1200          10        2800        3500
+> cat /proc/meminfo
+MemTotal:       {mem_total_mb * 1024} kB
 > cat /etc/redhat-release
 Red Hat Enterprise Linux release 9.4 (Plow)
 """)
@@ -198,6 +200,9 @@ backend.xmx = 8g
             "enabled": True, "cgroupsVersion": "CGROUPS_V2", "hierarchiesMountPoint": "/sys/fs/cgroup",
             "pythonRRecipes": {"targets": [{"cgroupPathTemplate": "DSS/${user}/pythonRRecipes",
                                             "limits": [{"key": "memory.max", "value": "40G"}]}]},
+            # ~62.5 GiB host (60-120 tier, target 66% = ~41 GiB): 42G is 67% -> inside the Pass band
+            "cgroups": [{"cgroupPathTemplate": "memory/DSS",
+                         "limits": [{"key": "memory.limit_in_bytes", "value": "42G"}]}],
         },
         "useImplicitK8sCluster": False,
         "defaultK8sClusterId": "eks-main",

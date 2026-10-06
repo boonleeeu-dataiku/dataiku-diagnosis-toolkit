@@ -41,12 +41,19 @@ def test_remote_database_is_not_loopback_and_agent_hub_is_detected():
 
 def test_missing_settings_are_explicit_absent_never_false_or_zero():
     facts = run_facts("synthetic_design_baseline")
-    assert facts["host_memory"]["value"] == "ABSENT"
+    assert facts["config_folder_size"]["value"] == "ABSENT"
     assert facts["trace_explorer"]["value"] == "ABSENT"
     sso = facts["sso_and_ldap"]["value"]
     # Not masked by the secret-key redaction either, even for a key name containing "auth".
     assert sso["ssoSettings.enabled"] == "ABSENT"
     assert sso["ldapSettings.authenticationEnabled"] == "ABSENT"
+
+
+def test_cgroup_limit_is_reported_as_a_percentage_of_host_memory():
+    cg = run_facts("synthetic_design_k8s_remote")["cgroups"]["value"]
+    assert cg["enabled"] is True
+    limit = cg["limits"][0]
+    assert limit["value"] == "42G" and limit["pct_of_MemTotal"] == pytest.approx(67.2, abs=0.2)
 
 
 @pytest.mark.parametrize("bundle", sorted(p.name for p in BUNDLES.iterdir() if p.is_dir()))

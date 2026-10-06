@@ -10,6 +10,13 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.27.1] - 2026-10-06
+
+### Changed
+
+- SEC-004 (cgroup memory cap) calibration rewritten to judge the limit against the checklist's RAM tiers (over 120 GiB: 75% of RAM; 60-120 GiB: 66%; 30-60 GiB: RAM minus 20 GiB; under 30 GiB: 50%). Within 10% of the tier target is **Pass**, including slightly above it; 80% of RAM or more is **Needs Review** (over-allocation risk); more than 10% off the target, or no memory limit, is **Needs Review**. Previously a flat "roughly 50-75%" left a 75.7% cap to run-to-run judgment (Pass/Partial/Partial across three runs).
+- Fixtures: `synthetic_design_k8s_remote` now has host RAM in `/proc/meminfo` form and a memory cgroup cap inside the Pass band, so SEC-004's expected answer is `[Pass]`; `tests/test_facts.py` covers the cgroup percentage.
+
 ## [0.27.0] - 2026-10-06
 
 ### Added

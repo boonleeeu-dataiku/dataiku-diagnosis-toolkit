@@ -7,5 +7,7 @@ DIP_HOME=/data/dataiku/design
 > free -m
               total        used        free      shared  buff/cache   available
 Mem:          64000       60000        1200          10        2800        3500
+> cat /proc/meminfo
+MemTotal:       65536000 kB
 > cat /etc/redhat-release
 Red Hat Enterprise Linux release 9.4 (Plow)

@@ -21,8 +21,8 @@ items:
   ARCH-013:
     status: [Pass, Partial]
     mentions_any: [eks-main, clusters/]
-  SEC-004:
-    status: [Pass, Partial, Needs Review]
+  SEC-004:    # ~62.5 GiB host, 42G cap = 67%: within 10% of the 66% tier target -> Pass
+    status: [Pass]
     mentions: [cgroup]
   SEC-006:    # DSS terminates TLS itself
     status: [Pass]

@@ -15,7 +15,18 @@
           ]
         }
       ]
-    }
+    },
+    "cgroups": [
+      {
+        "cgroupPathTemplate": "memory/DSS",
+        "limits": [
+          {
+            "key": "memory.limit_in_bytes",
+            "value": "42G"
+          }
+        ]
+      }
+    ]
   },
   "useImplicitK8sCluster": false,
   "defaultK8sClusterId": "eks-main",

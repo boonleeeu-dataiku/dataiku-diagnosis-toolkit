@@ -109,9 +109,26 @@ Add each new one as its own entry under the right heading; don't overwrite prior
   table says where): **Pass**. Whether the OS identities exist is a live check (`notes` only).
   Disabled: **Fail**.
 
-- **cgroups memory limit (SEC-004):** enabled with a limit of roughly 50-75% of host RAM: **Pass**.
-  Enabled with no limit, or one far outside that range: **Partial**. Disabled: **Fail**. Empty
-  per-workload placements are a `notes` observation, not a downgrade.
+- **cgroups memory limit (SEC-004):** the recommended cap depends on host RAM, so judge the limit against
+  its tier, not a flat percentage. Host RAM `R` is `MemTotal` in GiB and the cap `L` is the memory cgroup
+  limit in GiB (the cgroup "G" is GiB; never mix GB and GiB). Quote the percentage from the reader's
+  `facts.py`. The checklist's tiers give the recommended cap `T`:
+
+  | Host RAM | Recommended cap `T` |
+  |---|---|
+  | over 120 GiB | 75% of `R` |
+  | 60-120 GiB | 66% of `R` |
+  | 30-60 GiB | `R` minus 20 GiB |
+  | under 30 GiB | 50% of `R` |
+
+  - **Disabled:** **Fail**. Cgroup settings missing from the bundle: **Needs Review**.
+  - **`L` is 80% of `R` or more:** **Needs Review**, naming the risk of over-allocating memory to cgroups
+    (too little left for the OS and DSS's own processes). Check this first; it overrides the band below.
+  - **`L` within 10% of `T`** (either side): **Pass**, including slightly above `T`.
+  - **`L` more than 10% away from `T`, or enabled with no memory limit:** **Needs Review** (ask whether
+    it is intentional).
+  - In `notes`, give the percentage and tier, e.g. `190G = 75.7% of 251 GiB; tier target 75%`. Empty
+    per-workload placements are a `notes` observation, not a downgrade.
 
 - **Export restriction (ADVSEC-008):** the check lists alternative keys (`one_of`), so any one set to
   true is **Pass**; the others (e.g. clipboard keys) are `notes` only. None set: **Fail**.
