@@ -58,7 +58,10 @@ dump whole files). Also:
   say so in your final summary, name the file, and tell the user to rotate it.
 - If the bundle itself holds plaintext credentials (e.g. an internal-database password), report that
   even if you never printed the value: name the file and the kind of credential, never the value, and
-  recommend rotating it and moving it to a secrets store.
+  recommend rotating it and moving it to a secrets store. Put it in your final summary every time, in
+  exactly this form: `Plaintext credential: the internal database password is stored in plaintext in <the
+  settings file named in facts.py's internal_database source>; value not read. Rotate it and use a secrets
+  store.` The SCALE-001 `notes` carry the matching `Action:` (see `references/calibrations.md`).
 
 ## 1. Orient
 

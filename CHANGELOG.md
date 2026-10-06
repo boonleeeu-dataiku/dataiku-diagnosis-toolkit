@@ -10,6 +10,12 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.29.1] - 2026-10-06
+
+### Changed
+
+- A plaintext internal-database password (from `facts.py`'s `internal_database`) is now reported the same way every run: SCALE-001 `notes` carry `Action: rotate the stored database credential and move it to a secrets store` (status unchanged), and the final summary carries one fixed line. The value is never printed. The baseline fixture stores a synthetic plaintext password and expects the Action.
+
 ## [0.29.0] - 2026-10-06
 
 ### Added

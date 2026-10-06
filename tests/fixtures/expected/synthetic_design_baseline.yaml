@@ -62,6 +62,7 @@ items:
   SCALE-001:  # PostgreSQL, but on loopback -> Partial
     status: [Partial]
     mentions_any: [127.0.0.1, loopback, local]
+    mentions: [rotate]   # plaintext internal DB password -> the rotate Action
   SCALE-002:  # Hive metastore on a Hadoop estate -> Pass without a functional test
     status: [Pass]
   SCALE-003:  # graphics export off -> Needs Review (ask if intentional)

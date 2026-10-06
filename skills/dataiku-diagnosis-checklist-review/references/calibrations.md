@@ -206,6 +206,9 @@ matches. Add each new one as its own entry under the right heading; don't overwr
   reader's `data-dir-config` reference says where). PostgreSQL on a non-local host: **Pass**. On the same
   host (loopback or the DSS host itself): **Partial**. Not PostgreSQL: **Fail**. Pool size against
   `max_connections` and backups are `notes` only.
+  When `facts.py`'s `internal_database` reports `password_stored_in_plaintext: true`, `notes` carries
+  `Action: rotate the stored database credential and move it to a secrets store` (never the value). It does
+  not change the status. False or ABSENT: add nothing.
 
 - **Metastore (SCALE-002) and graphics export (SCALE-003):** decide from the setting, never Needs Review
   for want of a functional test.

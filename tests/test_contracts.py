@@ -163,3 +163,9 @@ def test_review_skill_defines_must_have_and_uses_insufficient_evidence_column():
     """Step 6 keys off must-have items and step 4 defers to the checklist's own fallback column."""
     for phrase in ("priority == must_have", "insufficient_evidence_handling", "Claude (AI-assisted review of"):
         assert phrase in REVIEW_SKILL, f"review skill no longer says {phrase!r}"
+
+
+def test_review_skill_fixes_the_plaintext_credential_summary_line():
+    flat = " ".join(REVIEW_SKILL.split())
+    assert "Plaintext credential: the internal database password is stored in plaintext in" in flat
+    assert "Rotate it and use a secrets store." in flat

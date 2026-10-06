@@ -30,7 +30,8 @@
       "params": {
         "host": "127.0.0.1",
         "port": 5432,
-        "db": "dss_design_db"
+        "db": "dss_design_db",
+        "password": "synthetic-not-a-secret"
       }
     }
   },
