@@ -191,11 +191,18 @@ rows (ID, Section, Title, Status) from the section sheets and applies one fixed 
 only the judgment text:
 
 - `checklist_path`, `reviewer`, `bundle`, and optionally `node_version` and `diagnosis_generated`.
+  Fix their format so repeat runs produce the same Summary header:
+  - `reviewer`: exactly the `validated_by` string, `Claude (AI-assisted review of <bundle name>)`.
+  - `node_version`: `<nodetype> / DSS <product_version>` from `facts.py`'s `node`, e.g. `design / DSS 14.2.1`.
+  - `diagnosis_generated`: an ISO date `YYYY-MM-DD`, from the timestamp in the bundle folder name
+    (`dku_diagnosis_<node>_<YYYY-MM-DD-HH-MM-SS>`).
 - `key_points`: `{item id: one line, <= 90 characters}` for **every** must-have item (`priority == must_have`) that is Fail,
   Partial or Needs Review, and for no other item. Echo the headline of the item's `notes`. The key
   order sets the row order within each block. List Fail items most causally central first.
 - `recommendations`: the ordered actions, linked issues together and root cause before its
-  symptoms. Leave out the numbering; the tool adds `1. `, `2. `, ...
+  symptoms. One action per root-cause group, at most 7, each naming its item ids in brackets (e.g.
+  `[SCALE-008]`). Order the groups by the Fail key points first (the first Fail's group first), then Partial,
+  then Needs Review. Leave out the numbering; the tool adds `1. `, `2. `, ...
 
 The tool fails without touching the file if a key point is missing, extra, too long or multi-line,
 or if any item has a blank or unknown status. Fix the input and call it again. It also re-reads

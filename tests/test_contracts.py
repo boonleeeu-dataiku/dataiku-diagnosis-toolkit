@@ -80,6 +80,12 @@ def test_review_skill_summary_headers_are_recognised_by_the_deck_generator(heade
     assert matches and matches[0] == alias_key, f"{header!r} is recognised as {matches}"
 
 
+def test_review_skill_pins_summary_header_formats():
+    assert "Claude (AI-assisted review of <bundle name>)" in REVIEW_SKILL
+    assert "<nodetype> / DSS <product_version>" in REVIEW_SKILL
+    assert "`YYYY-MM-DD`" in REVIEW_SKILL
+
+
 def test_review_skill_anchor_header_matches_exact_text_lookup():
     """find_section_blocks() locates the anchor by exact (case-insensitive) text."""
     assert SUMMARY_BLOCKS[0][0].lower() == "overall status counts"

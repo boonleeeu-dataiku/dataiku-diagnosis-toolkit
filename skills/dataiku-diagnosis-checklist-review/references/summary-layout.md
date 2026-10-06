@@ -8,7 +8,8 @@ use these header texts **verbatim**; differently worded headers make the deck sh
 whole sections.
 
 1. **Metadata rows**, label in column A ending in a colon, value in column B: `Bundle:`,
-   `Node / Version:`, `Diagnosis generated:`, `Report generated:` (today, `YYYY-MM-DD`), `Reviewer:`.
+   `Node / Version:`, `Diagnosis generated:`, `Report generated:` (today, `YYYY-MM-DD`), `Reviewer:`. Use the same formats as step 6 of `SKILL.md` (reviewer = the `validated_by` string,
+   node = `<nodetype> / DSS <version>`, diagnosis date = `YYYY-MM-DD`).
 2. **Block headers**, each alone in column A, in this order:
    - `Overall Status Counts`
    - `Per-Section Breakdown`

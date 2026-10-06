@@ -10,6 +10,12 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.28.2] - 2026-10-06
+
+### Changed
+
+- Checklist-review skill pins the `write_summary` header formats (reviewer = the `validated_by` string, node = `<nodetype> / DSS <version>`, diagnosis date = `YYYY-MM-DD`) and how recommendations are grouped and ordered (one per root-cause group, at most 7, Fail first), so repeat runs produce the same Summary. Contract test added.
+
 ## [0.28.1] - 2026-10-06
 
 ### Added
