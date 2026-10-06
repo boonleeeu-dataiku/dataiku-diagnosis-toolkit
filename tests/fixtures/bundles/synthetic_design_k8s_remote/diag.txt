@@ -9,5 +9,13 @@ DIP_HOME=/data/dataiku/design
 Mem:          64000       60000        1200          10        2800        3500
 > cat /proc/meminfo
 MemTotal:       65536000 kB
+> lsblk
+NAME                  MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                     8:0    0  1.5T  0 disk 
+└─vgAPP-data_dataiku  253:3    0  1.5T  0 lvm  /data/dataiku
+> lsblk -t
+NAME                 ALIGNMENT MIN-IO OPT-IO PHY-SEC LOG-SEC ROTA SCHED       RQ-SIZE  RA WSAME
+sda                          0  65536  65536    4096     512    0 mq-deadline     256 128    0B
+└─vgAPP-data_dataiku         0  65536  65536    4096     512    0                 128 128    0B
 > cat /etc/redhat-release
 Red Hat Enterprise Linux release 9.4 (Plow)

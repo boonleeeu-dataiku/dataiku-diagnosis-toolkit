@@ -28,7 +28,7 @@ TEMPLATE = REPO_ROOT / "skills" / "dataiku-diagnosis-checklist-review" / "resour
 EVAL_ITEM_IDS = [
     "ARCH-001",   # automation-node existence from a design bundle -> always Needs Review
     "ARCH-002",   # DSS version currency (web lookup, or Needs Review when unavailable)
-    "ARCH-004",   # SSD storage -> sanity-check.json is authoritative
+    "ARCH-004",   # SSD storage -> sanity-check flag is Fail; else the data dir's disk ROTA from the lsblk blocks
     "ARCH-010",   # containerized exec config -> Kubernetes-conditional
     "ARCH-013",   # cluster config -> Kubernetes-conditional
     "SEC-004",    # cgroups memory limit
@@ -51,6 +51,9 @@ EVAL_ITEM_IDS = [
     "SCALE-004",  # admin project cleanup: active schedule -> Pass; none -> Fail
     "ARCH-006",   # differently sized Spark configs -> Pass; none -> Fail
     "GENAI-007",  # Cobuild on a pre-gate DSS -> Needs Review (version gate beats feature gate)
+    "SEC-001",    # instance id present in the bundle -> Pass; missing -> Fail
+    "SEC-009",    # LDAP authorized groups: set -> Pass; empty -> Fail; LDAP off -> Not Applicable
+    "SCALE-010",  # any non-blank default connection/format/engine preference -> Needs Review; all blank -> Pass
 ]
 
 FIXTURE_MARKER = "SYNTHETIC TEST FIXTURE - not real diagnosis data."
@@ -63,7 +66,16 @@ def write(path: Path, content) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-def root_files(root: Path, *, mem_total_mb: int, xmx: str, oom: bool) -> None:
+def root_files(root: Path, *, mem_total_mb: int, xmx: str, oom: bool, lsblk_rota: int | None = None) -> None:
+    lsblk = "" if lsblk_rota is None else f"""> lsblk
+NAME                  MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                     8:0    0  1.5T  0 disk 
+\u2514\u2500vgAPP-data_dataiku  253:3    0  1.5T  0 lvm  /data/dataiku
+> lsblk -t
+NAME                 ALIGNMENT MIN-IO OPT-IO PHY-SEC LOG-SEC ROTA SCHED       RQ-SIZE  RA WSAME
+sda                          0  65536  65536    4096     512    {lsblk_rota} mq-deadline     256 128    0B
+\u2514\u2500vgAPP-data_dataiku         0  65536  65536    4096     512    {lsblk_rota}                 128 128    0B
+"""
     write(root / "diag.txt", f"""{FIXTURE_MARKER}
 > uname -a
 Linux synthetic-host 5.14.0-427.el9.x86_64 #1 SMP x86_64 GNU/Linux
@@ -75,7 +87,7 @@ DIP_HOME=/data/dataiku/design
 Mem:          {mem_total_mb}       {mem_total_mb - 4000}        1200          10        2800        3500
 > cat /proc/meminfo
 MemTotal:       {mem_total_mb * 1024} kB
-> cat /etc/redhat-release
+{lsblk}> cat /etc/redhat-release
 Red Hat Enterprise Linux release 9.4 (Plow)
 """)
     write(root / "timings.txt",
@@ -141,6 +153,10 @@ backend.xmx = 2g
                                             "params": {"host": "127.0.0.1", "port": 5432, "db": "dss_design_db"}}},
         "metastoreCatalogsSettings": {"synchronizeTo": {"flavor": "HIVESERVER2", "glueCredentialsMode": "DEFAULT"}},
         "hiveSettings": {"enabled": True},
+        "ldapSettings": {"enabled": True, "authenticationEnabled": True, "authorizedGroups": []},
+        "defaultDatasetCreationSettings": {"allowUploadsWithoutConnection": True,
+                                           "preferedUploadConnection": "filesystem_managed"},
+        "recipeEnginesPreferences": {"forbiddenEngines": [], "enginesPreferenceOrder": []},
         "graphicsExportsEnabled": False,
         "maxRunningActivities": 0,
         "maxRunningActivitiesPerJob": 0,
@@ -174,7 +190,7 @@ def k8s_remote_bundle(root: Path) -> None:
     """Design node with a managed Kubernetes cluster and two differently sized container
     configs, DSS-terminated HTTPS, a REMOTE deployer, cgroups with a memory limit, bounded
     flow limits, a clean backend.log and no filesystem_root -- the "healthy" counterpart."""
-    root_files(root, mem_total_mb=64000, xmx="8g", oom=False)
+    root_files(root, mem_total_mb=64000, xmx="8g", oom=False, lsblk_rota=0)
     m = root / "data_dataiku" / "design"
     write(m / "install.ini", """[general]
 nodeid = synthetic-design-02
@@ -231,6 +247,11 @@ backend.xmx = 8g
             "defaultRetrievableKnowledgeContainerExecSelection": {"containerMode": "INHERIT"},
         },
         "deployerClientSettings": {"mode": "REMOTE", "nodeUrl": "https://deployer.synthetic.example:11200"},
+        "ldapSettings": {"enabled": True, "authenticationEnabled": True,
+                         "authorizedGroups": ["dss-users", "dss-admins"]},
+        "defaultDatasetCreationSettings": {"allowUploadsWithoutConnection": True, "virtualizable": False},
+        "recipeEnginesPreferences": {"forbiddenEngines": [], "enginesPreferenceOrder": [],
+                                     "forbiddenByRecipeType": {}, "preferenceByRecipeType": {}},
         "maxRunningActivities": 10,
         "maxRunningActivitiesPerJob": 4,
         "jekSettings": {"maxRunningJobs": 5},
@@ -262,8 +283,15 @@ backend.xmx = 8g
 def admin_python_bundle(root: Path) -> None:
     """The baseline bundle plus an `ADMINISTRATIONPROJECT` (no fixed admin project name) whose only
     scenario is an active, scheduled `custom_python` one: housekeeping can't be confirmed without
-    reading its script, so SCALE-004 is Needs Review."""
+    reading its script, so SCALE-004 is Needs Review. It also has no instance id in install.ini
+    (SEC-001 Fail) and LDAP switched off (SEC-009 Not Applicable)."""
     baseline_bundle(root)
+    design = root / "data_dataiku" / "design"
+    ini = design / "install.ini"
+    ini.write_text("".join(ln for ln in ini.read_text().splitlines(True) if not ln.startswith("installid")))
+    settings = json.loads((design / "config" / "general-settings.json").read_text())
+    settings["ldapSettings"] = {"enabled": False, "authenticationEnabled": False, "authorizedGroups": []}
+    write(design / "config" / "general-settings.json", settings)
     p = root / "data_dataiku" / "design" / "config" / "projects" / "ADMINISTRATIONPROJECT"
     write(p / "params.json", {"projectKey": "ADMINISTRATIONPROJECT", "owner": "admin"})
     write(p / "scenarios" / "NIGHTLY_TASKS.json", {

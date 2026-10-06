@@ -11,7 +11,9 @@ A setting that is not in the bundle is reported as `{"value": "ABSENT", "searche
 It exists so a reviewer quotes these values instead of re-reading a ~large general-settings.json by
 hand (hand reads have mis-stated hosts, flags and limits, and missed keys that sit under an
 unexpected block). Concurrency limits are found by leaf-key search of the whole file, so a limit under
-`jekSettings` is not missed. The `config/` size comes from `config_listing.txt`, not `du`.
+`jekSettings` is not missed. The `config/` size comes from `config_listing.txt`, not `du`. The disk
+behind the data directory comes from the `lsblk` blocks of `diag.txt`. Housekeeping-project scenarios are
+summarised without ever opening a scenario's script, and the deployer target is reported without its API key.
 
 Read-only; no network calls; Python 3 stdlib only. Passwords and other secrets are never printed
 (only a boolean says whether the internal database password is stored in plaintext). Redaction reuses
@@ -21,6 +23,7 @@ import json
 import os
 import re
 import sys
+from urllib.parse import urlparse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 try:
@@ -236,8 +239,12 @@ def concurrency_limits():
 
 @fact("sso_and_ldap")
 def sso_and_ldap():
-    return settings_fact("ssoSettings.enabled", "ssoSettings.protocol",
-                         "ldapSettings.enabled", "ldapSettings.authenticationEnabled")
+    res = settings_fact("ssoSettings.enabled", "ssoSettings.protocol",
+                        "ldapSettings.enabled", "ldapSettings.authenticationEnabled")
+    if isinstance(res.get("value"), dict):  # authorized groups: the count only, group names are not printed
+        groups = dig(load_json("config/general-settings.json"), "ldapSettings.authorizedGroups")
+        res["value"]["ldapSettings.authorizedGroups_count"] = len(groups) if isinstance(groups, list) else groups
+    return res
 
 
 @fact("user_isolation")
@@ -330,6 +337,158 @@ def plugins():
     return found({"installed_config_dirs": names, "agent_hub_installed": "agent-hub" in names,
                   "AGENT_HUB_project_present": os.path.isdir(os.path.join(MIRROR, "config/projects/AGENT_HUB"))},
                  f"{rel}: directory names (agent_hub_installed = an agent-hub dir exists)")
+
+
+def diag_section(cmd):
+    """Lines of the `> <cmd>` block in diag.txt (up to the next `> ` command or a dashed separator)."""
+    path = os.path.join(ROOT, "diag.txt")
+    if not os.path.isfile(path):
+        return None
+    out, inside = [], False
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        for raw in fh:
+            line = raw.rstrip("\n")
+            if inside and (line.startswith("> ") or line.startswith("-----")):
+                break
+            if inside:
+                out.append(line)
+            elif line.strip() == f"> {cmd}":
+                inside = True
+    return out if inside else None
+
+
+def diag_env(name):
+    path = os.path.join(ROOT, "diag.txt")
+    if not os.path.isfile(path):
+        return None
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            if line.startswith(name + "="):
+                return line.rstrip("\n").split("=", 1)[1].strip()
+    return None
+
+
+def lsblk_nodes(lines):
+    """[{name, col, type, mount}] in listing order, from `lsblk` tree output (col = indent of the name)."""
+    nodes = []
+    for line in lines[1:]:
+        m = re.search(r"[A-Za-z0-9_]", line)
+        if not m:
+            continue
+        col = m.start()
+        rest = line[col:]
+        name = rest.split()[0]
+        tail = re.match(r"\S+\s+\d+:\d+\s+\d\s+\S+\s+\d\s+(\S+)\s*(.*)$", rest)
+        if not tail:
+            continue
+        nodes.append({"name": name, "col": col, "type": tail.group(1), "mount": tail.group(2).strip()})
+    return nodes
+
+
+def lsblk_rota(lines):
+    """{device name: ROTA} from `lsblk -t` output, located by the ROTA column of the header."""
+    header = lines[0].split()
+    if "ROTA" not in header:
+        return {}
+    idx = header.index("ROTA")
+    rota = {}
+    for line in lines[1:]:
+        m = re.search(r"[A-Za-z0-9_]", line)
+        if not m:
+            continue
+        toks = line[m.start():].split()
+        if len(toks) > idx and toks[idx] in ("0", "1"):
+            rota[toks[0]] = int(toks[idx])
+    return rota
+
+
+@fact("data_volume_device")
+def data_volume_device():
+    src = "diag.txt: printenv DIP_HOME, lsblk, lsblk -t"
+    data_dir = diag_env("DIP_HOME")
+    tree, tuning = diag_section("lsblk"), diag_section("lsblk -t")
+    if not data_dir or tree is None or tuning is None:
+        return absent("diag.txt DIP_HOME" if not data_dir else "diag.txt lsblk / lsblk -t blocks")
+    nodes = lsblk_nodes(tree)
+    rota = lsblk_rota(tuning)
+    best = None
+    for n in nodes:
+        mp = n["mount"]
+        if mp.startswith("/") and (data_dir == mp or data_dir.startswith(mp.rstrip("/") + "/")):
+            if best is None or len(mp) > len(best):
+                best = mp
+    if best is None:
+        return absent(f"{src}: no lsblk mount point contains {data_dir}")
+    disks = {}
+    for i, n in enumerate(nodes):
+        if n["mount"] != best:
+            continue
+        # walk up to the root disk of this listing entry (lsblk repeats an LVM volume under each disk)
+        col = n["col"]
+        for j in range(i - 1, -1, -1):
+            if nodes[j]["col"] < col:
+                col = nodes[j]["col"]
+                if nodes[j]["col"] == 0:
+                    disks.setdefault(nodes[j]["name"], rota.get(nodes[j]["name"]))
+                    break
+        if n["col"] == 0:
+            disks.setdefault(n["name"], rota.get(n["name"]))
+    if not disks:
+        return absent(f"{src}: mount {best} has no backing disk in the listing")
+    backing = [{"disk": d, "rota": r if r is not None else ABSENT} for d, r in sorted(disks.items())]
+    known = [b["rota"] for b in backing if b["rota"] != ABSENT]
+    return found({"data_dir": data_dir, "mount_point": best, "backing_disks": backing,
+                  "all_non_rotational": (all(r == 0 for r in known) if len(known) == len(backing) else ABSENT)},
+                 f"{src} (ROTA 0 = non-rotational/SSD, 1 = rotational)")
+
+
+@fact("admin_cleanup_scenarios")
+def admin_cleanup_scenarios():
+    rel = "config/projects"
+    base = os.path.join(MIRROR, rel)
+    if not os.path.isdir(base):
+        return absent(rel)
+    cand = sorted(k for k in os.listdir(base)
+                  if re.search(r"admin|maint|housekeep|clean", k, re.I) and os.path.isdir(os.path.join(base, k)))
+    projects = {}
+    for key in cand[:20]:
+        sdir = os.path.join(base, key, "scenarios")
+        scenarios = []
+        for fn in sorted(os.listdir(sdir)) if os.path.isdir(sdir) else []:
+            if not fn.endswith(".json"):
+                continue  # a scenario's .py script is never opened
+            try:
+                with open(os.path.join(sdir, fn), encoding="utf-8") as fh:
+                    sc = json.load(fh)
+            except (OSError, ValueError) as exc:
+                scenarios.append({"file": fn, "error": f"{type(exc).__name__}"})
+                continue
+            steps = (sc.get("params") or {}).get("steps") or []
+            scenarios.append({
+                "file": fn, "type": sc.get("type", ABSENT), "active": sc.get("active", ABSENT),
+                "triggers": [{"type": t.get("type"), "active": t.get("active")} for t in sc.get("triggers") or []],
+                "step_names": [st.get("name") or st.get("type") for st in steps][:12],
+            })
+        projects[key] = scenarios
+    return found({"candidate_projects": projects, "candidate_count": len(cand)},
+                 f"{rel}/<key>/scenarios/*.json (candidates matched on the key: admin, maint, housekeep, clean; scripts not read)")
+
+
+@fact("deployer")
+def deployer():
+    src = "config/general-settings.json"
+    gs = load_json(src)
+    if gs is None:
+        return absent(src)
+    d = dig(gs, "deployerClientSettings")
+    if d == ABSENT or not isinstance(d, dict):
+        return absent(f"{src}: deployerClientSettings")
+    url = urlparse(d.get("nodeUrl") or "")
+    return found({"mode": d.get("mode", ABSENT),
+                  "target_host": (url.hostname + (f":{url.port}" if url.port else "")) if url.hostname else ABSENT,
+                  "api_key_configured": bool(d.get("apiKey")) if "apiKey" in d else ABSENT,
+                  "trust_all_ssl_certificates": d.get("trustAllSSLCertificates", ABSENT)},
+                 f"{src}: deployerClientSettings (API key value and URL credentials never printed)")
 
 
 def find_mirror(root):

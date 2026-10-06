@@ -9,6 +9,13 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.10.0] - 2026-10-06
+
+### Added
+
+- `scripts/facts.py` gains three facts, verified against the design, automation and older design samples: `data_volume_device` (the data directory from `printenv` → the longest matching `lsblk` mount point → its backing disk(s) → ROTA from `lsblk -t`; `ABSENT` when the device can't be established), `admin_cleanup_scenarios` (housekeeping-project candidates with each scenario's `type`, `active`, trigger state and step names; scripts are never opened) and `deployer` (mode and target host; the API key is never printed, only whether one is configured). The `sso_and_ldap` fact also reports the LDAP authorized-groups count (names are not printed).
+- Secrets guidance: `deployerClientSettings` holds a Deployer API key, so read it via `facts.py` or `peek.py --path`, never raw. A repeat-review run printed that key. Documented in `SKILL.md`; the key-masking is covered by the `peek.py` redaction.
+
 ## [0.9.0] - 2026-10-06
 
 ### Added

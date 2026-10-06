@@ -43,6 +43,19 @@
   "hiveSettings": {
     "enabled": true
   },
+  "ldapSettings": {
+    "enabled": false,
+    "authenticationEnabled": false,
+    "authorizedGroups": []
+  },
+  "defaultDatasetCreationSettings": {
+    "allowUploadsWithoutConnection": true,
+    "preferedUploadConnection": "filesystem_managed"
+  },
+  "recipeEnginesPreferences": {
+    "forbiddenEngines": [],
+    "enginesPreferenceOrder": []
+  },
   "graphicsExportsEnabled": false,
   "maxRunningActivities": 0,
   "maxRunningActivitiesPerJob": 0,

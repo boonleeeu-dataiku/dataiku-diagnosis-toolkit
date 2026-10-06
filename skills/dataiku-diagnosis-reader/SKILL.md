@@ -1,7 +1,7 @@
 ---
 name: "dataiku-diagnosis-reader"
 description: "Navigate and interpret an extracted Dataiku DSS diagnosis.zip support bundle (also: DSS diagnostic export, instance diagnostic archive, a folder named dku_diagnosis_*) to answer troubleshooting questions on instance configuration, crashes/OOMs, performance, users, connections, projects, code environments, plugins and logs, without re-deriving the bundle layout. Use whenever the user provides or asks about a Dataiku diagnosis bundle or wants to diagnose a DSS instance from one."
-version: 0.9.0
+version: 0.10.0
 ---
 
 # Dataiku DSS diagnosis.zip reader
@@ -77,9 +77,12 @@ as a structural model, not a byte-identical layout guaranteed across every bundl
    of re-reading `general-settings.json` by hand. It prints JSON, `{fact: {value, source}}`: node and
    version, `install.ini` heap sizes, host memory (GiB), `config/` size from `config_listing.txt`, the
    internal database type/host/loopback, concurrency limits found by leaf-key search (including
-   `jekSettings`), SSO/LDAP, impersonation rule counts, cgroup memory limit as a percentage of host
+   `jekSettings`), SSO/LDAP (including the LDAP authorized-groups count), impersonation rule counts, cgroup memory limit as a percentage of host
    memory, connection count and `filesystem_root`, the Trace Explorer web app, default connection and
-   engine preferences, installed plugins and whether Agent Hub is installed. A missing setting is
+   engine preferences, installed plugins and whether Agent Hub is installed, the disk(s) behind the
+   data directory with their ROTA value (`data_volume_device`), the housekeeping-project scenarios
+   (`admin_cleanup_scenarios`: type, active, trigger state and step names, scripts never read), and the
+   deployer mode and target host (`deployer`, never its API key). A missing setting is
    `"value": "ABSENT"` (with what was searched), never `false` or `0`; an unreadable one is `"ERROR"`. It
    never prints secrets (only whether the internal database password is stored in plaintext). It is
    read-only Python 3 stdlib; if it cannot run where the bundle is, read the same values with the
@@ -111,6 +114,9 @@ output lands in the transcript.
   credentials. Use it first to learn a file's shape; then `--path` to one key. For `.ini`/`.properties`,
   grep exact key names. A file has more than 40 keys at some level (`general-settings.json` has over
   100 at the top)? Add `--keys` (names only) or `--max-items 200`; don't fall back to a raw dump.
+- **Deployer and API-key settings:** `general-settings.json` → `deployerClientSettings` holds a Deployer
+  API key. Don't open that block raw: take `mode` and the target host from `facts.py` (`deployer`), or use
+  `peek.py --path deployerClientSettings`, which masks the key.
 - Never `cat`, `jq .`, or `print(json.load(...))` whole `general-settings.json`, `connections.json`,
   `users.json`, `install.ini` or `dip.properties`; never run `printenv`/`env` or read user scripts in
   full. Never dump a whole settings block or connection.

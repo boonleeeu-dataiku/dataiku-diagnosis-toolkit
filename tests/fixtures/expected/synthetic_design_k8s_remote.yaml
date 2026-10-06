@@ -13,8 +13,9 @@ items:
     # any phrasing of "couldn't verify/check/look up the latest release", e.g. "could not be
     # verified", "Couldn't check how current this version is", "could not be looked up"
     matches: "(could ?n[o']t|can ?n[o']t|cannot|unable to|not able to|wasn't able to)\\b.{0,40}(verif|check|confirm|look(ed)? up|determin)"
-  ARCH-004:   # no sanity-check warning, but SSD can't be confirmed either
-    status: [Pass, Needs Review]
+  ARCH-004:   # no sanity-check warning; data dir /data/dataiku/design sits on sda with ROTA 0 -> Pass
+    status: [Pass]
+    mentions_any: [sda, rota, lsblk]
   ARCH-010:   # cluster attached + two differently sized container configs
     status: [Pass]
     mentions: [containerSettings]
@@ -68,3 +69,11 @@ items:
   GENAI-007:  # DSS 14.4.3 predates the check's minimum version -> Needs Review
     status: [Needs Review]
     mentions_any: ["14.4.3", version]
+  SEC-001:
+    status: [Pass]
+    mentions_any: [installid, install id, instance id]
+  SEC-009:    # LDAP enabled with two authorized groups -> Pass
+    status: [Pass]
+    mentions_any: [authorizedGroups, authorized groups]
+  SCALE-010:  # all default connection/format/engine preferences blank -> Pass
+    status: [Pass]

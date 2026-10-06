@@ -74,3 +74,10 @@ items:
   GENAI-007:  # DSS 12.6 predates the check's minimum version -> Needs Review, never Not Applicable
     status: [Needs Review]
     mentions_any: ["12.6", version]
+  SEC-001:    # no instance id in install.ini -> Fail
+    status: [Fail]
+    mentions_any: [installid, install id, instance id]
+  SEC-009:    # LDAP switched off -> Not Applicable
+    status: [Not Applicable]
+  SCALE-010:  # inherits the baseline's non-blank upload connection -> Needs Review
+    status: [Needs Review]

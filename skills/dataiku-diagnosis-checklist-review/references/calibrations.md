@@ -109,6 +109,14 @@ matches. Add each new one as its own entry under the right heading; don't overwr
   security concern. None configured: **Not Applicable** (say the default page is in use). Valid
   http/https redirect: **Pass**. **Fail** only when one is configured but invalid.
 
+- **Instance identification (SEC-001):** **Pass** when the node's instance (install) id is present in the
+  bundle (the reader's `facts.py` reports it under `node`); **Fail** when it is missing. Whether it
+  matches a customer inventory or tracking tool is a live check: an `Action:` in `notes`, never the status.
+
+- **LDAP authorized groups (SEC-009):** conditional on LDAP being enabled (`facts.py`, `sso_and_ldap`).
+  Enabled with one or more authorized groups: **Pass** (give the count, never the names). Enabled with
+  none: **Fail**. LDAP not enabled: **Not Applicable**.
+
 - **UIF (SEC-002):** impersonation enabled with at least one user or group rule (the reader's lookup
   table says where): **Pass**. Whether the OS identities exist is a live check (`notes` only).
   Disabled: **Fail**.
@@ -145,7 +153,7 @@ matches. Add each new one as its own entry under the right heading; don't overwr
 
 - **Backend Xmx sizing (SCALE-008):** apply the full rule from the checklist, not just the RAM tier.
   Check all of: (1) `backend.xmx` against the RAM tier; (2) `backend.xmx` >= 3x the size of the
-  `config/` folder (the reader's `listings-and-manifests` reference says how to size it); (3) not in the
+  `config/` folder (use `facts.py`'s `config_folder_size`, which sums the listing; never size it from the partial mirror); (3) not in the
   32-48GB dead zone; (4) the other components' heaps (`jek.xmx`/`fek.xmx`) not oversized; (5) no
   `OutOfMemoryError` in the backend logs. State which you checked in `evidence_found`; never assume a
   tier from RAM alone.
@@ -153,6 +161,12 @@ matches. Add each new one as its own entry under the right heading; don't overwr
 - **Flow limits sizing (SCALE-009):** a concurrency or sizing limit that sits in a different place than
   its name suggests still counts. A value of `0` means unsized: **Fail**, even when the other
   concurrency limit is in range.
+
+- **Preferred connections and engines (SCALE-010):** the check wants the default dataset-creation
+  connection, upload connection, storage formats and recipe engine preferences left blank unless a use case
+  justifies them (`facts.py`, `default_preferences`). Any of them non-blank: **Needs Review** (ask whether it
+  is intentional; name the values in `notes`, and call a non-blank engine preference the riskier one).
+  All blank or absent: **Pass**.
 
 - **Connection-detail gaps (SCALE-012):** gaps DSS itself flagged are real evidence. Report **Partial**
   rather than Not Applicable just because the storage is HDFS and not a cloud object store.
@@ -197,6 +211,12 @@ matches. Add each new one as its own entry under the right heading; don't overwr
   `notes` only.
 
 ## Architecture and version
+
+- **SSD storage (ARCH-004):** decide from the host's disks, because DSS's own sanity check may be missing
+  from the bundle. Use the reader's `data_volume_device` fact: every disk behind the data directory
+  non-rotational: **Pass**; any rotational: **Fail**; the fact is `ABSENT` (data directory, disk listing or
+  matching mount not found): **Needs Review**. DSS's own sanity check flagging a rotational disk is also
+  **Fail**; its absence is not evidence either way. Name the data directory and disk(s) in `evidence_found`.
 
 - **Automation-node existence / Design-Automation separation (ARCH-001), on a design-node bundle:** the
   automation node is a separate host with its own bundle, so a design bundle can never confirm one
@@ -251,6 +271,7 @@ and the row together.
 | ADVSEC-011 | Preventing links to be clickable in data tables |
 | ARCH-001 | Separation of Design and Automation Nodes |
 | ARCH-002 | Regular DSS Version Upgrades |
+| ARCH-004 | SSD Storage for DSS |
 | ARCH-006 | Baseline Spark Configuration Set (High/Standard/Large-memory/High I/O) |
 | ARCH-007 | Kubernetes Namespace and Auth Recommendations for Spark |
 | ARCH-008 | Functional Validation of Spark Execution (Recipe & Notebook) |
@@ -267,7 +288,10 @@ and the row together.
 | SCALE-007 | Backend.log Error Review |
 | SCALE-008 | Backend Xmx Sizing |
 | SCALE-009 | Flow Limits Sizing (Max Jobs, Max Activities) |
+| SCALE-010 | Preferred Connections and Engines Settings |
 | SCALE-012 | Cloud Object Storage Configuration (Details Readable By, HDFS Interface) |
+| SEC-001 | Verify/Capture Instance IDs |
 | SEC-002 | User Isolation Framework (UIF) Enabled with Appropriate Impersonation Rules |
 | SEC-004 | CGroups Enabled with Memory Limit per Sizing Heuristic |
 | SEC-006 | HTTPS Access Configured for DSS |
+| SEC-009 | LDAP Authorized Groups Configured |

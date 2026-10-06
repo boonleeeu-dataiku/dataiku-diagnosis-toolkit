@@ -10,6 +10,18 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-10-06
+
+### Added
+
+- Re-sync reader 0.10.0: `facts.py` now also reports `data_volume_device` (the disk behind the data directory and its ROTA value), `admin_cleanup_scenarios` (housekeeping-project scenarios: type, active, trigger state, step names; scripts never read), `deployer` (mode and target host, never the API key) and the LDAP authorized-groups count; plus reader guidance not to open the Deployer API key block raw (a repeat run printed it).
+- Calibrations for the checks that still split repeat Codex runs: **SEC-001** (instance id present = Pass, missing = Fail), **SEC-009** (LDAP on with authorized groups = Pass, on with none = Fail, off = Not Applicable), **ARCH-004** (decide from the disk behind the data directory, since DSS's sanity check can be missing: all non-rotational = Pass, any rotational = Fail, undeterminable = Needs Review) and **SCALE-010** (any non-blank default connection/format/engine preference = Needs Review, all blank = Pass).
+
+### Changed
+
+- SCALE-008 calibration: size the config folder from `facts.py`'s `config_folder_size` (listing-based), never the partial mirror.
+- Fixtures grow from 25 to 28 eval items (SEC-001, SEC-009, SCALE-010) and the `k8s_remote` bundle gains `lsblk` blocks so ARCH-004 is `[Pass]`; `tests/test_facts.py` covers the new facts, including that the deployer key and group names are never printed.
+
 ## [0.27.2] - 2026-10-06
 
 ### Changed

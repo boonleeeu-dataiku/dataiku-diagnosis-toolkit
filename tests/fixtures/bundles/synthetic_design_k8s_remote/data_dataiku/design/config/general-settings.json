@@ -115,6 +115,24 @@
     "mode": "REMOTE",
     "nodeUrl": "https://deployer.synthetic.example:11200"
   },
+  "ldapSettings": {
+    "enabled": true,
+    "authenticationEnabled": true,
+    "authorizedGroups": [
+      "dss-users",
+      "dss-admins"
+    ]
+  },
+  "defaultDatasetCreationSettings": {
+    "allowUploadsWithoutConnection": true,
+    "virtualizable": false
+  },
+  "recipeEnginesPreferences": {
+    "forbiddenEngines": [],
+    "enginesPreferenceOrder": [],
+    "forbiddenByRecipeType": {},
+    "preferenceByRecipeType": {}
+  },
   "maxRunningActivities": 10,
   "maxRunningActivitiesPerJob": 4,
   "jekSettings": {
