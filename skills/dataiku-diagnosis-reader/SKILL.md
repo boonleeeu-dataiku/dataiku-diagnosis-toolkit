@@ -1,7 +1,7 @@
 ---
 name: "dataiku-diagnosis-reader"
 description: "Navigate and interpret an extracted Dataiku DSS diagnosis.zip support bundle (also: DSS diagnostic export, instance diagnostic archive, a folder named dku_diagnosis_*) to answer troubleshooting questions on instance configuration, crashes/OOMs, performance, users, connections, projects, code environments, plugins and logs, without re-deriving the bundle layout. Use whenever the user provides or asks about a Dataiku diagnosis bundle or wants to diagnose a DSS instance from one."
-version: 0.8.0
+version: 0.9.0
 ---
 
 # Dataiku DSS diagnosis.zip reader
@@ -71,6 +71,19 @@ as a structural model, not a byte-identical layout guaranteed across every bundl
    `<mirror>/dss-version.json` for node type and version, `find <root> -type f -size +50M -exec ls -lh {} +`
    for the biggest files, and `ls` for `diag.txt`, `dmesg.txt`, `<mirror>/run/` and
    `<mirror>/config/general-settings.json`. Say in your output that you oriented by hand.
+
+8. **Key settings in one command.** When you need the usual configuration values (a review against a
+   checklist, a health check), run `scripts/facts.py <bundle_root>` once and quote its output instead
+   of re-reading `general-settings.json` by hand. It prints JSON, `{fact: {value, source}}`: node and
+   version, `install.ini` heap sizes, host memory (GiB), `config/` size from `config_listing.txt`, the
+   internal database type/host/loopback, concurrency limits found by leaf-key search (including
+   `jekSettings`), SSO/LDAP, impersonation rule counts, cgroup memory limit as a percentage of host
+   memory, connection count and `filesystem_root`, the Trace Explorer web app, default connection and
+   engine preferences, installed plugins and whether Agent Hub is installed. A missing setting is
+   `"value": "ABSENT"` (with what was searched), never `false` or `0`; an unreadable one is `"ERROR"`. It
+   never prints secrets (only whether the internal database password is stored in plaintext). It is
+   read-only Python 3 stdlib; if it cannot run where the bundle is, read the same values with the
+   references and say you did.
 
 ## Quick lookup (most common questions)
 

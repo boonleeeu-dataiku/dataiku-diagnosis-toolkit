@@ -7,6 +7,7 @@ relative to it unless a root-level bundle file is named directly.
 
 | Question | Where | Notes |
 |---|---|---|
+| Several key settings at once (heap sizes, host memory, `config/` size, DB host, concurrency limits, SSO, UIF, cgroups, `filesystem_root`, Agent Hub) | `scripts/facts.py <bundle_root>` | JSON `{fact: {value, source}}`; `ABSENT` = not in the bundle (not `false`/`0`); never prints secrets. Config size is summed from `config_listing.txt`, not `du` of the partial mirror |
 | DSS version | `dss-version.json` | `product_version`, `conf_version` |
 | Node type (design/automation/...) | `install.ini` → `[general] nodetype` | See `references/node-types.md` |
 | Is DSS running? Which components, PIDs, uptime? | `diag.txt` → `dss status` section | |

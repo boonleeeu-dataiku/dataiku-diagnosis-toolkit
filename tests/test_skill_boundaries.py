@@ -38,5 +38,5 @@ def test_checklist_skill_does_not_document_bundle_layout(path):
 
 def test_checklist_skill_makes_the_reader_a_prerequisite():
     text = (REVIEW_DIR / "SKILL.md").read_text(encoding="utf-8")
-    for phrase in ("load the `dataiku-diagnosis-reader` skill", "orient.sh", "limitations.md"):
+    for phrase in ("load the `dataiku-diagnosis-reader` skill", "orient.sh", "facts.py", "limitations.md"):
         assert phrase in text, f"SKILL.md no longer says {phrase!r}"

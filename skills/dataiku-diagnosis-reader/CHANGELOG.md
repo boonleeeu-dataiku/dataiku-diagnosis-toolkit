@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.9.0] - 2026-10-06
+
+### Added
+
+- `scripts/facts.py <bundle_root>`: one deterministic, secret-safe JSON report of the settings reviews most often need (node/version, heap sizes, host memory, `config/` size summed from `config_listing.txt`, internal database type/host/loopback, concurrency limits by leaf-key search, SSO/LDAP, impersonation rule counts, cgroup memory limit as % of host memory, `filesystem_root`, Trace Explorer, default connection/engine preferences, installed plugins/Agent Hub). Missing settings are an explicit `ABSENT`, never `false`/`0`. Added after repeat reviews of the same bundle disagreed because hand reads mis-stated or missed values. Verified against the design, automation and older design samples. Documented in `SKILL.md` step 8 and `lookup-table.md`.
+
 ## [0.8.0] - 2026-10-06
 
 ### Added

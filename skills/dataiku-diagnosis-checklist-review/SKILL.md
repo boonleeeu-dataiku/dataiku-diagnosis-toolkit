@@ -69,6 +69,13 @@ tells you what evidence is realistically available before you plan reads.
 If it shows a node type the reader hasn't verified (e.g. `deployer`) or no data-dir mirror, say what
 the bundle cannot support and mark the rows that depend on it **Needs Review**, not Fail.
 
+Then run the reader's `scripts/facts.py <bundle_root>` once and save its JSON output to the working
+file. It prints the values many checks depend on (heap sizes, host memory, config folder size, database
+host, concurrency limits, SSO, user isolation, cgroups, connections, GenAI and plugin presence), each with
+its `source`, and an explicit `ABSENT` for a setting that isn't in the bundle. This replaces hand-reading
+the big settings files, which repeat runs have mis-stated or missed. If it can't run or errors, say so in
+your final summary and use the reader's normal procedure.
+
 ## 2. Read the checklist fully
 
 Dump every sheet's rows into a working file — don't try to hold 50+ rows of context in your head.
@@ -88,6 +95,12 @@ clusters) and read each source once for all of its rows, rather than re-reading 
 each source via the reader's `lookup-table` and the other reader references.
 
 ## 4. Evaluate every row
+
+**Use the `facts.py` output as the source of truth** for every value it covers: take the value from it,
+cite its `source` in `evidence_found`, and quote the raw value behind any Pass or Fail on a setting. Don't
+re-derive such a value by hand, and never contradict it from memory. `ABSENT` is not yet a Fail: follow
+the reader's "Finding a setting reliably" before calling a setting absent. For a check it doesn't cover,
+read the bundle the normal way.
 
 First read `references/calibrations.md` in full and apply it to every matching row. Where a row's
 `insufficient_evidence_handling` says what to do when the bundle lacks the evidence, follow it; a
