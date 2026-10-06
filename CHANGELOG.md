@@ -10,6 +10,12 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.26.4] - 2026-10-06
+
+### Changed
+
+- Skill tidy-up, no change to any status outcome: linked-computer/device plumbing moved out of the checklist-review `SKILL.md` into `references/linked-computer.md` (shared with the deck builder, so the commit-and-verify rule lives once); `calibrations.md` regrouped by theme under general principles, keyed by checklist item id, with the duplicate HTTPS entries merged and the version-currency lookup procedure moved into its entry; Secrets section trimmed to the delta over the reader's; deck-builder narrative rules turned into bullets.
+
 ## [0.26.3] - 2026-10-06
 
 ### Changed

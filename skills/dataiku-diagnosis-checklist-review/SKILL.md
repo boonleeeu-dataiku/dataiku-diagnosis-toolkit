@@ -18,6 +18,7 @@ spreadsheet, plus add/update a Summary tab.
 - `calibrations.md` — **read in full before evaluating any row** (step 4). It holds the user's
   check-specific interpretations, which override a literal reading of the checklist.
 - `summary-layout.md` — manual Summary layout. Read only if `write_summary` is unavailable (step 6).
+- `linked-computer.md` — device staging and commit-verify loop. Read only on a linked computer (step 0).
 
 ## 0. Inputs, access and tools
 
@@ -40,59 +41,24 @@ spreadsheet, plus add/update a Summary tab.
   recording it in this skill.
 - Load the `xlsx` skill before reading/writing the spreadsheet.
 - If the checklist has a version-currency check, confirm a web search tool is available; it is
-  needed to look up the latest Dataiku DSS release (procedure below).
+  needed to look up the latest Dataiku DSS release (procedure in `references/calibrations.md`, DSS version currency).
 
 ### Files on a linked computer
 
-Only when this session is linked to the user's computer (remote-devices tools present) and the
-paths are local: call `get_device_info` first. If both paths already sit under its
-`connectedFolders`, skip the access request; otherwise request folder access to the common parent
-of both (`device_request_folder_access`; if the first request doesn't take effect, repeat it once
-before asking the user). Then `device_stage_files` a user-supplied checklist into the container, run
-`orient.sh` and bundle reads through `device_bash`, and `device_list_dir` (recursive) to see the
-bundle's structure. At the end, write the result back with `device_commit_files` (step 7).
-
-**Bundled default template:** it lives in the container (this skill's `resources/`), so there is
-nothing to stage. Copy it to a scratch file, fill it in there, then copy the finished file to
-`/mnt/user-data/outputs/<name>` and `device_commit_files` it by `stagedPath`. That first commit
-creates the file on the device. Connected folders show up in `device_bash` as
-`$HOME/mnt/<last path segment>` but the generator tools want the real path, so use the real path
-for `device_commit_files` and the tool calls.
-
-The `dataiku-review-generator` tools (`write_summary`, `analyze_checklist`, the deck build) run on
-the user's computer, not in your container, so they only see device paths. Pass the device path as
-`checklist_path`. Anything you write in the container (checklist, narrative) must be committed
-with `device_commit_files` before you call them. After `write_summary` rewrites the checklist on
-the device, your container copy is stale: re-stage it before editing again. If `orient.sh` cannot
-be run (it lives in the plugin, not on the device), follow the reader's fallback for orienting by
-hand and say so in your report.
-
-**Verify every commit.** `device_commit_files` can report `written` while the device keeps the old
-bytes, especially when the same `stagedPath` is committed a second time (observed in every test run:
-the deck was then built from stale narrative text). The sync is asynchronous. After each commit, read
-the device file back with `device_bash` (`wc -c`, or `grep` for a phrase you just changed) and compare
-it with the container copy before calling a generator tool. If it is stale, commit again under a
-**new staged filename** (e.g. `narrative_rev2.json`) to the same device path, and verify again. The
-same applies to `device_stage_files` (also async): wait for the size or mtime to change instead of
-sleeping a fixed time. Use explicit paths, never a glob over the outputs parent, so sibling run
-folders are not listed.
-
-The loop, in order: (1) stage the checklist into the container; (2) edit it and write the
-narrative there; (3) `device_commit_files` both back; (4) call the generator tools with device
-paths; (5) re-stage the checklist before any further edit. If you stage config files into the
-container to analyse them, redact values only, never key names (masking keys hides the setting you
-are sizing), and sanity-check the numbers you extract afterwards.
+If this session is linked to the user's computer (remote-devices tools present) and the paths are
+local, read `references/linked-computer.md` before step 1. It covers folder access, staging, and the
+commit-and-verify loop the generator tools need.
 
 ### Secrets
 
-Follow the reader's "Handling secrets" section: open config JSON with its `scripts/peek.py`, never
-dump whole files. In addition, never copy a secret into `evidence_found`, `notes`, the narrative or
-the deck, and if one does get printed, say so in your final summary, name the file, and tell the
-user to rotate it.
+Follow the reader's "Handling secrets" section (open config JSON with its `scripts/peek.py`, never
+dump whole files). Also:
 
-If the bundle itself holds plaintext credentials (for example an internal-database password), report
-that too, even if you never printed the value: in your final summary, name the file and the kind of
-credential (never the value) and recommend rotating it and moving it to a secrets store.
+- Never copy a secret into `evidence_found`, `notes`, the narrative or the deck. If one gets printed,
+  say so in your final summary, name the file, and tell the user to rotate it.
+- If the bundle itself holds plaintext credentials (e.g. an internal-database password), report that
+  even if you never printed the value: name the file and the kind of credential, never the value, and
+  recommend rotating it and moving it to a secrets store.
 
 ## 1. Orient
 
@@ -187,26 +153,13 @@ Backend heap too small for workload
 • Action: raise to 8g+; see PERF-003
 ```
 
-Bad (too long, method-first, file paths):
-
-```
-In apps/dss/design/<some config file> the backend.xmx key is set to 2g, and then
-when we looked at the crash dump we found OutOfMemoryError ...
-```
+Bad: method-first prose with file paths, e.g. "In <config file> the backend.xmx key is set to 2g,
+and then in the crash dump we found OutOfMemoryError ...".
 
 Look actively for causal chains across items (e.g., a resource limit set to
 a disabling value, paired with crash dumps and recurring error-log entries,
 all pointing to one root cause) — call these out explicitly and prioritize
 them, rather than reporting each row in isolation.
-
-### Version-currency lookup
-
-Which status to give is in `references/calibrations.md`. To find the latest GA release: use the
-**extended** web-search mode every run (a standard search can miss a newer major). Search "Dataiku
-DSS latest version release notes", then once more for the next major above the one found (e.g.
-"Dataiku DSS 15 release notes"). Take the highest GA version confirmed by an official Dataiku source
-(release notes, changelog, docs.dataiku.com). If results are links only, `WebFetch` the official
-release-notes page for the newest major. Never answer from training knowledge.
 
 ## 5. Write results back with openpyxl
 
@@ -248,16 +201,12 @@ texts `Overall Status Counts`, `Per-Section Breakdown`,
 Before delivering, check: every id has one of the five statuses; each `notes` is within budget with
 no file paths or secrets; the Summary was written after the last edit.
 
-Send the updated file to the conversation. If the source file came from the
-user's linked computer, write the result back to the same path via
-`device_commit_files` as well, and say so in one line. If you used the
-bundled default template instead of a user-supplied checklist, there is no
-original path to write back to — just name the output after the diagnosis
-bundle (e.g. `<bundle-name>_checklist_review.xlsx`; if the user names the output, use that name,
-and the deck's narrative then follows it as `<checklist_stem>_narrative.json`) and send it back to the
-conversation. Give a short summary of headline results (counts + the 1-3
-most important findings) rather than repeating the whole checklist back in
-chat.
+Send the updated file to the conversation. If the source came from the user's linked computer, also
+write it back to the same path via `device_commit_files` and say so in one line. With the bundled
+default template there is no original path: name the output `<bundle-name>_checklist_review.xlsx` (or
+the user's name for it; the deck's narrative then follows as `<checklist_stem>_narrative.json`).
+Summarise headline results (counts plus the 1-3 most important findings) rather than repeating the
+checklist.
 
 If the user also asked for a deck (or a "report and powerpoint"), continue with the
 `dataiku-review-deck-builder` skill and follow its order of work in full, including the narrative

@@ -1,245 +1,215 @@
-# Known check-specific calibrations
+# Check-specific calibrations
 
 > Judgment only: this file says which status to give, never where or how to find something in the
-> bundle. That belongs to the reader (`dataiku-diagnosis-reader` skill), which is
-> vendored from upstream. If a calibration needs a new "where/how to read" fact, add it to the
-> reader's references upstream, re-sync, and point to it from here. See `CLAUDE.md`.
+> bundle. That belongs to the reader (`dataiku-diagnosis-reader` skill), which is vendored from
+> upstream. If a calibration needs a new "where/how to read" fact, add it to the reader's references
+> upstream, re-sync, and point to it from here. See `CLAUDE.md`.
 
-Apply these interpretations consistently. They come directly from the user,
-supersede a literal reading of the checklist's `expected_value`/evidence
-text, and should be extended here over time whenever the user gives another
-one — add each as its own bullet rather than overwriting prior ones.
+These interpretations come directly from the user and override a literal reading of a checklist's
+`expected_value`/evidence text. Match an entry by item id first, then by what the check is about.
+Add each new one as its own entry under the right heading; don't overwrite prior ones.
 
-- **Kubernetes-conditional checks in general (Spark-on-K8s, containerized
-  execution, cluster configuration, etc.):** first determine whether a
-  Kubernetes cluster is actually attached to the instance at all (the reader's
-  `data-dir-config` reference says how to tell). If no
-  cluster is attached, mark any check that depends on Kubernetes/Elastic
-  Compute as **Not Applicable** rather than Fail or Needs Review — these
-  checks are only relevant once a cluster is attached. Once a cluster *is*
-  attached, a valid containerized execution configuration must be present —
-  treat that as a must-have: if none is defined, mark the check **Fail**.
+## General principles (apply to every check)
 
-- **Recommended containerized execution config baseline (e.g. a 'Standard'
-  config at ~200MB/16000MB and a 'Webapp' config at ~500MB/500MB, or similar
-  named/sized baselines):** treat any such baseline given in the checklist's
-  `expected_value`/`supporting_evidence` as an illustrative example, not a
-  literal instruction to match names or exact sizes. It is sufficient to see
-  **two or more containerized execution configs whose memory or CPU
-  requests/limits genuinely differ** (showing an intent to size workloads
-  differently) — mark this **Pass**
-  even when the config names and exact memory figures don't match the
-  baseline example. Still call out in `notes` if all configs are actually
-  identically sized despite different names (that remains a real gap, as
-  distinct from just not matching the example's naming/numbers).
+- **Judge only what the bundle shows.** An aspect that needs a live check (backups, restore tests, who
+  holds an OS identity, a functional export test, run history, an external proxy) goes in `notes` as an
+  `Action:`; it never moves the status away from what the bundle's own settings support. Absence of
+  run history is the normal state of a bundle, not a gap.
+- **Conditional check, precondition unmet: Not Applicable**, not Fail or Needs Review. A missing key is
+  a Fail only when the feature is demonstrably in use.
+- **An inferred value is not evidence.** Don't mark Pass or Fail from an assumed default (e.g. a
+  connection pool against an internal-database limit the bundle doesn't record). Mark **Needs Review**,
+  state the inference in `notes` as an inference, and ask for the real value.
+- **A hinted setting is not proof of absence.** A `parameter_hint` is a pointer, not a guarantee of
+  where the setting lives. Before marking a setting absent or Fail, look for it the way the reader's
+  `data-dir-config` reference ("Finding a setting reliably") describes.
+- **Version gate beats feature gate.** If the check's stated minimum DSS version is above the bundle's
+  `product_version`, mark **Needs Review** (the capability can't exist yet, so Fail would be unfair)
+  and name the introducing version in `notes`, even if the feature is also conditional (e.g. Cobuild
+  default LLMs, GENAI-007, on an older DSS). Upgrade planning is the actionable point.
+- **Optional feature off but the checklist asks for acceptance or enablement (GenAI, graphics export):**
+  **Needs Review** (ask whether it is intentional), not Fail. Security controls follow their own entries
+  below. A setting or section absent from the bundle is **Needs Review**, never treated as off.
 
-- **Spark and containerized-execution per-user Kubernetes namespace checks**
-  (e.g. items about a "per-user namespace pattern", `dss-ns-${dssUserLogin}`,
-  or similar, for either Spark configs or containerized execution configs):
-  it is sufficient evidence of compliance to see the namespace parameter
-  provisioned with a dynamic/templated variable (such as `${namespace}`),
-  **for a managed Kubernetes cluster attached to the Dataiku instance**. Do
-  not require tracing the variable to confirm it literally resolves to the
-  `dss-ns-${dssUserLogin}` string — mark the item **Pass** (not Needs
-  Review) once a templated/dynamic namespace variable is present, and note
-  in `evidence_found` which field/value was seen. This calibration applies
-  specifically to a **managed** cluster (Dataiku-provisioned/managed). For a
-  **manual**/externally-registered cluster, namespace behavior may be
-  governed outside DSS configuration entirely — keep judging that case on its
-  own merits rather than applying this shortcut. (The reader's
-  `data-dir-config` reference says where the namespace fields live and how
-  to tell managed from manual.)
+## Kubernetes, containers and Spark
 
-- **Dataiku DSS version currency check (e.g. "DSS Version Currency"):** look up the current GA
-  release at run time (see the SKILL's "Version-currency lookup"), then compare the bundle's DSS
-  `product_version` (the reader's `data-dir-identity` reference says where it is) against the latest
-  GA's **major** version only:
+- **Kubernetes-conditional checks in general (ARCH-010, ARCH-013, Spark-on-K8s, containerized execution,
+  cluster configuration):** first determine whether a Kubernetes cluster is attached to the instance at
+  all (the reader's `data-dir-config` reference says how). None attached: **Not Applicable** for any
+  check that depends on Kubernetes/Elastic Compute. Attached: a valid containerized execution
+  configuration is a must-have; if none is defined, **Fail**.
+
+- **Spark validation on a non-Kubernetes estate (ARCH-008):** worded for Spark on Kubernetes (executor
+  pods). No cluster attached and Spark on YARN/Hadoop: **Not Applicable**, per the rule above.
+
+- **Containerized execution baseline (ARCH-011; e.g. 'Standard' ~200MB/16000MB, 'Webapp' ~500MB/500MB):**
+  the checklist's baseline is an illustrative example, not names or sizes to match. **Pass** when there
+  are **two or more configs whose memory or CPU requests/limits genuinely differ**, whatever the names.
+  If all configs are identically sized despite different names, that is a real gap: say so in `notes`.
+
+- **Spark baseline configs (ARCH-006):** same logic, baseline illustrative. Two or more Spark execution
+  configs whose sizing genuinely differs: **Pass**. Only one, or all identically sized: **Partial**.
+  None: **Fail**.
+
+- **Per-user Kubernetes namespace (ARCH-007; Spark or containerized configs, e.g. `dss-ns-${dssUserLogin}`):**
+  for a **managed** cluster, a namespace parameter provisioned with a dynamic/templated variable (such as
+  `${namespace}`) is sufficient: **Pass** (not Needs Review) without tracing the variable, and note the
+  field/value seen in `evidence_found`. For a **manual**/externally-registered cluster, namespace
+  behaviour may be governed outside DSS, so judge it on its own merits. (The reader's `data-dir-config`
+  reference says where the namespace fields live and how to tell managed from manual.)
+
+## GenAI
+
+- **Feature-conditional GenAI checks (Cobuild default LLMs, Bring-your-own-LLM mode, local Hugging Face;
+  Agent Hub has its own rule below):** first confirm the feature is in use (the reader's
+  `data-dir-config` reference lists the signals it has verified and which it has not). Not in use:
+  **Not Applicable**. Turned off but the checklist asks for acceptance or enablement (e.g. AI Services
+  terms not accepted while all AI features are disabled): **Needs Review**. For "AI assistant debug data
+  in the bundle" checks, a bundle that lacks the section is **Needs Review**, not Fail.
+
+- **Internal code environments for LLM Mesh (GENAI-001; RAG, document extraction, PII detection):** judge
+  only whether the internal code envs are in use. Say in `notes` which envs you saw.
+  - **Pass:** the defaults are the internal code envs (the reader's `data-dir-config` and
+    `data-dir-runtime-and-codeenvs` references say how to tell). Don't downgrade for a container
+    execution mode of `INHERIT` when no container config exists, and don't require separate evidence for
+    each of the three categories.
+  - **Needs Review:** a non-internal code env is used for any of them.
+  - **Fail:** nothing is set up.
+
+- **Agent Hub deployer permissions (GENAI-009):** the bundle can't verify who may deploy, so don't infer
+  it from the project owner or group grants. Agent Hub installed (the reader's `data-dir-config`
+  reference lists the signal): **Needs Review**. Not installed: **Not Applicable**. Never Pass or Fail.
+
+## Security
+
+- **HTTPS (SEC-006):** DSS's own config shows only whether DSS itself terminates TLS; an external
+  reverse proxy (nginx, ALB, API gateway) is invisible to the bundle.
+  - **Pass:** DSS terminates TLS itself (SSL on and a certificate configured, as the reader's
+    `data-dir-identity` reference describes), or the bundle shows a documented proxy setup. Don't
+    downgrade because a proxy might also exist. Quote the raw server block in `evidence_found`, so a
+    misread is visible.
+  - **Needs Review:** DSS is not itself configured for HTTPS (e.g. plain HTTP). Never Fail. One `notes`
+    bullet says the bundle can't confirm or rule out a TLS-terminating proxy, plus an `Action:` to verify
+    with the customer/infrastructure team.
+  - **Fail:** only on positive evidence that no HTTPS exists anywhere (e.g. explicit customer
+    confirmation on record), not on absence from the bundle.
+
+- **Session expiry, single session per user, clickable links in data tables (ADVSEC-003, ADVSEC-004,
+  ADVSEC-011):** these settings are in the bundle (the reader's `data-dir-config` reference says where),
+  so judge them from the value, never Needs Review because a checklist hint calls them UI-only.
+  - Timeouts: `0` means unlimited. **Fail** when both are `0`; **Pass** when either is finite.
+  - Single-session or disable-links toggle: off is **Fail**, on is **Pass**.
+  - **Needs Review** only when the settings block itself is missing.
+
+- **Custom post-logout redirect (ADVSEC-006):** optional hardening; the default logout page is not a
+  security concern. None configured: **Not Applicable** (say the default page is in use). Valid
+  http/https redirect: **Pass**. **Fail** only when one is configured but invalid.
+
+- **UIF (SEC-002):** impersonation enabled with at least one user or group rule (the reader's lookup
+  table says where): **Pass**. Whether the OS identities exist is a live check (`notes` only).
+  Disabled: **Fail**.
+
+- **cgroups memory limit (SEC-004):** enabled with a limit of roughly 50-75% of host RAM: **Pass**.
+  Enabled with no limit, or one far outside that range: **Partial**. Disabled: **Fail**. Empty
+  per-workload placements are a `notes` observation, not a downgrade.
+
+- **Export restriction (ADVSEC-008):** the check lists alternative keys (`one_of`), so any one set to
+  true is **Pass**; the others (e.g. clipboard keys) are `notes` only. None set: **Fail**.
+
+- **Security HTTP headers (ADVSEC-009):** none of the listed headers configured in DSS: **Fail**. Some
+  but not all: **Partial**. All with restrictive values: **Pass**. In `notes`, say a proxy may set them
+  (the bundle can't show that).
+
+## Platform, sizing and runtime
+
+- **Backend Xmx sizing (SCALE-008):** apply the full rule from the checklist, not just the RAM tier.
+  Check all of: (1) `backend.xmx` against the RAM tier; (2) `backend.xmx` >= 3x the size of the
+  `config/` folder (the reader's `listings-and-manifests` reference says how to size it); (3) not in the
+  32-48GB dead zone; (4) the other components' heaps (`jek.xmx`/`fek.xmx`) not oversized; (5) no
+  `OutOfMemoryError` in the backend logs. State which you checked in `evidence_found`; never assume a
+  tier from RAM alone.
+
+- **Flow limits sizing (SCALE-009):** a concurrency or sizing limit that sits in a different place than
+  its name suggests still counts. A value of `0` means unsized: **Fail**, even when the other
+  concurrency limit is in range.
+
+- **Connection-detail gaps (SCALE-012):** gaps DSS itself flagged are real evidence. Report **Partial**
+  rather than Not Applicable just because the storage is HDFS and not a cloud object store.
+
+- **Log-error review (SCALE-007):** the status is mechanical, so every run gives the same one:
+  - Any ERROR, FATAL or WARN entries in the backend logs: **Needs Review**, however few or benign-looking.
+    Never Fail or Partial.
+  - No errors and no warnings at all: **Pass**.
+  - Logs missing from the bundle: **Needs Review** (the checklist's `insufficient_evidence_handling`).
+
+  Still make the finding useful. The bundle usually holds only a few hours of backend log, so quote
+  counts with their window (e.g. `214 in ~2.6h`) in both `evidence_found` and `notes`, and group by
+  message pattern (digits and ids normalised), not by raw line. When one pattern dominates (e.g. repeated
+  rejected WebSocket sessions that were not logged in), say so in `notes` with its share, and put the
+  `Action:` on the real failures (e.g. failing API calls). The reader's `data-dir-runtime-and-codeenvs`
+  reference says how to count and get the window.
+
+- **External PostgreSQL runtime database (SCALE-001):** judge the internal database's type and host (the
+  reader's `data-dir-config` reference says where). PostgreSQL on a non-local host: **Pass**. On the same
+  host (loopback or the DSS host itself): **Partial**. Not PostgreSQL: **Fail**. Pool size against
+  `max_connections` and backups are `notes` only.
+
+- **Metastore (SCALE-002) and graphics export (SCALE-003):** decide from the setting, never Needs Review
+  for want of a functional test.
+  - **Metastore** (the reader's lookup table says where the flavor lives): **Pass** when it matches the
+    estate (Hive on a Hadoop/YARN estate, Glue on AWS, DSS internal otherwise); **Needs Review** only
+    when the estate can't be told.
+  - **Graphics export:** on is **Pass**; off is **Needs Review** (ask if intentional); setting absent
+    from the bundle is **Needs Review**, never off.
+
+- **Admin project garbage collection (SCALE-004):** there is no fixed project name; the reader's lookup
+  table says how to find candidate projects and read their scenarios. Judge only scenarios that are
+  active with an active trigger. Never open or grep the script behind a Python-based scenario.
+  - **Pass:** an active scheduled step-based scenario whose steps clearly clear logs, purge, delete or
+    clean up.
+  - **Needs Review:** an active scheduled scenario whose purpose is only inferable from its name or that
+    runs a script (say in `notes` the script was not read); or a candidate project with scenarios but
+    none both active and scheduled.
+  - **Fail:** no candidate project, or one whose scenarios are all inactive or absent.
+
+  Run history, whether the cleanup actually runs, and whether it covers logs, idle kernels or both are
+  `notes` only.
+
+## Architecture and version
+
+- **Automation-node existence / Design-Automation separation (ARCH-001), on a design-node bundle:** the
+  automation node is a separate host with its own bundle, so a design bundle can never confirm one
+  exists. Always **Needs Review**, never Pass or Fail. Use the reader's `node-types` and
+  `data-dir-config` (deployer) references to find indicators; work through them in this order and
+  report what you find:
+  1. **Local Project Deployer on the design host:** one holding projects to deploy to an automation node
+     indicates an automation node is in use. Enumerate what it holds (infrastructures, deployments,
+     published projects, any automation-node URLs). **Put this indication, with counts, in the headline
+     of `notes`** and list the URLs and enumeration in `evidence_found`. Distinguish a populated deployer
+     (strong indication) from one present but empty (enabled, no sign of use). A local API Deployer
+     targets API nodes: mention it separately as an API-node indication, not as evidence of an automation
+     node.
+  2. **Remote deployer:** a design node pushing to an external Deployer URL suggests Design -> Deployer ->
+     Automation, but any automation infrastructure is defined on that node, not in this bundle. Exported
+     project bundles are weak supporting evidence either way.
+  3. **Otherwise:** state in `notes` that no definitive configuration in the bundle shows whether an
+     automation node is deployed, and that it needs verification with the customer.
+
+- **DSS version currency (ARCH-002):** look up the current GA release at run time, then compare the
+  bundle's DSS `product_version` (the reader's `data-dir-identity` reference says where it is) against the
+  latest GA's **major** version only:
   - Same major (e.g. bundle 14.x, latest GA 14.x, any minor/patch): **Pass**.
-  - Bundle's major is behind: **Needs Review** (not Fail) — a major gap warrants a human look at
-    upgrade planning.
-  - Lookup failed, returned nothing usable, or no web search tool is available: **Needs Review**.
-    Never guess from prior knowledge; say in `notes` that currency could not be verified.
+  - Bundle's major is behind: **Needs Review** (not Fail); a major gap warrants a human look at upgrade
+    planning.
+  - Lookup failed, returned nothing usable, or no web search tool is available: **Needs Review**. Never
+    guess from prior knowledge; say in `notes` that currency could not be verified.
+
   State the bundle's version, the latest GA version, its release date if known, and how many majors
   behind (0 if current). Keep `notes` short (e.g. `Bundle 13.x vs latest GA 14.x (date) — 1 major
   behind`); put the full source citation in `evidence_found`.
 
-- **Feature-conditional GenAI checks (Cobuild default LLMs, Bring-your-own-LLM
-  mode, local Hugging Face; Agent Hub has its own rule below):** first confirm the feature is actually in use
-  (the reader's `data-dir-config` reference lists the signals it has verified
-  and which it has not). If it isn't, mark the check **Not Applicable**, not
-  Fail or Needs Review. A
-  missing key is only a Fail when the feature is demonstrably in use. When a
-  setting is turned off but the checklist asks for acceptance or enablement
-  (e.g. AI Services terms not accepted while all AI features are disabled),
-  use **Needs Review** and ask whether it is intentional. For "AI assistant
-  debug data in the bundle" checks, a bundle that simply lacks the section is
-  **Needs Review**, not Fail.
-
-- **Backend Xmx sizing (e.g. a "backend Xmx" check):** apply the full rule from the checklist, not
-  just the RAM tier. Check all of: (1) `backend.xmx` against the RAM tier; (2) `backend.xmx` >= 3x the size
-  of the `config/` folder (the reader's `listings-and-manifests` reference says how to size it);
-  (3) it is not in the 32-48GB dead zone; (4) the other components' heaps (`jek.xmx`/`fek.xmx`)
-  are not oversized; (5) no `OutOfMemoryError` in the backend logs. State which of these you
-  checked in `evidence_found`; never assume a tier from RAM alone.
-
-- **Log-error review (e.g. a backend log-error check):** the status is mechanical, so every run gives
-  the same one:
-  - Any ERROR, FATAL or WARN entries in the backend logs: **Needs Review**, however few or however
-    benign-looking. Never Fail or Partial.
-  - No errors and no warnings at all: **Pass**.
-  - Logs missing from the bundle: **Needs Review** (the checklist's `insufficient_evidence_handling`).
-
-  Still make the finding useful to a reviewer. The bundle usually holds only a few hours of backend
-  log, so quote counts with their window (e.g. `214 in ~2.6h`) in both `evidence_found` and `notes`,
-  and group by message pattern (digits and ids normalised), not by raw line. When one pattern
-  dominates (for example repeated rejected WebSocket sessions that were not logged in), say so in
-  `notes` with its share of the count, and put the `Action:` on the real failures (for example failing
-  API calls). The reader's `data-dir-runtime-and-codeenvs` reference says how to count and get the
-  window.
-
-- **Internal code environments for LLM Mesh (e.g. RAG, document extraction, PII detection):** judge only
-  whether the internal code envs are in use:
-  - **Pass** when the defaults are the internal code envs (the reader's `data-dir-config` and
-    `data-dir-runtime-and-codeenvs` references say how to tell). Do not downgrade for a container
-    execution mode of `INHERIT` when no container config exists, and do not require separate evidence for
-    each of the three categories.
-  - **Needs Review** when a non-internal code env is used for any of them.
-  - **Fail** when nothing is set up.
-  Say in `notes` which envs you saw.
-
-- **Agent Hub deployer permissions:** the bundle cannot conclusively verify who may deploy, so do not try
-  to infer it from the project owner or group grants. Agent Hub installed (the reader's `data-dir-config`
-  reference lists the signal): **Needs Review**. Not installed: **Not Applicable**. Never Pass or Fail.
-
-- **A hinted setting is not proof of absence:** a checklist `parameter_hint` is a pointer,
-  not a guarantee of where the setting lives. Before marking a setting absent or Fail, look for it
-  the way the reader's `data-dir-config` reference ("Finding a setting reliably") describes. A
-  concurrency or sizing limit that sits in a different place than its name suggests still counts:
-  a value of `0` means unsized and is a **Fail** for "Flow Limits Sizing", even when the other
-  concurrency limit is in range. Connection-detail gaps that DSS itself flagged are real evidence
-  for connection-details checks: report them **Partial** rather than Not Applicable just because
-  the storage is HDFS and not a cloud object store.
-
-- **HTTPS enforcement check (especially for custom/on-prem
-  installs):** DSS's own config only shows whether DSS
-  itself is terminating TLS. It cannot show whether an external reverse
-  proxy (nginx, an ALB/load balancer, an API gateway, etc.) sits in front of
-  DSS and terminates HTTPS there instead — that setup is invisible to the
-  diagnosis bundle. So: if the bundle shows DSS is *not* itself configured
-  for HTTPS (e.g. plain HTTP in the server settings), do not mark this **Fail**.
-  Mark it **Needs Review** instead, and in `notes` state plainly, in one
-  bullet, that the bundle cannot confirm or rule out an external reverse
-  proxy terminating HTTPS in front of DSS, with an `Action:` bullet to verify
-  it directly with the customer/infrastructure team before treating it as a
-  real gap. Only
-  mark **Pass** when the bundle shows positive evidence HTTPS is enforced
-  somewhere in the path (DSS-terminated or a documented proxy setup
-  referenced in the bundle); only mark **Fail** if there is positive
-  evidence no HTTPS exists anywhere (e.g. explicit customer confirmation on
-  record, not just absence from the bundle).
-
-- **Automation-node existence / Design–Automation separation, when reviewing a design-node bundle:** the automation node is
-  a separate host with its own bundle, so a design-node bundle can never
-  definitively confirm one exists. Always mark this **Needs Review**, never
-  Pass or Fail from the design bundle alone. Use the reader's `node-types`
-  and `data-dir-config` (deployer) references to find the indicators, work
-  through them in this order and report what you find:
-  1. **Local Project Deployer on the design host:** a deployer configured
-     locally that holds projects to deploy onto an automation node is an
-     indication an automation node is in use. Enumerate what it holds
-     (infrastructures, deployments, published projects, and any automation
-     node URLs they point to) and **highlight this indication prominently in
-     the headline of `notes`** with the counts, and list the URLs and
-     enumeration in `evidence_found`. Distinguish a populated deployer (strong
-     indication) from one that is present but empty (deployer enabled, no
-     sign of actual use). A local API Deployer targets API nodes — mention it
-     separately as an API-node indication, not as evidence of an automation
-     node.
-  2. **Remote deployer:** if the design node pushes to an external Deployer
-     URL, highlight that — suggestive of a Design → Deployer → Automation
-     setup, but any automation infrastructure is defined on that node, not in
-     this bundle. Exported project bundles are weak supporting evidence either
-     way.
-  3. **Otherwise:** state in `notes` that there is no definitive
-     configuration in the bundle indicating whether an automation node is
-     deployed, and that this needs further verification with the customer.
-
-- **Session-management and clickable-link checks (session expiry, single session per user, links in data
-  tables):** these settings are captured in the bundle (the reader's `data-dir-config` reference says
-  where), so judge them from the value, never **Needs Review** because a checklist hint calls them
-  UI-only. A timeout of `0` means unlimited: **Fail** when both session timeouts are `0`, **Pass** when
-  either is finite. A single-session or disable-links toggle that is off is **Fail**; on is **Pass**.
-  Needs Review only when the settings block itself is missing from the bundle.
-
-- **Custom post-logout redirect (e.g. a "custom URL after logout" check):** this is optional hardening,
-  and the checklist itself says the default logout page is not a security concern. When no custom
-  redirect is configured, mark it **Not Applicable** (not Fail or Needs Review) and say the default page
-  is in use. **Pass** when a valid http/https redirect is configured; **Fail** only when one is
-  configured but invalid.
-
-- **Spark validation checks on a non-Kubernetes estate (e.g. a "functional Spark validation" check):**
-  these are worded for Spark on Kubernetes (executor pods). If no Kubernetes cluster is attached and Spark
-  runs on YARN/Hadoop, treat them under the Kubernetes-conditional rule above: **Not Applicable**.
-
-- **Version-gated checks (e.g. a check that needs a newer DSS than the bundle runs):** compare the
-  check's stated minimum version with the bundle's `product_version`. If the bundle is older, mark it
-  **Needs Review** (the capability can't exist yet, so Fail would be unfair) and say which version
-  introduces it.
-
-- **An inferred limit is not evidence (e.g. a connection pool vs. an internal-database limit that the
-  bundle does not record):** don't mark Pass or Fail from an assumed default. Mark **Needs Review**,
-  state the inference in `notes` as an inference, and ask for the real value.
-
-- **Judge only what the bundle shows (applies to every check):** an aspect that needs a live check
-  (backups, restore tests, who holds an OS identity, a functional export test, run history, an external
-  proxy) goes in `notes` as an `Action:`; it never moves the status away from what the bundle's own
-  settings support. Absence of run history is the normal state of a bundle, not a gap.
-
-- **HTTPS (reinforcing the rule above):** DSS terminating TLS itself (SSL switched on and a certificate
-  configured, as the reader's `data-dir-identity` reference describes) is **Pass**. Do not downgrade it
-  because an external proxy might also exist. Quote the raw server block in `evidence_found`, so a
-  misread is visible.
-
-- **Main control on, with extras missing (UIF, cgroups, export restriction):**
-  - **UIF (user isolation):** impersonation enabled with at least one user or group rule (the reader's
-    lookup table says where the setting lives): **Pass**. Whether
-    the OS identities exist is a live check (`notes` only). Disabled: **Fail**.
-  - **cgroups memory limit:** enabled with a memory limit of roughly 50-75% of host RAM: **Pass**. Enabled
-    with no memory limit, or one far outside that range: **Partial**. Disabled: **Fail**. Empty
-    per-workload placements are a `notes` observation, not a downgrade.
-  - **Export restriction:** the check lists alternative keys (`one_of`), so any one of them set to true is
-    **Pass**; the others (e.g. clipboard keys) are `notes` only. None set: **Fail**.
-
-- **Security HTTP headers:** none of the listed headers configured in DSS: **Fail**. Some but not all:
-  **Partial**. All with restrictive values: **Pass**. In `notes`, say a proxy may set them (the bundle
-  cannot show that).
-
-- **External PostgreSQL runtime database:** judge the internal database's type and host (the reader's
-  `data-dir-config` reference says where). PostgreSQL on a non-local host: **Pass**. PostgreSQL on the same
-  host (loopback or the DSS host itself): **Partial**. Not PostgreSQL: **Fail**. Pool size against
-  `max_connections` and backups are `notes` only.
-
-- **Contextual infrastructure toggles (metastore, graphics export):** decide from the setting, never
-  **Needs Review** for want of a functional test.
-  - **Metastore** (the reader's lookup table says where the flavor lives): **Pass** when it matches the estate (Hive on a Hadoop/YARN estate, Glue on AWS, DSS
-    internal otherwise); **Needs Review** only when the estate cannot be told.
-  - **Graphics export:** on is **Pass**; off is **Needs Review** (ask if intentional), as for other
-    off-but-requested settings above. Setting absent from the bundle: **Needs Review**, never off.
-
-- **Admin project garbage collection:** there is no fixed project name; the reader's lookup table says how
-  to find candidate projects and read their scenarios. Judge only scenarios that are active with an active
-  trigger. Never open or grep the script behind a Python-based scenario.
-  - **Pass:** an active scheduled step-based scenario whose steps clearly clear logs, purge, delete or clean up.
-  - **Needs Review:** an active scheduled scenario whose purpose is only inferable from its name or that runs a
-    script (say in `notes` that the script was not read); or a candidate project with scenarios but none both
-    active and scheduled.
-  - **Fail:** no candidate project, or a candidate project whose scenarios are all inactive or absent.
-  Run history, whether the cleanup actually runs, and whether it covers logs, idle kernels or both are `notes` only.
-
-- **Spark baseline configs (e.g. "Baseline Spark Configuration Set"):** like the containerized baseline above,
-  the baseline values are illustrative. Two or more Spark execution configs whose sizing genuinely differs:
-  **Pass**, whatever the names. Only one, or all identically sized: **Partial**. None: **Fail**.
-
-- **Check is both feature-conditional and version-gated (e.g. Cobuild default LLMs on an older DSS):** the
-  version gate wins. A bundle older than the check's stated minimum is **Needs Review** with the
-  introducing version in `notes`, not Not Applicable, because upgrade planning is the actionable point.
+  **Lookup procedure:** use the **extended** web-search mode every run (a standard search can miss a
+  newer major). Search "Dataiku DSS latest version release notes", then once more for the next major above
+  the one found (e.g. "Dataiku DSS 15 release notes"). Take the highest GA version confirmed by an
+  official Dataiku source (release notes, changelog, docs.dataiku.com). If results are links only,
+  `WebFetch` the official release-notes page for the newest major. Never answer from training knowledge.

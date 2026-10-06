@@ -22,32 +22,23 @@ discovery (in Claude Code, `ToolSearch` with `select:<name>,...`). Names may car
 **Order of work (required whenever you, an LLM, are running this skill):**
 1. Make sure the checklist is final, including its Summary sheet (the review skill writes it with
    `write_summary`; if it is missing or stale, call that first). Any later edit changes its hash.
-2. Call `analyze_checklist` on the checklist, then draft the narrative (next section) from its output and this
-   checklist's rows, for this bundle only. It returns `checklist_sha256`, the `narrative_path` to save to, the
-   Needs Review and Not Applicable ids your owner and N/A groups must each cover once, quick-win candidates,
-   and the validation rules. Do not skip this step or
-   build first and "add it later": the tool's fallback text is generic and is not customer-ready.
+2. Call `analyze_checklist` on the checklist, then draft the narrative (next section) from its output
+   and this checklist's rows, for this bundle only. It returns `checklist_sha256`, the `narrative_path`
+   to save to, the Needs Review and Not Applicable ids your owner and N/A groups must each cover once,
+   quick-win candidates, and the validation rules. Do not skip this step or build first and "add it
+   later": the tool's fallback text is generic and is not customer-ready. Only a plain script run with
+   no LLM present may build without a narrative.
 3. Write `<checklist_stem>_narrative.json` beside the checklist (with the `checklist_sha256` from
    `analyze_checklist`), then build ("Build the deck" below).
-4. If the tool rejects the narrative, fix the narrative and rebuild. Never drop it to get a build through.
+4. If the tool rejects the narrative, fix the narrative and rebuild; never drop it to get a build through.
 5. In your report, state whether a narrative was used (`narrative_used`). If the result has
-   `narrative_missing: true` (with a `narrative_warning`), the deck has no narrative: draft one and rebuild. If you did not draft one, say so
+   `narrative_missing: true` (with a `narrative_warning`), draft one and rebuild. If you can't, say so
    plainly and say the deck's judgment text is auto-derived and needs reviewer rewriting.
 
-Only a plain script run with no LLM present may build without a narrative.
-
 **Container vs. device:** these tools run on the user's computer and read device paths only. If you
-wrote the checklist or narrative in your container, commit it to the device with `device_commit_files`
-before calling them, and verify it on the device afterwards (`device_bash`: `wc -c` or `grep` for a
-phrase you just changed, compared with the container copy): `device_commit_files` can report `written`
-while the device keeps the old bytes (the sync is asynchronous, and a second commit of the same
-`stagedPath` is the usual culprit). A build reads whatever file is there, and a stale copy only
-produces a hash warning. If it is stale, commit again under a **new staged filename** to the same
-device path and verify again before rebuilding. `analyze_checklist` and the build report `checklist_path`,
-`checklist_modified` and `narrative_modified` (UTC): compare them with what you last wrote, and recommit
-the file if they are older. Also pass an
-`output_path` in the user's own outputs folder: the default is inside the plugin directory, and a
-rebuild on the same day overwrites the same file name.
+wrote the checklist or narrative in your container, follow `../dataiku-diagnosis-checklist-review/references/linked-computer.md`
+(commit, then verify on the device, before calling a tool). Pass an `output_path` in the user's own
+outputs folder.
 
 ### Draft the narrative (v2)
 
@@ -60,25 +51,24 @@ Add `"checklist_sha256"` (from `shasum -a 256 <checklist>`) so a later build war
 The tool derives counts, root-cause groups, quick wins, the Needs Review split by owner and the N/A groups
 from the checklist. The judgment text is yours: write it from this checklist's rows only, and never copy
 another customer's text. All keys are optional; omitted ones fall back to text derived from the cells.
-`analyze_checklist` returns the `shape` map with the exact keys and types (`verdict_title`, `highlights`,
-`takeaways`, `snapshot`, `risk1`-`risk3`, `quick_wins`, `owners`, `roadmap`, `na_groups`, `caveats`). Follow it
-rather than this file. Enumerated values: `snapshot[].state` is `ok`, `watch` or `neutral` (a dot
+`analyze_checklist` returns the `shape` map with the exact keys and types; follow it rather than this file. Enumerated values: `snapshot[].state` is `ok`, `watch` or `neutral` (a dot
 colour, not good/warn/risk); `takeaways[].tone` is `good`, `risk` or `win`; `effort` is `S`, `M` or
 `L`. `suggested_owner` in the scaffold is only a hint: assign owners yourself. `owners` must cover every Needs Review item once and `na_groups` every N/A item once.
 Text fields are single strings, never lists. A rejection names each wrong field by path: fix exactly those
 fields instead of reading the generator's source.
 
-Rules: the generator adds the "Risk 1: " / "Risk 2: " / "Risk 3: " lead to `risk1`/`risk2`/`risk3` titles when it is missing, so write a plain conclusion title; group findings by root cause (shared evidence, "see SEC-004" in Action text); titles state a conclusion;
-every figure on a main slide must appear in a checklist cell, so quote figures
-verbatim from the cells and do not state counts you tallied yourself (e.g. "nine options fail"): the validator
-rejects them, so rephrase without the number or use one the cells carry; never cite a Pass item as a problem unless it is
-under `caveats`; effort is indicative. If the tool rejects the narrative, fix the narrative (or the
-checklist), not the tool.
+Rules:
+- Write plain `risk1`/`risk2`/`risk3` conclusion titles; the generator adds the "Risk 1: " lead if missing.
+- Group findings by root cause (shared evidence, "see SEC-004" in Action text). Titles state a conclusion.
+- Every figure on a main slide must appear in a checklist cell. Quote figures verbatim from the cells and
+  never state counts you tallied yourself (e.g. "nine options fail"); the validator rejects them, so
+  rephrase without the number or use one the cells carry.
+- Never cite a Pass item as a problem unless it is under `caveats`. Effort is indicative.
+- If the tool rejects the narrative, fix the narrative (or the checklist), not the tool.
 
 **Length budgets.** `validate_deck` checks structure, never layout, and the generator does not shrink or
-clip narrative text, so text that is too long overlaps its neighbour on the slide (every test run had to
-shorten the roadmap, owners, fix-list and takeaway text after a render). Write to these budgets, derived
-from the slide's text-box sizes, and treat them as ceilings (characters, spaces included):
+clip narrative text, so text that is too long overlaps its neighbour on the slide. Treat these budgets,
+derived from the slide's text-box sizes, as ceilings (characters, spaces included):
 
 | Field | Budget |
 |---|---|
