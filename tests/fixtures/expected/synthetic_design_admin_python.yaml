@@ -79,6 +79,17 @@ items:
     mentions_any: [installid, install id, instance id]
   SEC-009:    # LDAP switched off -> Not Applicable
     status: [Not Applicable]
+  ARCH-003:
+    status: [Pass, Fail, Needs Review]
+    mentions: ["9.4"]
+  SEC-005:    # JEK-specific cgroup target configured -> Fail
+    status: [Fail]
+  GENAI-005:  # BYO active (main LLM set) but no reference project -> Fail
+    status: [Fail]
+    mentions_any: [referenceProjectKey, reference project]
+  GENAI-006:  # gpt-5.1 is unsupported -> Fail
+    status: [Fail]
+    mentions_any: ["5.1"]
   SEC-010:    # SSO explicitly disabled -> Fail (even with LDAP off)
     status: [Fail]
     mentions_any: [sso]

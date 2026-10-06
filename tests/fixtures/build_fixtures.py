@@ -53,6 +53,10 @@ EVAL_ITEM_IDS = [
     "GENAI-007",  # Cobuild on a pre-gate DSS -> Needs Review (version gate beats feature gate)
     "SEC-001",    # instance id present in the bundle -> Pass; missing -> Fail
     "SEC-009",    # LDAP authorized groups: set -> Pass; empty -> Fail; LDAP off -> Not Applicable
+    "ARCH-003",   # supported OS: web lookup -> listed Pass / not listed Fail; no lookup -> Needs Review
+    "SEC-005",    # JEK-specific cgroup limits: none -> Pass; a JEK target -> Fail
+    "GENAI-005",  # BYO LLM: inactive -> Not Applicable; active with project + main LLM -> Pass; either missing -> Fail
+    "GENAI-006",  # BYO LLM model version: inactive -> Not Applicable; recommended -> Pass; <= 5.1 -> Fail
     "SEC-010",    # SSO + LDAP enabled -> Pass; SSO disabled -> Fail; SSO enabled/LDAP off or settings missing -> Needs Review
     "SCALE-010",  # any non-blank default connection/format/engine preference -> Needs Review; all blank -> Pass
 ]
@@ -249,6 +253,7 @@ backend.xmx = 8g
         },
         "deployerClientSettings": {"mode": "REMOTE", "nodeUrl": "https://deployer.synthetic.example:11200"},
         "ssoSettings": {"enabled": True, "protocol": "SAML"},
+        "localAIServerSettings": {"referenceProjectKey": "LLM_REF", "mainLLMId": "openai:OpenAI:gpt-5.2"},
         "ldapSettings": {"enabled": True, "authenticationEnabled": True,
                          "authorizedGroups": ["dss-users", "dss-admins"]},
         "defaultDatasetCreationSettings": {"allowUploadsWithoutConnection": True, "virtualizable": False},
@@ -286,7 +291,8 @@ def admin_python_bundle(root: Path) -> None:
     """The baseline bundle plus an `ADMINISTRATIONPROJECT` (no fixed admin project name) whose only
     scenario is an active, scheduled `custom_python` one: housekeeping can't be confirmed without
     reading its script, so SCALE-004 is Needs Review. It also has no instance id in install.ini
-    (SEC-001 Fail), LDAP switched off (SEC-009 Not Applicable) and SSO explicitly disabled (SEC-010 Fail)."""
+    (SEC-001 Fail), LDAP switched off (SEC-009 Not Applicable) SSO explicitly disabled (SEC-010 Fail), a JEK-specific cgroup target (SEC-005 Fail)
+    and BYO LLM active with an old model and no reference project (GENAI-005 and GENAI-006 Fail)."""
     baseline_bundle(root)
     design = root / "data_dataiku" / "design"
     ini = design / "install.ini"
@@ -294,6 +300,9 @@ def admin_python_bundle(root: Path) -> None:
     settings = json.loads((design / "config" / "general-settings.json").read_text())
     settings["ldapSettings"] = {"enabled": False, "authenticationEnabled": False, "authorizedGroups": []}
     settings["ssoSettings"] = {"enabled": False}
+    settings["cgroupSettings"]["jobExecutionKernels"] = {"targets": [{"cgroupPathTemplate": "DSS/${user}/jek",
+                                                                      "limits": [{"key": "memory.max", "value": "8G"}]}]}
+    settings["localAIServerSettings"] = {"mainLLMId": "openai:OpenAI:gpt-5.1"}
     write(design / "config" / "general-settings.json", settings)
     p = root / "data_dataiku" / "design" / "config" / "projects" / "ADMINISTRATIONPROJECT"
     write(p / "params.json", {"projectKey": "ADMINISTRATIONPROJECT", "owner": "admin"})

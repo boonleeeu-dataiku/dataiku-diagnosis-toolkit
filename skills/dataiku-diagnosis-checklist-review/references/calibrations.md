@@ -80,6 +80,14 @@ matches. Add each new one as its own entry under the right heading; don't overwr
   - **Needs Review:** a non-internal code env is used for any of them.
   - **Fail:** nothing is set up.
 
+- **Bring Your Own LLM (GENAI-005, GENAI-006):** BYO mode counts as active only when `facts.py`'s `byo_llm`
+  reports `active: true` (a main LLM id or a reference project key is set). A custom LLM connection alone does
+  not make it active. Inactive (or the block missing): **Not Applicable** for both.
+  - **GENAI-005:** active with both the reference project key and a main LLM set: **Pass**; either missing: **Fail**.
+  - **GENAI-006:** judge the model ids `byo_llm` reports. A recommended version (OpenAI ChatGPT 5.2 or later):
+    **Pass**; a known unsupported one (ChatGPT 5.1 or earlier): **Fail**; non-OpenAI, ambiguous or
+    undeterminable: **Needs Review** (name the id in `notes`).
+
 - **Agent Hub deployer permissions (GENAI-009):** the bundle can't verify who may deploy, so don't infer
   it from the project owner or group grants. Agent Hub installed (the reader's `data-dir-config`
   reference lists the signal): **Needs Review**. Not installed: **Not Applicable**. Never Pass or Fail.
@@ -125,6 +133,11 @@ matches. Add each new one as its own entry under the right heading; don't overwr
 - **UIF (SEC-002):** impersonation enabled with at least one user or group rule (the reader's lookup
   table says where): **Pass**. Whether the OS identities exist is a live check (`notes` only).
   Disabled: **Fail**.
+
+- **JEK-specific cgroup limits (SEC-005):** the check wants none configured. From `facts.py`'s `cgroups`,
+  `workload_categories_with_no_placement` lists the workload categories with no cgroup target. The Job Execution
+  Kernel (JEK) category in that list, or no JEK category at all: **Pass**. A JEK target configured: **Fail**. The cgroup settings missing
+  from the bundle: **Needs Review**. Whether the live OS hierarchy matches is an `Action:` in `notes`, never the status.
 
 - **cgroups memory limit (SEC-004):** the recommended cap depends on host RAM, so judge the limit against
   its tier, not a flat percentage. Host RAM `R` is `MemTotal` in GiB and the cap `L` is the memory cgroup
@@ -241,6 +254,13 @@ matches. Add each new one as its own entry under the right heading; don't overwr
   3. **Otherwise:** state in `notes` that no definitive configuration in the bundle shows whether an
      automation node is deployed, and that it needs verification with the customer.
 
+- **Supported operating system (ARCH-003):** take the OS name and version from the bundle (the reader's
+  `root-files` reference says where) and compare them with Dataiku's supported-OS documentation for the
+  bundle's DSS **major** version, using the same web lookup as ARCH-002 (official Dataiku docs only, never prior
+  knowledge). Listed: **Pass** (mention a deprecation notice in `notes` if the page has one). Not listed:
+  **Fail**. Lookup failed or unavailable, or the OS isn't captured: **Needs Review**. Name the OS, the DSS
+  major and the page consulted in `evidence_found`.
+
 - **DSS version currency (ARCH-002):** look up the current GA release at run time, then compare the
   bundle's DSS `product_version` (the reader's `data-dir-identity` reference says where it is) against the
   latest GA's **major** version only:
@@ -276,6 +296,7 @@ and the row together.
 | ADVSEC-011 | Preventing links to be clickable in data tables |
 | ARCH-001 | Separation of Design and Automation Nodes |
 | ARCH-002 | Regular DSS Version Upgrades |
+| ARCH-003 | Supported Operating System Version |
 | ARCH-004 | SSD Storage for DSS |
 | ARCH-006 | Baseline Spark Configuration Set (High/Standard/Large-memory/High I/O) |
 | ARCH-007 | Kubernetes Namespace and Auth Recommendations for Spark |
@@ -284,6 +305,8 @@ and the row together.
 | ARCH-011 | Baseline Container Execution Configs (Standard, Webapp) and Namespace Settings |
 | ARCH-013 | Valid Cluster Configuration for Elastic Compute |
 | GENAI-001 | Internal Code Environments for RAG, Document Extraction, PII Detection |
+| GENAI-005 | Bring Your Own LLM Mode - Reference Project & Main Model |
+| GENAI-006 | Bring Your Own LLM - Recommended Model Versions |
 | GENAI-007 | Cobuild Default LLM Configuration |
 | GENAI-009 | Agent Hub Deployment Required Permissions |
 | SCALE-001 | External PostgreSQL Runtime Database |
@@ -298,6 +321,7 @@ and the row together.
 | SEC-001 | Verify/Capture Instance IDs |
 | SEC-002 | User Isolation Framework (UIF) Enabled with Appropriate Impersonation Rules |
 | SEC-004 | CGroups Enabled with Memory Limit per Sizing Heuristic |
+| SEC-005 | JEK-Specific CGroup Limits Left Unconfigured |
 | SEC-006 | HTTPS Access Configured for DSS |
 | SEC-009 | LDAP Authorized Groups Configured |
 | SEC-010 | SSO Enablement Reviewed |

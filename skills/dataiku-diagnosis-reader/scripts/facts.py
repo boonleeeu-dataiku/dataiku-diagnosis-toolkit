@@ -247,6 +247,25 @@ def sso_and_ldap():
     return res
 
 
+@fact("byo_llm")
+def byo_llm():
+    """Bring Your Own LLM mode: active when a main LLM id or a reference project key is set. A CustomLLM
+    connection alone does not make it active. Field names come from Dataiku's checklist; no sample bundle
+    has them populated yet, so an unset block reads as inactive."""
+    src = "config/general-settings.json"
+    gs = load_json(src)
+    if gs is None:
+        return absent(src)
+    block = dig(gs, "localAIServerSettings")
+    if block == ABSENT:
+        return absent(f"{src}: localAIServerSettings")
+    get = lambda k: (block.get(k) or ABSENT) if isinstance(block, dict) else ABSENT  # noqa: E731
+    main, ref = get("mainLLMId"), get("referenceProjectKey")
+    return found({"active": main != ABSENT or ref != ABSENT, "mainLLMId": main, "referenceProjectKey_set": ref != ABSENT,
+                  "responseFormatAwareLLMId": get("responseFormatAwareLLMId"), "fastLightLLMId": get("fastLightLLMId")},
+                 f"{src}: localAIServerSettings (model ids are names, not secrets; empty or missing reads ABSENT)")
+
+
 @fact("user_isolation")
 def user_isolation():
     src = "config/general-settings.json"

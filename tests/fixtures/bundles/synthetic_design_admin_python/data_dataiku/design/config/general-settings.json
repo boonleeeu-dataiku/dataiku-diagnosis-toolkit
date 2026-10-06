@@ -1,7 +1,20 @@
 {
   "cgroupSettings": {
     "enabled": false,
-    "cgroupsVersion": "CGROUPS_V2"
+    "cgroupsVersion": "CGROUPS_V2",
+    "jobExecutionKernels": {
+      "targets": [
+        {
+          "cgroupPathTemplate": "DSS/${user}/jek",
+          "limits": [
+            {
+              "key": "memory.max",
+              "value": "8G"
+            }
+          ]
+        }
+      ]
+    }
   },
   "useImplicitK8sCluster": false,
   "containerSettings": {
@@ -70,5 +83,8 @@
   },
   "ssoSettings": {
     "enabled": false
+  },
+  "localAIServerSettings": {
+    "mainLLMId": "openai:OpenAI:gpt-5.1"
   }
 }

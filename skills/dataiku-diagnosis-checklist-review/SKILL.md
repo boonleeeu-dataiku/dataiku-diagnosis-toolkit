@@ -40,7 +40,7 @@ spreadsheet, plus add/update a Summary tab.
   them whole. If the reader lacks a layout fact you need, say so in your final summary rather than
   recording it in this skill.
 - Load the `xlsx` skill before reading/writing the spreadsheet.
-- If the checklist has a version-currency check, confirm a web search tool is available; it is
+- If the checklist has a version-currency or supported-OS check, confirm a web search tool is available; it is
   needed to look up the latest Dataiku DSS release (procedure in `references/calibrations.md`, DSS version currency).
 
 ### Files on a linked computer

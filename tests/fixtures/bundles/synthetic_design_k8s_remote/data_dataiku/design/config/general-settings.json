@@ -119,6 +119,10 @@
     "enabled": true,
     "protocol": "SAML"
   },
+  "localAIServerSettings": {
+    "referenceProjectKey": "LLM_REF",
+    "mainLLMId": "openai:OpenAI:gpt-5.2"
+  },
   "ldapSettings": {
     "enabled": true,
     "authenticationEnabled": true,

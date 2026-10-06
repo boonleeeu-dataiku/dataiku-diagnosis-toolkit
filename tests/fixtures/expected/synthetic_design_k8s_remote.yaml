@@ -75,6 +75,16 @@ items:
   SEC-009:    # LDAP enabled with two authorized groups -> Pass
     status: [Pass]
     mentions_any: [authorizedGroups, authorized groups]
+  ARCH-003:   # RHEL 9.4 on DSS 14.x: Pass when the lookup lists it, Needs Review without a lookup
+    status: [Pass, Needs Review]
+    mentions: ["9.4"]
+  SEC-005:    # no JEK target -> Pass
+    status: [Pass]
+  GENAI-005:  # BYO active with reference project and main LLM -> Pass
+    status: [Pass]
+  GENAI-006:  # gpt-5.2 is the recommended minimum -> Pass
+    status: [Pass]
+    mentions_any: ["5.2"]
   SEC-010:    # SSO and LDAP both enabled -> Pass
     status: [Pass]
     mentions_any: [sso]

@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.11.0] - 2026-10-06
+
+### Added
+
+- `scripts/facts.py` gains `byo_llm`: whether Bring Your Own LLM mode is active (a main LLM id or reference project key is set in `localAIServerSettings`; a CustomLLM connection alone does not count), the main/response-format/fast LLM ids and whether a reference project key is set. `ABSENT` when the block is missing. The field names come from Dataiku's checklist: the three sample bundles have the block but none populates them, so this is unverified against a populated sample (see `references/data-dir-config.md`).
+
 ## [0.10.0] - 2026-10-06
 
 ### Added

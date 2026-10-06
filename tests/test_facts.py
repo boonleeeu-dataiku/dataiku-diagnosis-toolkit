@@ -141,3 +141,11 @@ def test_ldap_authorized_groups_are_counted_not_named():
 def test_missing_install_id_is_absent():
     assert run_facts("synthetic_design_admin_python")["node"]["value"]["installid"] == "ABSENT"
     assert run_facts("synthetic_design_baseline")["node"]["value"]["installid"] == "SYNTHETICINSTALL01"
+
+
+def test_byo_llm_is_active_only_when_a_main_llm_or_reference_project_is_set():
+    assert run_facts("synthetic_design_baseline")["byo_llm"]["value"] == "ABSENT"  # no localAIServerSettings block
+    on = run_facts("synthetic_design_k8s_remote")["byo_llm"]["value"]
+    assert on["active"] is True and on["referenceProjectKey_set"] is True and on["mainLLMId"].endswith("gpt-5.2")
+    partial = run_facts("synthetic_design_admin_python")["byo_llm"]["value"]
+    assert partial["active"] is True and partial["referenceProjectKey_set"] is False

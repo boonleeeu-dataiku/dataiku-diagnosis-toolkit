@@ -79,6 +79,15 @@ items:
   SEC-009:    # LDAP enabled but authorized groups empty -> Fail
     status: [Fail]
     mentions_any: [authorizedGroups, authorized groups]
+  ARCH-003:   # RHEL 9.4 on DSS 12.x: listed/not listed depends on the lookup; never guess
+    status: [Pass, Fail, Needs Review]
+    mentions: ["9.4"]
+  SEC-005:    # cgroups block present, no JEK target -> Pass
+    status: [Pass]
+  GENAI-005:  # no BYO settings -> Not Applicable
+    status: [Not Applicable]
+  GENAI-006:
+    status: [Not Applicable]
   SEC-010:    # no ssoSettings in the bundle -> Needs Review (settings missing)
     status: [Needs Review]
     mentions_any: [sso]

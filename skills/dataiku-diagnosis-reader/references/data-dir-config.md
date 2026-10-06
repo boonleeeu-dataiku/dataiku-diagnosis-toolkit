@@ -160,7 +160,9 @@ usually visible only in `datadir_listing.txt`.
   webapp impersonation.
 - **Is an optional feature in use?** GenAI/Hugging Face signals seen: `localAIServerSettings.*UseLocal`
   (booleans such as `prepareAICompletionUseLocal`, `aiGenerateSQLUseLocal`), and
-  `generativeAISettings`. **Agent Hub**: an `agent-hub` directory under `config/plugins/`, an `AGENT_HUB`
+  `generativeAISettings`. **Bring Your Own LLM** is active when `localAIServerSettings.mainLLMId` or
+  `referenceProjectKey` is set (field names from Dataiku's checklist; not yet seen populated in a sample bundle, so
+  verify when one appears); a `CustomLLM` connection alone does not make it active (`facts.py` `byo_llm`). **Agent Hub**: an `agent-hub` directory under `config/plugins/`, an `AGENT_HUB`
   project under `config/projects/` with a `web_apps/` entry (and `agent-tools/`), seen in one design sample.
   Still unverified: `agentBuildingSettings` and an `INTERNAL_huggingface` code env.
 

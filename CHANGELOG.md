@@ -10,6 +10,13 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-10-06
+
+### Added
+
+- Re-sync reader 0.11.0: `facts.py` gains `byo_llm` (Bring Your Own LLM active only when a main LLM id or reference project key is set; a custom LLM connection alone does not count).
+- Calibrations for the four checks that still split repeat Codex runs: **ARCH-003** (supported OS: listed in Dataiku's docs for the DSS major = Pass, not listed = Fail, lookup failed or OS not captured = Needs Review), **SEC-005** (no JEK-specific cgroup target = Pass, a target configured = Fail, cgroup settings missing = Needs Review) and **GENAI-005 / GENAI-006** (BYO LLM inactive = Not Applicable; active: reference project + main LLM = Pass else Fail; model ChatGPT 5.2+ = Pass, 5.1 or earlier = Fail, unknown = Needs Review). Fixtures and expected answers cover them.
+
 ## [0.28.3] - 2026-10-06
 
 ### Added
