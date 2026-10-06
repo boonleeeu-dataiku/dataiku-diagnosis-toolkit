@@ -10,6 +10,18 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-10-06
+
+### Added
+
+- Re-sync reader 0.9.0: `scripts/facts.py <bundle_root>` prints a deterministic, secret-safe JSON report of the settings reviews most often need (heap sizes, host memory, `config/` size from the listing, database host, concurrency limits by leaf-key search, SSO/LDAP, user isolation, cgroups, `filesystem_root`, Trace Explorer, default preferences, plugins/Agent Hub), with an explicit `ABSENT` for a missing setting. Added after repeat reviews of one bundle disagreed on 14 of 67 items, mostly because hand reads mis-stated or missed values.
+- `tests/test_facts.py` (synthetic fixtures only).
+
+### Changed
+
+- Checklist-review `SKILL.md` runs `facts.py` after `orient.sh` and treats its values as the source of truth, citing each `source` in `evidence_found`. `tests/test_skill_boundaries.py` now requires that wiring.
+- This is also the release that lets Codex load it: a Codex plugin install is cached per version, and the previous commits kept 0.26.4, so Codex runs never saw `facts.py`.
+
 ## [0.26.4] - 2026-10-06
 
 ### Changed
