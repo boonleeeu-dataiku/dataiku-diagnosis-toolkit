@@ -89,7 +89,9 @@
     }
   },
   "metastoreCatalogsSettings": {
-    "flavor": "DSS_INTERNAL"
+    "synchronizeTo": {
+      "flavor": "DSS_INTERNAL"
+    }
   },
   "graphicsExportsEnabled": true,
   "generativeAISettings": {

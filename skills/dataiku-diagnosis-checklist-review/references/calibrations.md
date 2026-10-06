@@ -221,14 +221,20 @@ one — add each as its own bullet rather than overwriting prior ones.
 
 - **Contextual infrastructure toggles (metastore, graphics export):** decide from the setting, never
   **Needs Review** for want of a functional test.
-  - **Metastore:** **Pass** when it matches the estate (Hive on a Hadoop/YARN estate, Glue on AWS, DSS
+  - **Metastore** (the reader's lookup table says where the flavor lives): **Pass** when it matches the estate (Hive on a Hadoop/YARN estate, Glue on AWS, DSS
     internal otherwise); **Needs Review** only when the estate cannot be told.
   - **Graphics export:** on is **Pass**; off is **Needs Review** (ask if intentional), as for other
-    off-but-requested settings above.
+    off-but-requested settings above. Setting absent from the bundle: **Needs Review**, never off.
 
-- **Admin project garbage collection:** the admin project has an active scheduled cleanup scenario with at
-  least one step: **Pass**. Scenario present but inactive or with no steps: **Partial**. No admin project or
-  scenario: **Fail**. Run history and step-level coverage are `notes` only.
+- **Admin project garbage collection:** there is no fixed project name; the reader's lookup table says how
+  to find candidate projects and read their scenarios. Judge only scenarios that are active with an active
+  trigger. Never open or grep the script behind a Python-based scenario.
+  - **Pass:** an active scheduled step-based scenario whose steps clearly clear logs, purge, delete or clean up.
+  - **Needs Review:** an active scheduled scenario whose purpose is only inferable from its name or that runs a
+    script (say in `notes` that the script was not read); or a candidate project with scenarios but none both
+    active and scheduled.
+  - **Fail:** no candidate project, or a candidate project whose scenarios are all inactive or absent.
+  Run history, whether the cleanup actually runs, and whether it covers logs, idle kernels or both are `notes` only.
 
 - **Spark baseline configs (e.g. "Baseline Spark Configuration Set"):** like the containerized baseline above,
   the baseline values are illustrative. Two or more Spark execution configs whose sizing genuinely differs:

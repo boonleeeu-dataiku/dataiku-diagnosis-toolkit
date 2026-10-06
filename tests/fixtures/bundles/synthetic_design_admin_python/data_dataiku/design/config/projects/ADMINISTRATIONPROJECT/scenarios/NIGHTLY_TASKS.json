@@ -1,6 +1,6 @@
 {
-  "type": "step_based",
-  "name": "CLEANUP",
+  "type": "custom_python",
+  "name": "NIGHTLY_TASKS",
   "active": true,
   "triggers": [
     {
@@ -12,11 +12,8 @@
     }
   ],
   "params": {
-    "steps": [
-      {
-        "type": "runnable",
-        "name": "Clear Job logs"
-      }
-    ]
+    "envSelection": {
+      "envMode": "INHERIT"
+    }
   }
 }

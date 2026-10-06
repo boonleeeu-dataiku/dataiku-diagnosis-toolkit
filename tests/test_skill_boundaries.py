@@ -20,7 +20,9 @@ READER_OWNED_TERMS = ["ROTA", "lsblk", "[ERROR]", "defaultK8sClusterId", "hs_err
                       "containerSettings", "deployerClientSettings", "project-deployer", "api-deployer",
                       "dss-version.json", "du -sh", "sessionsMax", "forceSingleSessionPerUser",
                       "disableDataTableLinks", "canObtainAPITicket", "lastRunTimestamp", "agent-hub",
-                      "userRules", "groupRules"]
+                      "userRules", "groupRules",
+                      "metastoreCatalogsSettings", "graphicsExportsEnabled", "synchronizeTo",
+                      "custom_python", "step_based", "envSelection"]
 
 
 def _files():

@@ -10,6 +10,20 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.26.3] - 2026-10-06
+
+### Changed
+
+- Re-sync reader 0.8.0: how to find a housekeeping project and read its scenarios (`step_based` vs `custom_python`).
+- SCALE-004 calibration rewritten: scenario scripts are never read; unconfirmed intent is Needs Review, not Partial. Fixtures use real step shapes and add a third bundle (`synthetic_design_admin_python`).
+
+## [0.26.2] - 2026-10-06
+
+### Changed
+
+- Re-sync reader 0.7.0: documents where the metastore flavor (`metastoreCatalogsSettings.synchronizeTo.flavor`) and `graphicsExportsEnabled` live.
+- Fixed the synthetic fixtures' metastore key to the real nested shape; graphics export with the setting absent is Needs Review.
+
 ## [0.26.1] - 2026-10-06
 
 ### Changed

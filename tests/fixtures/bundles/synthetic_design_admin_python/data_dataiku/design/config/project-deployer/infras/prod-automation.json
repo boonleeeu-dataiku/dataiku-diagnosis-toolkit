@@ -1,0 +1,9 @@
+{
+  "id": "prod-automation",
+  "stage": "Production",
+  "automationNodes": [
+    {
+      "url": "https://automation.synthetic.example:11200"
+    }
+  ]
+}

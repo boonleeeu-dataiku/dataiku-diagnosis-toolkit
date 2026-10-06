@@ -9,6 +9,18 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.8.0] - 2026-10-06
+
+### Added
+
+- Reference facts, spot-checked against the design and automation samples: how to find a housekeeping/admin project (no fixed name: `ADMINPROJECT`, `ADMINISTRATIONPROJECT`) and read its scenarios; `step_based` scenarios keep steps in `params.steps[]` (`runnable`), `custom_python` ones only `params.envSelection` plus a sibling `.py`. Added to `lookup-table.md` and `data-dir-config.md`.
+
+## [0.7.0] - 2026-10-06
+
+### Added
+
+- Reference facts, spot-checked against the design and automation samples: the metastore flavor is `general-settings.json` → `metastoreCatalogsSettings.synchronizeTo.flavor` (`HIVESERVER2` in all three; other values unobserved), and `graphicsExportsEnabled` is a top-level boolean (`true`/`false` both seen). Added to `lookup-table.md` and `data-dir-config.md`.
+
 ## [0.6.0] - 2026-10-06
 
 ### Added

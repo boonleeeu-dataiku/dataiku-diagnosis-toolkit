@@ -1,0 +1,14 @@
+{
+  "messages": [
+    {
+      "severity": "WARNING",
+      "code": "WARN_MISC_DATADIR_ON_ROTATIONAL_DISK",
+      "details": "The DSS data directory /data/dataiku/design is on a rotational (non-SSD) disk."
+    },
+    {
+      "severity": "WARNING",
+      "code": "WARN_SECURITY_NO_CGROUPS",
+      "details": "cgroups resource control is not enabled."
+    }
+  ]
+}

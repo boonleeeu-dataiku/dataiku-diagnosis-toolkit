@@ -154,6 +154,7 @@ usually visible only in `datadir_listing.txt`.
   `ipBoundSessions`, and `disableDataTableLinks` (the equivalent of the `dku.feature.dataTableLinks.enabled`
   property). Present in both a design and an automation sample; check there before calling one UI-only.
 - **User isolation (UIF / impersonation)** is `general-settings.json` → top-level `impersonation`: `enabled`, `useHadoopDelegationTokens`, `userRules[]`, `groupRules[]`. Rules carry `scope` and `type` (`IDENTITY`, or `SINGLE_MAPPING` with `dssUser`/`targetUnix`/`targetHadoop` and sometimes `ruleFrom`). Present, enabled, in all three samples (two design, one automation). `security.webappsIsolationMode` is the separate webapp-isolation setting. The `install.ini` `[mus]` wrapper is only the OS side, so check this block before saying UIF is off.
+- **Metastore and graphics export** are top-level in `general-settings.json`: `metastoreCatalogsSettings.synchronizeTo.flavor` (`HIVESERVER2` in all three samples; other flavors unobserved) and the boolean `graphicsExportsEnabled` (`true` in two samples, `false` in one). Neither is in `dip.properties`.
 - **Webapp API-ticket groups**: `config/users.json` → `groups[]` entries carry
   `canObtainAPITicketFromCookiesForGroupsRegex` (a regex, empty when not granted), the "allowed groups" for
   webapp impersonation.
@@ -198,6 +199,8 @@ shape is the same either way). Each project directory is its own internal git re
 | `lambda_services/<id>.json` | API/Lambda service endpoint definitions — includes activated API-scoring projects on automation nodes |
 | `managed_folders/`, `zones/`, `statistics_worksheets/`, `explore/` | Supporting flow/UI artifacts |
 | `pictures/` | Thumbnails for dashboards/insights/project |
+
+**Scenario storage forms.** `type: step_based` keeps its work in `params.steps[]` (`type: runnable`). `type: custom_python` has only `params.envSelection` and a sibling `<name>.py` holding the logic. In the automation sample's `ADMINPROJECT`, 1 of 14 scenarios is step-based and 13 are `custom_python`, so an empty `params.steps` does not mean an empty scenario.
 
 This confirms recipes, ML analyses, scenarios, notebooks, dashboards, wikis, and project-local
 library code are all captured as real content — the complete design-time (or activated-bundle)

@@ -1,0 +1,6 @@
+{
+  "id": "SALES_FORECAST-on-prod-automation",
+  "publishedProjectKey": "SALES_FORECAST",
+  "infraId": "prod-automation",
+  "bundleId": "v12"
+}

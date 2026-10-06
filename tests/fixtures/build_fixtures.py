@@ -137,7 +137,7 @@ backend.xmx = 2g
         "impersonation": {"enabled": False, "userRules": [], "groupRules": []},
         "internalDatabase": {"connection": {"type": "PostgreSQL",
                                             "params": {"host": "127.0.0.1", "port": 5432, "db": "dss_design_db"}}},
-        "metastoreCatalogsSettings": {"flavor": "HIVESERVER2"},
+        "metastoreCatalogsSettings": {"synchronizeTo": {"flavor": "HIVESERVER2", "glueCredentialsMode": "DEFAULT"}},
         "hiveSettings": {"enabled": True},
         "graphicsExportsEnabled": False,
         "maxRunningActivities": 0,
@@ -219,7 +219,7 @@ backend.xmx = 8g
         "internalDatabase": {"connection": {"type": "PostgreSQL",
                                             "params": {"host": "pg-internal.synthetic.example", "port": 5432,
                                                        "db": "dss_design_db"}}},
-        "metastoreCatalogsSettings": {"flavor": "DSS_INTERNAL"},
+        "metastoreCatalogsSettings": {"synchronizeTo": {"flavor": "DSS_INTERNAL"}},
         "graphicsExportsEnabled": True,
         "generativeAISettings": {
             "defaultRetrievableKnowledgeCodeEnv": "INTERNAL_retrieval_augmented_generation_v1",
@@ -245,18 +245,34 @@ backend.xmx = 8g
     write(m / "config" / "dip.properties", "dku.exports.disableAllExports=true\n")
     write(m / "config" / "projects" / "ADMINPROJECT" / "params.json", {"projectKey": "ADMINPROJECT", "owner": "admin"})
     write(m / "config" / "projects" / "ADMINPROJECT" / "scenarios" / "CLEANUP.json", {
-        "id": "CLEANUP", "active": True,
+        "type": "step_based", "name": "CLEANUP", "active": True,
         "triggers": [{"type": "temporal", "active": True, "params": {"frequency": "Daily"}}],
-        "params": {"steps": [{"type": "clear_items", "name": "Clear job logs"}]},
+        "params": {"steps": [{"type": "runnable", "name": "Clear Job logs"}]},
     })
     write(m / "config" / "plugins" / "agent-hub" / "settings.json", {"id": "agent-hub"})
     write(m / "config" / "projects" / "AGENT_HUB" / "params.json", {"projectKey": "AGENT_HUB", "owner": "svc_agents"})
     write(m / "config" / "projects" / "AGENT_HUB" / "web_apps" / "synthetic1.json", {"name": "Agent_Hub"})
 
 
+def admin_python_bundle(root: Path) -> None:
+    """The baseline bundle plus an `ADMINISTRATIONPROJECT` (no fixed admin project name) whose only
+    scenario is an active, scheduled `custom_python` one: housekeeping can't be confirmed without
+    reading its script, so SCALE-004 is Needs Review."""
+    baseline_bundle(root)
+    p = root / "data_dataiku" / "design" / "config" / "projects" / "ADMINISTRATIONPROJECT"
+    write(p / "params.json", {"projectKey": "ADMINISTRATIONPROJECT", "owner": "admin"})
+    write(p / "scenarios" / "NIGHTLY_TASKS.json", {
+        "type": "custom_python", "name": "NIGHTLY_TASKS", "active": True,
+        "triggers": [{"type": "temporal", "active": True, "params": {"frequency": "Daily"}}],
+        "params": {"envSelection": {"envMode": "INHERIT"}},
+    })
+    write(p / "scenarios" / "NIGHTLY_TASKS.py", "# synthetic placeholder; never read by the review\n")
+
+
 SCENARIOS = {
     "synthetic_design_baseline": baseline_bundle,
     "synthetic_design_k8s_remote": k8s_remote_bundle,
+    "synthetic_design_admin_python": admin_python_bundle,
 }
 
 

@@ -1,0 +1,4 @@
+  100  4 drwxr-x---   dataiku dataiku  4096 Jan  1 00:00 /data/dataiku/design/config
+  101  4 -rw-r-----   dataiku dataiku  1200 Jan  1 00:00 /data/dataiku/design/config/general-settings.json
+  102  4 -rw-r-----   dataiku dataiku   200 Jan  1 00:00 /data/dataiku/design/config/project-deployer/infras/prod-automation.json
+  103  4 -rw-r-----   dataiku dataiku   200 Jan  1 00:00 /data/dataiku/design/config/project-deployer/deployments/SALES_FORECAST-on-prod-automation.json
