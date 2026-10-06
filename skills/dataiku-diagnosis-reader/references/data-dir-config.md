@@ -153,6 +153,7 @@ usually visible only in `datadir_listing.txt`.
   `sessionsMaxTotalTimeMinutes` and `sessionsMaxIdleTimeMinutes` (`0` = no limit), `forceSingleSessionPerUser`,
   `ipBoundSessions`, and `disableDataTableLinks` (the equivalent of the `dku.feature.dataTableLinks.enabled`
   property). Present in both a design and an automation sample; check there before calling one UI-only.
+- **User isolation (UIF / impersonation)** is `general-settings.json` → top-level `impersonation`: `enabled`, `useHadoopDelegationTokens`, `userRules[]`, `groupRules[]`. Rules carry `scope` and `type` (`IDENTITY`, or `SINGLE_MAPPING` with `dssUser`/`targetUnix`/`targetHadoop` and sometimes `ruleFrom`). Present, enabled, in all three samples (two design, one automation). `security.webappsIsolationMode` is the separate webapp-isolation setting. The `install.ini` `[mus]` wrapper is only the OS side, so check this block before saying UIF is off.
 - **Webapp API-ticket groups**: `config/users.json` → `groups[]` entries carry
   `canObtainAPITicketFromCookiesForGroupsRegex` (a regex, empty when not granted), the "allowed groups" for
   webapp impersonation.

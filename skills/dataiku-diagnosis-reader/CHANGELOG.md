@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.6.0] - 2026-10-06
+
+### Added
+
+- Reference facts, spot-checked against the design and automation samples: user isolation (UIF) lives in `general-settings.json` → `impersonation` (`enabled`, `userRules[]`, `groupRules[]`, rule `type`/`scope`), separate from the `install.ini` `[mus]` OS wrapper. Added to `lookup-table.md` and `data-dir-config.md`.
+
 ## [0.5.0] - 2026-10-05
 
 ### Added

@@ -10,6 +10,13 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.26.1] - 2026-10-06
+
+### Changed
+
+- Re-sync reader 0.6.0: documents where user isolation (UIF) lives (`general-settings.json` → `impersonation`), which the SEC-002 calibration relies on.
+- Fixed the synthetic fixture's impersonation rule key (`type`, as in real bundles, not `rule`).
+
 ## [0.26.0] - 2026-10-05
 
 ### Changed

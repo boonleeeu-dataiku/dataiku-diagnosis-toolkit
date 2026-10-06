@@ -19,7 +19,8 @@ READER_OWNED_TERMS = ["ROTA", "lsblk", "[ERROR]", "defaultK8sClusterId", "hs_err
                       "jekSettings", "localAIServerSettings", "managedNamespace", "kubernetesNamespace",
                       "containerSettings", "deployerClientSettings", "project-deployer", "api-deployer",
                       "dss-version.json", "du -sh", "sessionsMax", "forceSingleSessionPerUser",
-                      "disableDataTableLinks", "canObtainAPITicket", "lastRunTimestamp", "agent-hub"]
+                      "disableDataTableLinks", "canObtainAPITicket", "lastRunTimestamp", "agent-hub",
+                      "userRules", "groupRules"]
 
 
 def _files():

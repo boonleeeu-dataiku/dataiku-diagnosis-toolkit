@@ -201,7 +201,8 @@ one — add each as its own bullet rather than overwriting prior ones.
   misread is visible.
 
 - **Main control on, with extras missing (UIF, cgroups, export restriction):**
-  - **UIF (user isolation):** impersonation enabled with at least one user or group rule: **Pass**. Whether
+  - **UIF (user isolation):** impersonation enabled with at least one user or group rule (the reader's
+    lookup table says where the setting lives): **Pass**. Whether
     the OS identities exist is a live check (`notes` only). Disabled: **Fail**.
   - **cgroups memory limit:** enabled with a memory limit of roughly 50-75% of host RAM: **Pass**. Enabled
     with no memory limit, or one far outside that range: **Partial**. Disabled: **Fail**. Empty

@@ -73,7 +73,7 @@
     "userRules": [
       {
         "scope": "GLOBAL",
-        "rule": "IDENTITY"
+        "type": "IDENTITY"
       }
     ],
     "groupRules": []

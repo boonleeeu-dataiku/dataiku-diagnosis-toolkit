@@ -214,7 +214,7 @@ backend.xmx = 8g
             {"name": "spark-standard", "conf": [{"key": "spark.executor.memory", "value": "4g"}]},
             {"name": "spark-large-memory", "conf": [{"key": "spark.executor.memory", "value": "12g"}]},
         ]},
-        "impersonation": {"enabled": True, "userRules": [{"scope": "GLOBAL", "rule": "IDENTITY"}],
+        "impersonation": {"enabled": True, "userRules": [{"scope": "GLOBAL", "type": "IDENTITY"}],
                           "groupRules": []},
         "internalDatabase": {"connection": {"type": "PostgreSQL",
                                             "params": {"host": "pg-internal.synthetic.example", "port": 5432,
