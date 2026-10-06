@@ -8,7 +8,7 @@ which `.gitignore` excludes.
 | Path | What it is |
 |---|---|
 | `bundles/<scenario>/` | Minimal fake bundles, each designed to trigger specific checklist-review calibrations. See the docstrings in `build_fixtures.py` |
-| `checklists/eval_checklist.xlsx` | A trimmed copy of the bundled default template, keeping 16 items that each exercise one calibration (`EVAL_ITEM_IDS` in `build_fixtures.py`) |
+| `checklists/eval_checklist.xlsx` | A trimmed copy of the bundled default template, keeping 25 items that each exercise one calibration (`EVAL_ITEM_IDS` in `build_fixtures.py`) |
 | `expected/<scenario>.yaml` | The answers a correct review should give for that bundle: allowed statuses plus required mentions. Maintained by hand |
 
 Regenerate the bundles and checklist after editing `build_fixtures.py`:

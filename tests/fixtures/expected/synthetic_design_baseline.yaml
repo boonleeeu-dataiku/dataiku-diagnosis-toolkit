@@ -53,3 +53,23 @@ items:
     mentions: [custom_rag_env]
   GENAI-009:  # no Agent Hub installed -> Not Applicable
     status: [Not Applicable]
+  SEC-002:    # UIF disabled -> Fail
+    status: [Fail]
+  ADVSEC-008: # no export-restriction key set -> Fail
+    status: [Fail]
+  ADVSEC-009: # no security headers configured in DSS -> Fail
+    status: [Fail]
+  SCALE-001:  # PostgreSQL, but on loopback -> Partial
+    status: [Partial]
+    mentions_any: [127.0.0.1, loopback, local]
+  SCALE-002:  # Hive metastore on a Hadoop estate -> Pass without a functional test
+    status: [Pass]
+  SCALE-003:  # graphics export off -> Needs Review (ask if intentional)
+    status: [Needs Review]
+  SCALE-004:  # no admin project or cleanup scenario -> Fail
+    status: [Fail]
+  ARCH-006:   # no Spark execution configs -> Fail
+    status: [Fail]
+  GENAI-007:  # DSS 12.6 predates the check's minimum version -> Needs Review, never Not Applicable
+    status: [Needs Review]
+    mentions_any: ["12.6", version]

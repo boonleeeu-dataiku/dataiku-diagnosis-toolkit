@@ -189,3 +189,50 @@ one — add each as its own bullet rather than overwriting prior ones.
 - **An inferred limit is not evidence (e.g. a connection pool vs. an internal-database limit that the
   bundle does not record):** don't mark Pass or Fail from an assumed default. Mark **Needs Review**,
   state the inference in `notes` as an inference, and ask for the real value.
+
+- **Judge only what the bundle shows (applies to every check):** an aspect that needs a live check
+  (backups, restore tests, who holds an OS identity, a functional export test, run history, an external
+  proxy) goes in `notes` as an `Action:`; it never moves the status away from what the bundle's own
+  settings support. Absence of run history is the normal state of a bundle, not a gap.
+
+- **HTTPS (reinforcing the rule above):** DSS terminating TLS itself (SSL switched on and a certificate
+  configured, as the reader's `data-dir-identity` reference describes) is **Pass**. Do not downgrade it
+  because an external proxy might also exist. Quote the raw server block in `evidence_found`, so a
+  misread is visible.
+
+- **Main control on, with extras missing (UIF, cgroups, export restriction):**
+  - **UIF (user isolation):** impersonation enabled with at least one user or group rule: **Pass**. Whether
+    the OS identities exist is a live check (`notes` only). Disabled: **Fail**.
+  - **cgroups memory limit:** enabled with a memory limit of roughly 50-75% of host RAM: **Pass**. Enabled
+    with no memory limit, or one far outside that range: **Partial**. Disabled: **Fail**. Empty
+    per-workload placements are a `notes` observation, not a downgrade.
+  - **Export restriction:** the check lists alternative keys (`one_of`), so any one of them set to true is
+    **Pass**; the others (e.g. clipboard keys) are `notes` only. None set: **Fail**.
+
+- **Security HTTP headers:** none of the listed headers configured in DSS: **Fail**. Some but not all:
+  **Partial**. All with restrictive values: **Pass**. In `notes`, say a proxy may set them (the bundle
+  cannot show that).
+
+- **External PostgreSQL runtime database:** judge the internal database's type and host (the reader's
+  `data-dir-config` reference says where). PostgreSQL on a non-local host: **Pass**. PostgreSQL on the same
+  host (loopback or the DSS host itself): **Partial**. Not PostgreSQL: **Fail**. Pool size against
+  `max_connections` and backups are `notes` only.
+
+- **Contextual infrastructure toggles (metastore, graphics export):** decide from the setting, never
+  **Needs Review** for want of a functional test.
+  - **Metastore:** **Pass** when it matches the estate (Hive on a Hadoop/YARN estate, Glue on AWS, DSS
+    internal otherwise); **Needs Review** only when the estate cannot be told.
+  - **Graphics export:** on is **Pass**; off is **Needs Review** (ask if intentional), as for other
+    off-but-requested settings above.
+
+- **Admin project garbage collection:** the admin project has an active scheduled cleanup scenario with at
+  least one step: **Pass**. Scenario present but inactive or with no steps: **Partial**. No admin project or
+  scenario: **Fail**. Run history and step-level coverage are `notes` only.
+
+- **Spark baseline configs (e.g. "Baseline Spark Configuration Set"):** like the containerized baseline above,
+  the baseline values are illustrative. Two or more Spark execution configs whose sizing genuinely differs:
+  **Pass**, whatever the names. Only one, or all identically sized: **Partial**. None: **Fail**.
+
+- **Check is both feature-conditional and version-gated (e.g. Cobuild default LLMs on an older DSS):** the
+  version gate wins. A bundle older than the check's stated minimum is **Needs Review** with the
+  introducing version in `notes`, not Not Applicable, because upgrade planning is the actionable point.

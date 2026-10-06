@@ -10,6 +10,18 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-10-05
+
+### Changed
+
+- Checklist-review calibrations for the 11 items whose status differed across three repeat runs on the
+  same bundle (SEC-002, SEC-004, SEC-006, ADVSEC-008, ADVSEC-009, SCALE-001/002/003/004, ARCH-006,
+  GENAI-007). New general rule: judge only what the bundle shows; live-check aspects go in `notes` as an
+  `Action:`, not in the status. Fixed statuses for UIF, cgroups memory limit, export restriction, security
+  headers, external PostgreSQL, metastore, graphics export, admin-project cleanup and Spark baselines; HTTPS
+  with DSS-terminated TLS is Pass; a version gate beats a feature gate (GENAI-007).
+- Eval fixtures extended to 25 items covering each new calibration, in both synthetic bundles.
+
 ## [0.25.0] - 2026-10-05
 
 ### Changed

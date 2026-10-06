@@ -42,6 +42,15 @@ EVAL_ITEM_IDS = [
     "ADVSEC-006", # no custom post-logout redirect -> Not Applicable
     "GENAI-001",  # internal LLM Mesh code envs -> Pass internal, Needs Review non-internal
     "GENAI-009",  # Agent Hub deployer -> Needs Review when installed, Not Applicable when not
+    "SEC-002",    # UIF enabled with rules -> Pass; disabled -> Fail
+    "ADVSEC-008", # export restriction: any one_of key set -> Pass; none -> Fail
+    "ADVSEC-009", # security headers: none -> Fail
+    "SCALE-001",  # internal DB: PostgreSQL local -> Partial; remote -> Pass
+    "SCALE-002",  # metastore matches estate -> Pass without a functional test
+    "SCALE-003",  # graphics export on -> Pass; off -> Needs Review
+    "SCALE-004",  # admin project cleanup: active schedule -> Pass; none -> Fail
+    "ARCH-006",   # differently sized Spark configs -> Pass; none -> Fail
+    "GENAI-007",  # Cobuild on a pre-gate DSS -> Needs Review (version gate beats feature gate)
 ]
 
 FIXTURE_MARKER = "SYNTHETIC TEST FIXTURE - not real diagnosis data."
@@ -125,6 +134,12 @@ backend.xmx = 2g
         "deployerClientSettings": {"mode": "LOCAL"},
         "generativeAISettings": {"defaultRetrievableKnowledgeCodeEnv": "custom_rag_env",
                                  "defaultRetrievableKnowledgeContainerExecSelection": {"containerMode": "NONE"}},
+        "impersonation": {"enabled": False, "userRules": [], "groupRules": []},
+        "internalDatabase": {"connection": {"type": "PostgreSQL",
+                                            "params": {"host": "127.0.0.1", "port": 5432, "db": "dss_design_db"}}},
+        "metastoreCatalogsSettings": {"flavor": "HIVESERVER2"},
+        "hiveSettings": {"enabled": True},
+        "graphicsExportsEnabled": False,
         "maxRunningActivities": 0,
         "maxRunningActivitiesPerJob": 0,
         "jekSettings": {"maxRunningJobs": 0},
@@ -195,8 +210,17 @@ backend.xmx = 8g
                  "kubernetesResources": {"memRequestMB": 8192, "memLimitMB": 32768, "cpuRequest": 2, "cpuLimit": 8}},
             ],
         },
-        "sparkSettings": {"executionConfigs": [{"name": "spark-standard",
-                                                "conf": [{"key": "spark.executor.memory", "value": "4g"}]}]},
+        "sparkSettings": {"executionConfigs": [
+            {"name": "spark-standard", "conf": [{"key": "spark.executor.memory", "value": "4g"}]},
+            {"name": "spark-large-memory", "conf": [{"key": "spark.executor.memory", "value": "12g"}]},
+        ]},
+        "impersonation": {"enabled": True, "userRules": [{"scope": "GLOBAL", "rule": "IDENTITY"}],
+                          "groupRules": []},
+        "internalDatabase": {"connection": {"type": "PostgreSQL",
+                                            "params": {"host": "pg-internal.synthetic.example", "port": 5432,
+                                                       "db": "dss_design_db"}}},
+        "metastoreCatalogsSettings": {"flavor": "DSS_INTERNAL"},
+        "graphicsExportsEnabled": True,
         "generativeAISettings": {
             "defaultRetrievableKnowledgeCodeEnv": "INTERNAL_retrieval_augmented_generation_v1",
             "defaultRetrievableKnowledgeContainerExecSelection": {"containerMode": "INHERIT"},
@@ -218,6 +242,13 @@ backend.xmx = 8g
     })
     write(m / "code-envs" / "desc" / "python" / "INTERNAL_retrieval_augmented_generation_v1" / "desc.json",
           {"envName": "INTERNAL_retrieval_augmented_generation_v1", "owner": "INTERNAL"})
+    write(m / "config" / "dip.properties", "dku.exports.disableAllExports=true\n")
+    write(m / "config" / "projects" / "ADMINPROJECT" / "params.json", {"projectKey": "ADMINPROJECT", "owner": "admin"})
+    write(m / "config" / "projects" / "ADMINPROJECT" / "scenarios" / "CLEANUP.json", {
+        "id": "CLEANUP", "active": True,
+        "triggers": [{"type": "temporal", "active": True, "params": {"frequency": "Daily"}}],
+        "params": {"steps": [{"type": "clear_items", "name": "Clear job logs"}]},
+    })
     write(m / "config" / "plugins" / "agent-hub" / "settings.json", {"id": "agent-hub"})
     write(m / "config" / "projects" / "AGENT_HUB" / "params.json", {"projectKey": "AGENT_HUB", "owner": "svc_agents"})
     write(m / "config" / "projects" / "AGENT_HUB" / "web_apps" / "synthetic1.json", {"name": "Agent_Hub"})

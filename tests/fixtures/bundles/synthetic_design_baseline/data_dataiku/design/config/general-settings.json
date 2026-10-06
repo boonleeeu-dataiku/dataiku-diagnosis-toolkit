@@ -19,6 +19,28 @@
       "containerMode": "NONE"
     }
   },
+  "impersonation": {
+    "enabled": false,
+    "userRules": [],
+    "groupRules": []
+  },
+  "internalDatabase": {
+    "connection": {
+      "type": "PostgreSQL",
+      "params": {
+        "host": "127.0.0.1",
+        "port": 5432,
+        "db": "dss_design_db"
+      }
+    }
+  },
+  "metastoreCatalogsSettings": {
+    "flavor": "HIVESERVER2"
+  },
+  "hiveSettings": {
+    "enabled": true
+  },
+  "graphicsExportsEnabled": false,
   "maxRunningActivities": 0,
   "maxRunningActivitiesPerJob": 0,
   "jekSettings": {

@@ -48,3 +48,23 @@ items:
     mentions: [INTERNAL_retrieval_augmented_generation_v1]
   GENAI-009:  # Agent Hub installed -> Needs Review, the bundle can't verify deployer permissions
     status: [Needs Review]
+  SEC-002:    # impersonation on with a rule -> Pass
+    status: [Pass]
+  ADVSEC-008: # disableAllExports=true -> Pass; clipboard keys are notes only
+    status: [Pass]
+  ADVSEC-009: # no security headers configured -> Fail
+    status: [Fail]
+  SCALE-001:  # PostgreSQL on a non-local host -> Pass
+    status: [Pass]
+  SCALE-002:  # DSS internal metastore, no Hadoop -> Pass
+    status: [Pass]
+  SCALE-003:  # graphics export on -> Pass
+    status: [Pass]
+  SCALE-004:  # active scheduled cleanup scenario with a step -> Pass despite no run history
+    status: [Pass]
+    mentions_any: [ADMINPROJECT, CLEANUP]
+  ARCH-006:   # two differently sized Spark configs -> Pass
+    status: [Pass]
+  GENAI-007:  # DSS 14.4.3 predates the check's minimum version -> Needs Review
+    status: [Needs Review]
+    mentions_any: ["14.4.3", version]

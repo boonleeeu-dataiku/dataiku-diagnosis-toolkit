@@ -56,9 +56,42 @@
             "value": "4g"
           }
         ]
+      },
+      {
+        "name": "spark-large-memory",
+        "conf": [
+          {
+            "key": "spark.executor.memory",
+            "value": "12g"
+          }
+        ]
       }
     ]
   },
+  "impersonation": {
+    "enabled": true,
+    "userRules": [
+      {
+        "scope": "GLOBAL",
+        "rule": "IDENTITY"
+      }
+    ],
+    "groupRules": []
+  },
+  "internalDatabase": {
+    "connection": {
+      "type": "PostgreSQL",
+      "params": {
+        "host": "pg-internal.synthetic.example",
+        "port": 5432,
+        "db": "dss_design_db"
+      }
+    }
+  },
+  "metastoreCatalogsSettings": {
+    "flavor": "DSS_INTERNAL"
+  },
+  "graphicsExportsEnabled": true,
   "generativeAISettings": {
     "defaultRetrievableKnowledgeCodeEnv": "INTERNAL_retrieval_augmented_generation_v1",
     "defaultRetrievableKnowledgeContainerExecSelection": {
