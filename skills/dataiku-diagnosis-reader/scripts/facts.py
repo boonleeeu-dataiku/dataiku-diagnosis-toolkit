@@ -463,6 +463,65 @@ def genai_settings():
                  f"{src}: generativeAISettings, aiDrivenAnalyticsSettings (code env names; Cobuild LLM ids reduced to set/unset)")
 
 
+@fact("metastore_and_exports")
+def metastore_and_exports():
+    """The metastore catalog flavor, the estate signals that decide whether it fits (Hive enabled, Hadoop in the host
+    environment), and whether graphics (PDF/image) export is on. A key that is not set reads ABSENT, never false."""
+    src = "config/general-settings.json"
+    gs = load_json(src)
+    if gs is None:
+        return absent(src)
+    flavor = dig(gs, "metastoreCatalogsSettings.synchronizeTo.flavor")
+    hive = dig(gs, "hiveSettings.enabled")
+    graphics = gs.get("graphicsExportsEnabled")
+    hadoop_env = diag_env("DKU_HADOOP_ENABLED")
+    return found({"metastore_flavor": flavor if isinstance(flavor, str) and flavor else ABSENT,
+                  "hive_enabled": hive if isinstance(hive, bool) else ABSENT,
+                  "hadoop_enabled_in_host_env": (hadoop_env.lower() == "true") if hadoop_env is not None else ABSENT,
+                  "graphics_exports_enabled": graphics if isinstance(graphics, bool) else ABSENT},
+                 f"{src}: metastoreCatalogsSettings, hiveSettings, graphicsExportsEnabled; diag.txt: DKU_HADOOP_ENABLED")
+
+
+LOG_LINE = re.compile(rb"^\[(\d{4}/\d\d/\d\d-\d\d:\d\d:\d\d)[.\d]*\] \[[^\]]*\] \[([A-Z]+)\]")
+
+
+@fact("backend_log")
+def backend_log():
+    """Counts per backend log file (`backend.log`, `.1`, `.2`, ...): lines at ERROR, FATAL and WARN, lines naming an
+    OutOfMemoryError, and the file's first and last timestamp, so every count carries its window. Streams each file line by
+    line (they run to ~100MB) and prints counts only, never log text. Compressed rotations are not read (`gz_files_skipped`)."""
+    rel = "run"
+    base = os.path.join(MIRROR, rel)
+    if not os.path.isdir(base):
+        return absent(rel)
+    names = sorted((n for n in os.listdir(base) if re.fullmatch(r"backend\.log(\.\d+)?", n)),
+                   key=lambda n: int(n.rsplit(".", 1)[1]) if n.count(".") == 2 else -1)
+    gz = sorted(n for n in os.listdir(base) if re.fullmatch(r"backend\.log.*\.(gz|zip)", n))
+    if not names:
+        return absent(f"{rel}/backend.log*")
+    files = []
+    for n in names:
+        counts = {"ERROR": 0, "FATAL": 0, "WARN": 0}
+        oom, first, last = 0, None, None
+        with open(os.path.join(base, n), "rb") as fh:
+            for line in fh:
+                m = LOG_LINE.match(line)
+                if m:
+                    ts = m.group(1).decode()
+                    first = first or ts
+                    last = ts
+                    lvl = m.group(2).decode()
+                    if lvl in counts:
+                        counts[lvl] += 1
+                if b"OutOfMemoryError" in line:
+                    oom += 1
+        files.append({"file": n, **counts, "OutOfMemoryError": oom, "first": first or ABSENT, "last": last or ABSENT})
+    total = lambda k: sum(f[k] for f in files)  # noqa: E731
+    return found({"files": files, "ERROR": total("ERROR"), "FATAL": total("FATAL"), "WARN": total("WARN"),
+                  "OutOfMemoryError": total("OutOfMemoryError"), "gz_files_skipped": len(gz)},
+                 f"{rel}/backend.log*: line counts by level and OutOfMemoryError mentions (no log text)")
+
+
 @fact("default_preferences")
 def default_preferences():
     src = "config/general-settings.json"
@@ -616,7 +675,7 @@ def admin_cleanup_scenarios():
                 continue
             steps = (sc.get("params") or {}).get("steps") or []
             scenarios.append({
-                "file": fn, "type": sc.get("type", ABSENT), "active": sc.get("active", ABSENT),
+                "file": fn, "type": sc.get("type", ABSENT), "scripted": sc.get("type") != "step_based", "active": sc.get("active", ABSENT),
                 "triggers": [{"type": t.get("type"), "active": t.get("active")} for t in sc.get("triggers") or []],
                 "step_names": [st.get("name") or st.get("type") for st in steps][:12],
             })

@@ -15,7 +15,8 @@ sys.path.insert(0, str(SCRIPTS))
 import rules_platform  # noqa: E402,F401
 import verdicts  # noqa: E402
 
-RULED = {"SEC-004", "SCALE-001", "SCALE-006", "SCALE-009", "SCALE-011", "ARCH-004"}
+RULED = {"SEC-004", "SCALE-001", "SCALE-006", "SCALE-009", "SCALE-011", "ARCH-004",
+         "SCALE-002", "SCALE-003", "SCALE-004", "SCALE-007", "SCALE-008", "SCALE-010"}
 
 
 def facts(**blocks):
@@ -177,3 +178,123 @@ def test_platform_rules_agree_with_the_fixtures_expected_answers(scenario):
     for check_id, status in decided.items():
         if check_id in expected:
             assert status in expected[check_id]["status"], f"{scenario} {check_id}: verdict {status}, expected {expected[check_id]['status']}"
+
+
+# --- Batch 4c: metastore, graphics export, admin cleanup, backend log, Xmx, preferences -------------------------------
+
+def meta(flavor="HIVESERVER2", hive=True, hadoop="ABSENT", graphics=True):
+    return {"metastore_flavor": flavor, "hive_enabled": hive, "hadoop_enabled_in_host_env": hadoop, "graphics_exports_enabled": graphics}
+
+
+@pytest.mark.parametrize("m,expected", [
+    (meta(), "Pass"),
+    (meta(hive="ABSENT", hadoop=True), "Pass"),
+    (meta(hive=False), "Needs Review"),
+    (meta("DSS_INTERNAL", hive="ABSENT"), "Pass"),
+    (meta("DSS_INTERNAL", hive=True), "Needs Review"),
+    (meta("GLUE"), "Needs Review"),
+    (meta("SOMETHING_ELSE"), "Needs Review"),
+    (meta("ABSENT"), "Needs Review"),
+    ("ABSENT", "Needs Review"),
+])
+def test_scale002_metastore_matches_the_estate(m, expected):
+    assert run("SCALE-002", facts(metastore_and_exports=m)) == expected
+
+
+@pytest.mark.parametrize("graphics,expected", [(True, "Pass"), (False, "Needs Review"), ("ABSENT", "Needs Review")])
+def test_scale003_graphics_export(graphics, expected):
+    assert run("SCALE-003", facts(metastore_and_exports=meta(graphics=graphics))) == expected
+
+
+def sc(steps=("Clear Job logs",), active=True, scheduled=True, scripted=False):
+    return {"file": "S.json", "scripted": scripted, "active": active, "step_names": list(steps),
+            "triggers": [{"type": "temporal", "active": scheduled}] if scheduled is not None else []}
+
+
+@pytest.mark.parametrize("projects,expected", [
+    ({"ADMINPROJECT": [sc()]}, "Pass"),
+    ({"ADMINPROJECT": [sc(("Purge old data",))]}, "Pass"),
+    ({}, "Fail"),
+    ({"ADMINPROJECT": []}, "Fail"),
+    ({"ADMINPROJECT": [sc(active=False)]}, "Fail"),
+    ({"ADMINPROJECT": [sc(scripted=True, steps=())]}, "Needs Review"),
+    ({"ADMINPROJECT": [sc(steps=("build dataset",))]}, "Needs Review"),
+    ({"ADMINPROJECT": [sc(scheduled=False)]}, "Needs Review"),
+    ({"ADMINPROJECT": [sc(scheduled=None)]}, "Needs Review"),
+    ({"ADMINPROJECT": [sc(scripted=True, steps=()), sc()]}, "Pass"),
+])
+def test_scale004_admin_cleanup(projects, expected):
+    assert run("SCALE-004", facts(admin_cleanup_scenarios={"candidate_projects": projects, "candidate_count": len(projects)})) == expected
+
+
+def test_scale004_missing_project_list_is_needs_review():
+    assert run("SCALE-004", facts(admin_cleanup_scenarios="ABSENT")) == "Needs Review"
+
+
+def blog(error=0, fatal=0, warn=0, oom=0):
+    return {"files": [{"file": "backend.log"}], "ERROR": error, "FATAL": fatal, "WARN": warn, "OutOfMemoryError": oom}
+
+
+@pytest.mark.parametrize("log,expected", [
+    (blog(), "Pass"), (blog(error=1), "Needs Review"), (blog(warn=1), "Needs Review"), (blog(fatal=1), "Needs Review"),
+    ("ABSENT", "Needs Review"),
+])
+def test_scale007_backend_log_errors_are_needs_review_never_fail(log, expected):
+    assert run("SCALE-007", facts(backend_log=log)) == expected
+
+
+def xmx_facts(xmx="16g", ram=250, cfg=1.0, oom=0):
+    kw = {"heap_sizes": {"javaopts.backend.xmx": xmx}}
+    if ram is not None:
+        kw["host_memory"] = host(ram)
+    if cfg is not None:
+        kw["config_folder_size"] = {"GiB": cfg}
+    if oom is not None:
+        kw["backend_log"] = blog(oom=oom)
+    return facts(**kw)
+
+
+@pytest.mark.parametrize("kw,expected", [
+    ({}, "Pass"),
+    ({"xmx": "12g"}, "Fail"),                      # below the 16g tier for >95 GiB
+    ({"xmx": "8g", "ram": 62.5}, "Pass"),          # 8g tier
+    ({"xmx": "4g", "ram": 62.5}, "Fail"),
+    ({"xmx": "4g", "ram": 16}, "Pass"),            # 4g tier above 12 GiB
+    ({"xmx": "2g", "ram": 8, "cfg": 0.5}, "Pass"),             # no tier below 12 GiB
+    ({"xmx": "40g"}, "Fail"),                      # the 32-48 GB dead zone
+    ({"xmx": "48g"}, "Pass"),
+    ({"xmx": "8192m", "ram": 62.5}, "Pass"),
+    ({"cfg": 6.0}, "Fail"),                        # 16g < 3 x 6
+    ({"cfg": 5.0}, "Pass"),                        # exactly 3x passes
+    ({"oom": 2}, "Fail"),
+    ({"cfg": None}, "Needs Review"),               # nothing missed, config size absent
+    ({"oom": None}, "Needs Review"),
+    ({"ram": None}, "Needs Review"),
+    ({"cfg": None, "xmx": "12g"}, "Fail"),         # a confirmed miss wins over a missing input
+    ({"cfg": None, "oom": 1}, "Fail"),
+])
+def test_scale008_backend_xmx(kw, expected):
+    assert run("SCALE-008", xmx_facts(**kw)) == expected
+
+
+def test_scale008_missing_xmx_is_needs_review():
+    assert run("SCALE-008", facts(heap_sizes="ABSENT", host_memory=host(64))) == "Needs Review"
+
+
+def prefs(**ds):
+    base = {"preferedConnection": "ABSENT", "forcedPreferedConnection": "ABSENT", "preferedUploadConnection": "ABSENT",
+            "preferedStorageFormats": "ABSENT"}
+    return {"defaultDatasetCreationSettings": {**base, **ds}, "recipeEnginesPreferences_nonempty": {}}
+
+
+@pytest.mark.parametrize("p,expected", [
+    (prefs(), "Pass"),
+    (prefs(preferedStorageFormats="CSV_ESCAPING_NOGZIP_FORHIVE,CSV_EXCEL_GZIP,PARQUET_HIVE"), "Pass"),  # DSS's own default list
+    (prefs(preferedStorageFormats="PARQUET_HIVE"), "Needs Review"),
+    (prefs(preferedUploadConnection="filesystem_managed"), "Needs Review"),
+    (prefs(forcedPreferedConnection="local"), "Needs Review"),
+    ({**prefs(), "recipeEnginesPreferences_nonempty": {"enginesPreferenceOrder": ["SPARK"]}}, "Needs Review"),
+    ("ABSENT", "Needs Review"),
+])
+def test_scale010_preferences(p, expected):
+    assert run("SCALE-010", facts(default_preferences=p)) == expected

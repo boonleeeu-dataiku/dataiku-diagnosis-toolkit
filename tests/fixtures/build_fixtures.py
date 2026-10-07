@@ -142,12 +142,13 @@ backend.xmx = 2g
 #   The system is out of physical RAM or swap space
 #
 """)
-    log = ["[2026/01/01-00:00:00.000] [main] INFO  dku.startup - DSS backend starting"]
+    log = ["[2026/01/01-00:00:00.000] [main] [INFO] [dku.startup] - DSS backend starting"]
     for i in range(1, 6):
-        log.append(f"[2026/01/0{i}-02:00:00.000] [jek-{i}] ERROR dku.jobs.exec - Job failed: "
+        log.append(f"[2026/01/0{i}-02:00:00.000] [jek-{i}] [ERROR] [dku.jobs.exec] - Job failed: "
                    "java.lang.OutOfMemoryError: Java heap space")
-    log.append("[2026/01/05-03:00:00.000] [sched-1] ERROR dku.scenarios - Scenario run as deleted user 'old_admin'")
+    log.append("[2026/01/05-03:00:00.000] [sched-1] [ERROR] [dku.scenarios] - Scenario run as deleted user 'old_admin'")
     write(m / "run" / "backend.log", "\n".join(log) + "\n")
+    write(m / "config" / "projects" / "SALES_DEMO" / "params.json", {"projectKey": "SALES_DEMO", "owner": "analyst"})  # a project, but no admin one (SCALE-004 Fail)
     write(m / "config" / "general-settings.json", {
         "cgroupSettings": {"enabled": False, "cgroupsVersion": "CGROUPS_V2"},
         "useImplicitK8sCluster": False,
@@ -218,8 +219,8 @@ backend.xmx = 8g
     write(m / "dss-version.json", {"product_version": "14.4.3", "product_commitid": "synthetic", "conf_version": "14400"})
     write(m / "run" / "sanity-check.json", {"messages": []})
     write(m / "run" / "backend.log",
-          "[2026/01/01-00:00:00.000] [main] INFO  dku.startup - DSS backend starting\n"
-          "[2026/01/01-00:00:05.000] [main] INFO  dku.startup - DSS backend started\n")
+          "[2026/01/01-00:00:00.000] [main] [INFO] [dku.startup] - DSS backend starting\n"
+          "[2026/01/01-00:00:05.000] [main] [INFO] [dku.startup] - DSS backend started\n")
     write(m / "config" / "general-settings.json", {
         "cgroupSettings": {
             "enabled": True, "cgroupsVersion": "CGROUPS_V2", "hierarchiesMountPoint": "/sys/fs/cgroup",

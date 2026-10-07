@@ -80,6 +80,8 @@ records install/enable state on *any* node type (see `references/data-dir-config
 `\[ERROR\]` / `\[FATAL\]` / `\[WARN\]`; a line-anchored pattern such as `^ERROR` returns a false
 zero.
 
+**Counts.** `facts.py` `backend_log` streams every `backend.log*` file once and reports, per file, the lines at `ERROR`, `FATAL` and `WARN`, the lines naming an `OutOfMemoryError`, and the file's first and last timestamp (counts only, no log text; compressed rotations are skipped and counted). It counts a level only in the line's own `[LEVEL]` position, so subprocess output that quotes another log line (an `INFO` line carrying a nested `[ERROR]`) is not counted as an error; a looser `grep` for `[ERROR]` reads a few percent higher.
+
 **Time window.** Each rotated file covers a very different span: in the samples a file covered
 anywhere from ~1 hour (a busy design node) to ~3 days, so the same count means different things
 for different files. Take the first and last timestamp of **each** file so any count can be quoted

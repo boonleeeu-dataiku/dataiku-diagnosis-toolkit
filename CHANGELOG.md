@@ -10,6 +10,19 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-10-07
+
+### Added
+
+- Deterministic verdicts, Batch 4c (partial), six more checks in `scripts/rules_platform.py`: **SCALE-002** (Hive metastore on a Hadoop estate or DSS-internal without one = Pass; Glue, an estate mismatch or an unknown flavor = Needs Review), **SCALE-003** (graphics export on = Pass, off or missing = Needs Review), **SCALE-004** (an active scheduled step-based scenario with cleanup steps in an admin project = Pass; scheduled but unclear purpose, or active but unscheduled = Needs Review; no candidate project or no active scenario = Fail), **SCALE-007** (any ERROR, FATAL or WARN in the backend logs = Needs Review, none = Pass), **SCALE-008** (Fail on any confirmed miss: below the RAM tier, under 3x the config folder, the 32-48 GB dead zone, or any OutOfMemoryError; Needs Review when nothing is missed but an input is absent; Pass when all met), **SCALE-010** (any non-blank connection, upload connection, engine or non-default storage-format preference = Needs Review, DSS's own default format list counts as blank).
+- Reader 0.18.0 facts behind them: `metastore_and_exports`, `backend_log` (per-file level and OutOfMemoryError counts with time windows, counts only) and a `scripted` flag on admin cleanup scenarios.
+
+### Changed
+
+- Reader re-synced to 0.18.0. `calibrations.md`: `[code-decided]` marks and the new case lists for these six.
+- Eval fixtures: the synthetic `backend.log` lines now use the real bracketed level format, and the baseline bundle carries a non-admin project so the SCALE-004 "no admin project" case is real rather than a missing directory.
+- SCALE-012 to 015 (cloud storage, Snowflake, Databricks, warehouses) stay with the model: no connection facts yet.
+
 ## [0.36.0] - 2026-10-07
 
 ### Added

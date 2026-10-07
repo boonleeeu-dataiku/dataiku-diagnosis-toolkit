@@ -9,6 +9,14 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.18.0] - 2026-10-07
+
+### Added
+
+- `scripts/facts.py` gains `metastore_and_exports`: the metastore catalog flavor, the estate signals that decide whether it fits (`hive_enabled`, `hadoop_enabled_in_host_env` from `diag.txt`), and `graphics_exports_enabled`; each `ABSENT` when not set. Verified against the three sample bundles (`HIVESERVER2` with Hive enabled on all three; graphics export off on the July sample).
+- `scripts/facts.py` gains `backend_log`: per `backend.log*` file the lines at `ERROR`, `FATAL` and `WARN`, the lines naming an `OutOfMemoryError`, and the first and last timestamp, with totals. Streams each file (about 0.8 s for ~250MB per bundle), prints counts only, skips compressed rotations (`gz_files_skipped`). Counts a level only at the line's own level position; spot-checked against `grep` on a sample file (the few extra `grep` hits were `INFO` lines quoting a subprocess's `[ERROR]`). `references/data-dir-runtime-and-codeenvs.md` documents it.
+- `scripts/facts.py` `admin_cleanup_scenarios`: each scenario gains `scripted` (true when it is not a step-based scenario, i.e. it runs a script that is never read), so a rule needn't know the scenario type names.
+
 ## [0.17.0] - 2026-10-07
 
 ### Added

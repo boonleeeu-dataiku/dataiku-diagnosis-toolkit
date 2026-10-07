@@ -207,12 +207,19 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
   filesystem is still present: **Fail** (whether a project uses it is a live check: an `Action:` in `notes`, never the
   status). Absent: **Pass**. The connections list missing from the bundle: **Needs Review**.
 
-- **Backend Xmx sizing (SCALE-008):** apply the full rule from the checklist, not just the RAM tier.
+- **Backend Xmx sizing (SCALE-008) [code-decided]:** apply the full rule from the checklist, not just the RAM tier.
   Check all of: (1) `backend.xmx` against the RAM tier; (2) `backend.xmx` >= 3x the size of the
   `config/` folder (use `facts.py`'s `config_folder_size`, which sums the listing; never size it from the partial mirror); (3) not in the
   32-48GB dead zone; (4) the other components' heaps (`jek.xmx`/`fek.xmx`) not oversized; (5) no
   `OutOfMemoryError` in the backend logs. State which you checked in `evidence_found`; never assume a
   tier from RAM alone.
+  - **Fail:** any confirmed miss: below the RAM tier (4g above 12 GiB, 8g above 30, 16g above 95; the tier is a minimum),
+    under 3x the config folder, in the 32-48 GB dead zone, or any `OutOfMemoryError` mention in the backend logs
+    (`facts.py`'s `backend_log`, counted per file with its time window).
+  - **Pass:** none missed and every input was available.
+  - **Needs Review:** none missed but an input is missing (host memory, config folder size or the logs), or `backend.xmx` itself
+    is missing. A confirmed miss still decides Fail when another input is missing.
+  - `jek.xmx`/`fek.xmx` oversizing stays in `notes` (no threshold is defined).
 
 - **Flow limits sizing (SCALE-009) [code-decided]:** a concurrency or sizing limit that sits in a different place than
   its name suggests still counts. A value of `0` (or blank) means unsized: **Fail**, even when the other
@@ -220,16 +227,16 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
   **Needs Review** (ask whether the sizing is justified). All three in range: **Pass**. A limit missing from the bundle:
   **Needs Review**.
 
-- **Preferred connections and engines (SCALE-010):** the check wants the default dataset-creation
+- **Preferred connections and engines (SCALE-010) [code-decided]:** the check wants the default dataset-creation
   connection, upload connection, storage formats and recipe engine preferences left blank unless a use case
   justifies them (`facts.py`, `default_preferences`). Any of them non-blank: **Needs Review** (ask whether it
   is intentional; name the values in `notes`, and call a non-blank engine preference the riskier one).
-  All blank or absent: **Pass**.
+  All blank or absent: **Pass**. The storage-format list DSS ships with (`CSV_ESCAPING_NOGZIP_FORHIVE,CSV_EXCEL_GZIP,PARQUET_HIVE`) counts as blank.
 
 - **Connection-detail gaps (SCALE-012):** gaps DSS itself flagged are real evidence. Report **Partial**
   rather than Not Applicable just because the storage is HDFS and not a cloud object store.
 
-- **Log-error review (SCALE-007):** the status is mechanical, so every run gives the same one:
+- **Log-error review (SCALE-007) [code-decided]:** the status is mechanical, so every run gives the same one:
   - Any ERROR, FATAL or WARN entries in the backend logs: **Needs Review**, however few or benign-looking.
     Never Fail or Partial.
   - No errors and no warnings at all: **Pass**.
@@ -251,15 +258,17 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
   `Action: rotate the stored database credential and move it to a secrets store` (never the value). It does
   not change the status. False or ABSENT: add nothing.
 
-- **Metastore (SCALE-002) and graphics export (SCALE-003):** decide from the setting, never Needs Review
+- **Metastore (SCALE-002) and graphics export (SCALE-003) [code-decided]:** decide from the setting, never Needs Review
   for want of a functional test.
   - **Metastore** (the reader's lookup table says where the flavor lives): **Pass** when it matches the
     estate (Hive on a Hadoop/YARN estate, Glue on AWS, DSS internal otherwise); **Needs Review** only
-    when the estate can't be told.
+    when the estate can't be told. Decided from `metastore_and_exports`: Hive with Hive enabled or Hadoop in the host environment
+    is Pass (Hive without a Hadoop signal: Needs Review); a DSS-internal flavor is Pass without a Hadoop signal and Needs Review
+    with one; Glue is always Needs Review (AWS integration can't be verified); an unrecognised or missing flavor is Needs Review.
   - **Graphics export:** on is **Pass**; off is **Needs Review** (ask if intentional); setting absent
     from the bundle is **Needs Review**, never off.
 
-- **Admin project garbage collection (SCALE-004):** there is no fixed project name; the reader's lookup
+- **Admin project garbage collection (SCALE-004) [code-decided]:** there is no fixed project name; the reader's lookup
   table says how to find candidate projects and read their scenarios. Judge only scenarios that are
   active with an active trigger. Never open or grep the script behind a Python-based scenario.
   - **Pass:** an active scheduled step-based scenario whose steps clearly clear logs, purge, delete or
@@ -268,6 +277,8 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
     runs a script (say in `notes` the script was not read); or a candidate project with scenarios but
     none both active and scheduled.
   - **Fail:** no candidate project, or one whose scenarios are all inactive or absent.
+  - The project list missing from the bundle: **Needs Review**. A cleanup step is one whose name says clear, purge, delete,
+    clean, remove, vacuum or prune; a scenario counts as scheduled when it has an active time-based trigger.
 
   Run history, whether the cleanup actually runs, and whether it covers logs, idle kernels or both are
   `notes` only.

@@ -1,7 +1,7 @@
-[2026/01/01-00:00:00.000] [main] INFO  dku.startup - DSS backend starting
-[2026/01/01-02:00:00.000] [jek-1] ERROR dku.jobs.exec - Job failed: java.lang.OutOfMemoryError: Java heap space
-[2026/01/02-02:00:00.000] [jek-2] ERROR dku.jobs.exec - Job failed: java.lang.OutOfMemoryError: Java heap space
-[2026/01/03-02:00:00.000] [jek-3] ERROR dku.jobs.exec - Job failed: java.lang.OutOfMemoryError: Java heap space
-[2026/01/04-02:00:00.000] [jek-4] ERROR dku.jobs.exec - Job failed: java.lang.OutOfMemoryError: Java heap space
-[2026/01/05-02:00:00.000] [jek-5] ERROR dku.jobs.exec - Job failed: java.lang.OutOfMemoryError: Java heap space
-[2026/01/05-03:00:00.000] [sched-1] ERROR dku.scenarios - Scenario run as deleted user 'old_admin'
+[2026/01/01-00:00:00.000] [main] [INFO] [dku.startup] - DSS backend starting
+[2026/01/01-02:00:00.000] [jek-1] [ERROR] [dku.jobs.exec] - Job failed: java.lang.OutOfMemoryError: Java heap space
+[2026/01/02-02:00:00.000] [jek-2] [ERROR] [dku.jobs.exec] - Job failed: java.lang.OutOfMemoryError: Java heap space
+[2026/01/03-02:00:00.000] [jek-3] [ERROR] [dku.jobs.exec] - Job failed: java.lang.OutOfMemoryError: Java heap space
+[2026/01/04-02:00:00.000] [jek-4] [ERROR] [dku.jobs.exec] - Job failed: java.lang.OutOfMemoryError: Java heap space
+[2026/01/05-02:00:00.000] [jek-5] [ERROR] [dku.jobs.exec] - Job failed: java.lang.OutOfMemoryError: Java heap space
+[2026/01/05-03:00:00.000] [sched-1] [ERROR] [dku.scenarios] - Scenario run as deleted user 'old_admin'
