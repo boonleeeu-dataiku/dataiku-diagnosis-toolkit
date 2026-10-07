@@ -91,7 +91,8 @@ Then run `scripts/run_step.py verdicts <bundle_root> --manifest <stem>_run_manif
   judge differently, because `verify` fails naming any row whose workbook status differs. Make `evidence_found` and
   `notes` agree with it and quote the `deciding_values`. If you think a rule is wrong, say so in your final summary (never
   in the workbook) so the rule gets fixed.
-- A row that is not listed has no rule: decide it as in step 4. The list may be empty.
+- A row that is not listed has no rule: decide it as in step 4. The list may be empty. `undecided` names rows that have a rule
+  but whose case the facts cannot settle; decide those as in step 4 too.
 - `title_mismatch` and `probable_renumber` name rows whose id and title don't both match a rule (usually a changed
   checklist). They get no verdict: decide them as in step 4 and name them in your final summary.
 

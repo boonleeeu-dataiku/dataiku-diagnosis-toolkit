@@ -11,6 +11,9 @@ matches AND its title matches the anchor (case, punctuation and spacing ignored)
 checklist falls back to the model instead of being forced to a wrong status. Rows that match on id but not on
 title, and titles that match under another id, are reported, never silently applied.
 
+A rule may return None for a case the facts cannot settle (for example evidence that lives in log text). The row then
+gets no verdict, is listed under `undecided`, and the model decides it as usual.
+
 Code is final: `run_step.py verify` fails when a ruled row's workbook status differs from its verdict.
 
 This module is stdlib only and has no I/O; `run_step.py` reads the facts and the checklist and calls `compute`.
@@ -24,7 +27,7 @@ STATUSES = ("Pass", "Fail", "Partial", "Needs Review", "Not Applicable")
 ABSENT = "ABSENT"
 
 Facts = dict[str, dict[str, Any]]
-Rule = Callable[[Facts], dict[str, Any]]
+Rule = Callable[[Facts], "dict[str, Any] | None"]
 
 # check id -> (anchor title, rule function). Rules are added here batch by batch (see TODO.md).
 RULES: dict[str, tuple[str, Rule]] = {}
@@ -69,13 +72,17 @@ def compute(facts_doc: dict[str, Any], rows: list[dict[str, Any]]) -> dict[str, 
     """Verdicts for the checklist `rows` (dicts with at least `id` and `title`) from a parsed facts.py document."""
     facts: Facts = facts_doc.get("facts", {})
     anchors = {norm(anchor): check_id for check_id, (anchor, _) in RULES.items()}
-    verdicts, title_mismatch, probable_renumber = [], [], []
+    verdicts, title_mismatch, probable_renumber, undecided = [], [], [], []
     for row in rows:
         check_id, title = row.get("id"), row.get("title")
         if check_id in RULES:
             anchor, fn = RULES[check_id]
             if norm(title) == norm(anchor):
-                result = _checked(check_id, fn(facts))
+                result = fn(facts)
+                if result is None:
+                    undecided.append({"id": check_id, "title": title})
+                    continue
+                result = _checked(check_id, result)
                 verdicts.append({"id": check_id, "title": title, **{k: result[k] for k in ("status", "deciding_values", "reason")}})
             else:
                 title_mismatch.append({"id": check_id, "row_title": title, "rule_title": anchor})
@@ -83,6 +90,7 @@ def compute(facts_doc: dict[str, Any], rows: list[dict[str, Any]]) -> dict[str, 
             probable_renumber.append({"row_id": check_id, "title": title, "rule_id": anchors[norm(title)]})
     return {
         "verdicts": sorted(verdicts, key=lambda v: v["id"]),
+        "undecided": undecided,
         "title_mismatch": title_mismatch,
         "probable_renumber": probable_renumber,
         "rows": len(rows),

@@ -40,8 +40,10 @@ Per batch: rule + unit tests on the synthetic fixtures, update `EVAL_ITEM_IDS` a
 - [x] Codex run on 0.32.0 reviewed (one run, by the owner's choice to save usage; further rounds only on request): the five ruled items matched their verdicts; the run left no manifest beside the workbook and wrote `Claude` as reviewer, both fixed in 0.32.1.
 - [ ] Re-save the eval baseline (`scripts/test.sh eval ... --save-baseline`, costs model usage) when the owner asks; it is stale (2 scenarios x 11 items vs 3 x 34).
 
-### Batch 2 - numeric and tiered rules, facts exist (7)
-- [ ] SEC-004 (RAM tiers, +/-10% band, >=80%), SCALE-001, SCALE-006 (0.30.0: sanity-check present = Pass, missing or empty = Fail), SCALE-008, SCALE-009, SCALE-011, ARCH-004
+### Batch 2 - numeric and tiered rules, facts exist (6)
+- [x] SEC-004 (RAM tiers, +/-10% band, >=80%), SCALE-001, SCALE-006 (sanity-check present = Pass, missing or empty = Fail), SCALE-009 (any 0 = Fail, out of range = Needs Review), SCALE-011, ARCH-004 (0.33.0). ARCH-004 returns `undecided` when the sanity-check text may flag a rotational disk, and the model reads it.
+- Moved out: SCALE-008 needs `OutOfMemoryError` counts from the backend logs (and the config-folder size is often absent); now in Batch 4c with SCALE-007.
+- [ ] Codex run on 0.33.0 (once): the six rules match their verdicts, `RUN VERIFY: PASS`, run files beside the workbook.
 
 ### Batch 3 - security settings toggles (14; needs a new reader `security_settings` fact)
 - [ ] ADVSEC-001 to ADVSEC-012, SEC-006, SEC-007
@@ -52,15 +54,15 @@ Per batch: rule + unit tests on the synthetic fixtures, update `EVAL_ITEM_IDS` a
 ### Batch 4b - GenAI (8)
 - [ ] GENAI-001, GENAI-002, GENAI-003, GENAI-004, GENAI-005, GENAI-006, GENAI-007, GENAI-011
 
-### Batch 4c - scale, connections, logs (9; SCALE-007 needs a log-count fact)
-- [ ] SCALE-002, SCALE-003, SCALE-004, SCALE-007, SCALE-010, SCALE-012, SCALE-013, SCALE-014, SCALE-015
+### Batch 4c - scale, connections, logs (10; SCALE-007 and SCALE-008 need a log-count fact)
+- [ ] SCALE-002, SCALE-003, SCALE-004, SCALE-007, SCALE-008, SCALE-010, SCALE-012, SCALE-013, SCALE-014, SCALE-015
 
 ### Stays with the model (14; never moved to code)
 - Web lookups: ARCH-002, ARCH-003
 - Live or external checks (Needs Review plus an `Action:`): ARCH-001, ARCH-008, ARCH-009, ARCH-012, SEC-003, SEC-008, SEC-011,
   SCALE-005, SCALE-016, GENAI-008, GENAI-009, GENAI-010
 
-(Count check: 5 + 7 + 14 + 10 + 8 + 9 + 14 = 67.)
+(Count check: 5 + 6 + 14 + 10 + 8 + 10 + 14 = 67.)
 
 ## Multi-LLM portability (cross-cutting; applies to every batch)
 

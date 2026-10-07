@@ -144,7 +144,7 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
   with 0 targets, or no JEK category at all: **Pass**. One or more JEK targets configured: **Fail**, even when cgroups are disabled overall. The cgroup settings missing
   from the bundle: **Needs Review**. Whether the live OS hierarchy matches is an `Action:` in `notes`, never the status.
 
-- **cgroups memory limit (SEC-004):** the recommended cap depends on host RAM, so judge the limit against
+- **cgroups memory limit (SEC-004) [code-decided]:** the recommended cap depends on host RAM, so judge the limit against
   its tier, not a flat percentage. Host RAM `R` is `MemTotal` in GiB and the cap `L` is the memory cgroup
   limit in GiB (the cgroup "G" is GiB; never mix GB and GiB). Quote the percentage from the reader's
   `facts.py`. The checklist's tiers give the recommended cap `T`:
@@ -174,6 +174,10 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
 
 ## Platform, sizing and runtime
 
+- **Remove the `filesystem_root` connection (SCALE-011) [code-decided]:** the default connection pointing at the server's root
+  filesystem is still present: **Fail** (whether a project uses it is a live check: an `Action:` in `notes`, never the
+  status). Absent: **Pass**. The connections list missing from the bundle: **Needs Review**.
+
 - **Backend Xmx sizing (SCALE-008):** apply the full rule from the checklist, not just the RAM tier.
   Check all of: (1) `backend.xmx` against the RAM tier; (2) `backend.xmx` >= 3x the size of the
   `config/` folder (use `facts.py`'s `config_folder_size`, which sums the listing; never size it from the partial mirror); (3) not in the
@@ -181,9 +185,11 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
   `OutOfMemoryError` in the backend logs. State which you checked in `evidence_found`; never assume a
   tier from RAM alone.
 
-- **Flow limits sizing (SCALE-009):** a concurrency or sizing limit that sits in a different place than
-  its name suggests still counts. A value of `0` means unsized: **Fail**, even when the other
-  concurrency limit is in range.
+- **Flow limits sizing (SCALE-009) [code-decided]:** a concurrency or sizing limit that sits in a different place than
+  its name suggests still counts. A value of `0` (or blank) means unsized: **Fail**, even when the other
+  concurrency limit is in range. None is 0 but max activities is outside 30-50 or activities per job is not 5:
+  **Needs Review** (ask whether the sizing is justified). All three in range: **Pass**. A limit missing from the bundle:
+  **Needs Review**.
 
 - **Preferred connections and engines (SCALE-010):** the check wants the default dataset-creation
   connection, upload connection, storage formats and recipe engine preferences left blank unless a use case
@@ -207,7 +213,7 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
   `Action:` on the real failures (e.g. failing API calls). The reader's `data-dir-runtime-and-codeenvs`
   reference says how to count and get the window.
 
-- **External PostgreSQL runtime database (SCALE-001):** judge the internal database's type and host (the
+- **External PostgreSQL runtime database (SCALE-001) [code-decided]:** judge the internal database's type and host (the
   reader's `data-dir-config` reference says where). PostgreSQL on a non-local host: **Pass**. On the same
   host (loopback or the DSS host itself): **Partial**. Not PostgreSQL: **Fail**. Pool size against
   `max_connections` and backups are `notes` only.
@@ -238,11 +244,15 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
 
 ## Architecture and version
 
-- **SSD storage (ARCH-004):** decide from the host's disks, because DSS's own sanity check may be missing
+- **SSD storage (ARCH-004) [code-decided where the facts settle it]:** decide from the host's disks, because DSS's own sanity check may be missing
   from the bundle. Use the reader's `data_volume_device` fact: every disk behind the data directory
   non-rotational: **Pass**; any rotational: **Fail**; the fact is `ABSENT` (data directory, disk listing or
   matching mount not found): **Needs Review**. DSS's own sanity check flagging a rotational disk is also
   **Fail**; its absence is not evidence either way. Name the data directory and disk(s) in `evidence_found`.
+  The verdict covers the disk facts: any rotational disk is **Fail**; every disk non-rotational with no sanity-check
+  messages is **Pass**; disks unknown and no sanity-check output is **Needs Review**. When the sanity check has messages, the
+  verdict is `undecided` (its text may flag a rotational disk): read it and decide as above.
+
 
 - **Automation-node existence / Design-Automation separation (ARCH-001), on a design-node bundle:** the
   automation node is a separate host with its own bundle, so a design bundle can never confirm one
@@ -262,7 +272,7 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
   3. **Otherwise:** state in `notes` that no definitive configuration in the bundle shows whether an
      automation node is deployed, and that it needs verification with the customer.
 
-- **Instance sanity check (SCALE-006):** a presence check only. From `facts.py`'s `sanity_check`: output in
+- **Instance sanity check (SCALE-006) [code-decided]:** a presence check only. From `facts.py`'s `sanity_check`: output in
   the bundle with at least one message (`empty: false`): **Pass** (give the message counts in `notes`; the
   warnings it lists are judged by the checks they relate to, not here). Output missing (`ABSENT`) **or empty**
   (`empty: true`, a blank file or no messages): **Fail**. Never Partial or Needs Review.
@@ -331,6 +341,7 @@ and the row together.
 | SCALE-008 | Backend Xmx Sizing |
 | SCALE-009 | Flow Limits Sizing (Max Jobs, Max Activities) |
 | SCALE-010 | Preferred Connections and Engines Settings |
+| SCALE-011 | Remove filesystem_root Connection |
 | SCALE-012 | Cloud Object Storage Configuration (Details Readable By, HDFS Interface) |
 | SEC-001 | Verify/Capture Instance IDs |
 | SEC-002 | User Isolation Framework (UIF) Enabled with Appropriate Impersonation Rules |

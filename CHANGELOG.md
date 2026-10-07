@@ -10,6 +10,18 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-10-07
+
+### Added
+
+- Deterministic verdicts, Batch 2: `scripts/rules_platform.py` decides **SEC-004** (cgroup memory cap against the checklist's RAM tiers: disabled = Fail, 80% of RAM or more = Needs Review, within 10% of the tier target = Pass, otherwise Needs Review), **SCALE-001** (PostgreSQL off-host = Pass, loopback = Partial, other type = Fail), **SCALE-006** (sanity-check output present = Pass, missing or empty = Fail), **SCALE-009** (any limit 0 or blank = Fail; none 0 but activities outside 30-50 or per-job not 5 = Needs Review; all in range = Pass), **SCALE-011** (`filesystem_root` present = Fail, absent = Pass) and **ARCH-004** (any rotational disk = Fail, all non-rotational with no sanity-check messages = Pass, disks unknown with no sanity-check output = Needs Review). A missing fact is Needs Review.
+- A rule may now return "undecided" for a case the facts cannot settle; the row gets no verdict and appears under `undecided` in the `verdicts` output, and the model decides it. ARCH-004 uses it when the sanity check has messages, since its text may flag a rotational disk.
+- `calibrations.md`: entries marked `[code-decided]`; new SCALE-011 entry and anchor; SCALE-009 and ARCH-004 entries record the cases above.
+
+### Changed
+
+- SCALE-008 (needs `OutOfMemoryError` counts from the backend logs) moves from Batch 2 to Batch 4c.
+
 ## [0.32.2] - 2026-10-07
 
 ### Fixed

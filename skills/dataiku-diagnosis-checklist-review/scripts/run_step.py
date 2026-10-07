@@ -14,7 +14,7 @@ output is also saved next to the manifest as `<stem>_facts.json`; its hash ignor
 `verdicts` (run after `facts`) computes, with `verdicts.py`, the status of every checklist row that a rule
 decides from the saved facts, prints them as JSON, saves them as `<stem>_verdicts.json` and records the step.
 The status in the workbook must equal the verdict: code is final. It also lists rows whose id has a rule but
-whose title differs, and titles that match a rule under another id; those rows get no verdict.
+whose title differs, titles that match a rule under another id, and rows a rule leaves `undecided`; those rows get no verdict.
 
 `verify` prints one PASS/FAIL line and exits non-zero on any problem: all three steps recorded with
 exit status 0; the saved `<stem>_facts.json` and a fresh `facts.py` run both match the recorded hash (the saved
@@ -34,7 +34,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import verdicts  # noqa: E402
-import rules_security  # noqa: E402,F401  (registers the security rules with verdicts.RULES)
+import rules_platform  # noqa: E402,F401  (registers the rules with verdicts.RULES)
+import rules_security  # noqa: E402,F401
 
 READER = Path(__file__).resolve().parents[2] / "dataiku-diagnosis-reader"
 READER_STEPS = {"orient": ["bash", str(READER / "scripts" / "orient.sh")],

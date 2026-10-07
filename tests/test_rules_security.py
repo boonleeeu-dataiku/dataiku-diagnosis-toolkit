@@ -13,6 +13,7 @@ from conftest import FIXTURES, REPO_ROOT, TEMPLATE
 SCRIPTS = REPO_ROOT / "skills" / "dataiku-diagnosis-checklist-review" / "scripts"
 FACTS_PY = REPO_ROOT / "skills" / "dataiku-diagnosis-reader" / "scripts" / "facts.py"
 sys.path.insert(0, str(SCRIPTS))
+import rules_platform  # noqa: E402,F401  (registered so the title-anchor test sees every rule)
 import rules_security  # noqa: E402,F401  (registers the rules)
 import verdicts  # noqa: E402
 
@@ -91,7 +92,7 @@ def test_rules_agree_with_the_fixtures_expected_answers(scenario):
     proc = subprocess.run([sys.executable, "-B", str(FACTS_PY), str(FIXTURES / "bundles" / scenario)],
                           capture_output=True, text=True, check=True)
     expected = yaml.safe_load((FIXTURES / "expected" / f"{scenario}.yaml").read_text())["items"]
-    rows = [{"id": i, "title": anchor} for i, (anchor, _) in verdicts.RULES.items()]
+    rows = [{"id": i, "title": verdicts.RULES[i][0]} for i in RULED]
     got = {v["id"]: v["status"] for v in verdicts.compute(json.loads(proc.stdout), rows)["verdicts"]}
     checked = 0
     for check_id, status_ in got.items():
