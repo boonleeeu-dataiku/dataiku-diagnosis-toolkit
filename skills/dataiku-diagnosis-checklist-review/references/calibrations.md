@@ -107,11 +107,11 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
   (the checklist requires them together); on with secure cookies on is **Needs Review**. A setting or the block missing from the
   bundle is **Needs Review**.
 
-- **HTTPS (SEC-006):** DSS's own config shows only whether DSS itself terminates TLS; an external
+- **HTTPS (SEC-006) [code-decided]:** DSS's own config shows only whether DSS itself terminates TLS; an external
   reverse proxy (nginx, ALB, API gateway) is invisible to the bundle.
-  - **Pass:** DSS terminates TLS itself (SSL on and a certificate configured, as the reader's
-    `data-dir-identity` reference describes), or the bundle shows a documented proxy setup. Don't
-    downgrade because a proxy might also exist. Quote the raw server block in `evidence_found`, so a
+  - **Pass:** DSS terminates TLS itself (SSL on and a certificate configured; `facts.py`, `server_config`). Don't
+    downgrade because a proxy might also exist. A proxy documented elsewhere in the bundle is not something the code
+    reads: it stays Needs Review, with the `Action:` below. Quote the raw server block in `evidence_found`, so a
     misread is visible.
   - **Needs Review:** DSS is not itself configured for HTTPS (e.g. plain HTTP). Never Fail. One `notes`
     bullet says the bundle can't confirm or rule out a TLS-terminating proxy, plus an `Action:` to verify
@@ -119,12 +119,16 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
   - **Fail:** only on positive evidence that no HTTPS exists anywhere (e.g. explicit customer
     confirmation on record), not on absence from the bundle.
 
-- **Session expiry, single session per user, clickable links in data tables (ADVSEC-003 and ADVSEC-004
-  [code-decided], ADVSEC-011):** these settings are in the bundle (the reader's `data-dir-config` reference says where),
+- **Session expiry, single session per user, clickable links in data tables (ADVSEC-003, ADVSEC-004,
+  ADVSEC-011) [code-decided]:** these settings are in the bundle (the reader's `data-dir-config` reference says where),
   so judge them from the value, never Needs Review because a checklist hint calls them UI-only.
   - Timeouts: `0` means unlimited. **Fail** when both are `0`; **Pass** when either is finite.
   - Single-session or disable-links toggle: off is **Fail**, on is **Pass**.
   - **Needs Review** only when the settings block itself is missing.
+
+- **Wiki upload restriction (ADVSEC-007) [code-decided]:** an upload-extension list configured: **Pass**. None configured
+  (including a bundle without the instance's properties file, which means nothing was customised): **Fail**, because the default allows
+  any file type.
 
 - **Custom post-logout redirect (ADVSEC-006) [code-decided]:** optional hardening; the default logout page is not a
   security concern. None configured: **Not Applicable** (say the default page is in use). Valid
@@ -174,11 +178,14 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
   - In `notes`, give the percentage and tier, e.g. `190G = 75.7% of 251 GiB; tier target 75%`. Empty
     per-workload placements are a `notes` observation, not a downgrade.
 
-- **Export restriction (ADVSEC-008):** the check lists alternative keys (`one_of`), so any one set to
+- **Export restriction (ADVSEC-008) [code-decided]:** the check lists alternative keys (`one_of`), so any one set to
   true is **Pass**; the others (e.g. clipboard keys) are `notes` only. None set: **Fail**.
 
-- **Security HTTP headers (ADVSEC-009):** none of the listed headers configured in DSS: **Fail**. Some
-  but not all: **Partial**. All with restrictive values: **Pass**. In `notes`, say a proxy may set them
+- **Security HTTP headers (ADVSEC-009) [code-decided]:** none of the ten listed headers configured in DSS: **Fail**.
+  Pass needs the six core headers set with restrictive values: content-security-policy (non-empty), x-frame-options
+  (SAMEORIGIN or DENY), x-content-type-options (nosniff), x-xss-protection (set and not `0`), hsts-max-age (above 0) and
+  referrer-policy (non-empty). Some header set but not all six core ones restrictive: **Partial**. The other four
+  (permissions-policy and the three cross-origin ones) are `notes` only. In `notes`, say a proxy may set them
   (the bundle can't show that).
 
 ## Platform, sizing and runtime
@@ -328,6 +335,7 @@ and the row together.
 | ADVSEC-004 | Forcing a single session per user |
 | ADVSEC-005 | Restricting visibility of groups and users |
 | ADVSEC-006 | Redirecting to a custom URL after logout |
+| ADVSEC-007 | Restricting types of files that can be uploaded in wikis |
 | ADVSEC-008 | Restricting exports |
 | ADVSEC-009 | Setting security-related HTTP headers |
 | ADVSEC-010 | Allowing DSS to be hosted inside an iframe |

@@ -47,10 +47,11 @@ Per batch: rule + unit tests on the synthetic fixtures, update `EVAL_ITEM_IDS` a
 
 ### Batch 3a - security toggles in the `security` settings block (9; reader 0.15.0 `security_settings`)
 - [x] ADVSEC-001, 002, 003, 004, 005, 006, 010, 012, SEC-007 (0.34.0). Off = Fail for ADVSEC-001/002/004; Needs Review where the checklist allows a deliberate choice (ADVSEC-005, 010, 012, SEC-007); ADVSEC-010 on with secure cookies off = Fail.
-- [ ] Codex run on 0.34.0 (once): the nine rules match their verdicts, `RUN VERIFY: PASS`.
+- [x] Codex run folded into the 0.35.0 run below (3a was pushed as 0.34.0).
 
-### Batch 3b - settings in `dip.properties` and `install.ini` (5; needs a second reader fact, e.g. `server_config`)
-- [ ] ADVSEC-007 (upload extensions), ADVSEC-008 (export restriction, one-of), ADVSEC-009 (security headers: none = Fail, some = Partial, all restrictive = Pass; needs a definition of restrictive), ADVSEC-011 (`disableDataTableLinks` or the `dip.properties` alternative; its `security` half is already in `security_settings`), SEC-006 (HTTPS: does DSS terminate TLS itself).
+### Batch 3b - settings in `dip.properties` and `install.ini` (5; reader 0.16.0 `server_config`)
+- [x] ADVSEC-007, 008, 009, 011, SEC-006 (0.35.0). ADVSEC-009: Pass needs the six core headers set restrictively, Partial for some, Fail for none. A missing `dip.properties` means nothing is set (Fail for 007/008).
+- [ ] Codex run on 0.35.0 (once), covering 3a and 3b: the 14 Batch 3 rules match their verdicts, `RUN VERIFY: PASS`.
 
 ### Batch 4a - Kubernetes, Spark and containers (10; conditional on a cluster; may need reader facts)
 - [ ] ARCH-005, ARCH-006, ARCH-007, ARCH-010, ARCH-011, ARCH-013, ARCH-014, ARCH-015, ARCH-016, ARCH-017

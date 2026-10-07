@@ -10,6 +10,13 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-10-07
+
+### Added
+
+- Deterministic verdicts, Batch 3b, from the new reader fact `server_config` (reader 0.16.0: whitelisted `install.ini` `[server]` and `config/dip.properties` settings, certificate locations reduced to yes/no): **SEC-006** (DSS terminates TLS itself, ssl on with a certificate = Pass; otherwise Needs Review, never Fail), **ADVSEC-007** (wiki upload extensions set = Pass, none = Fail), **ADVSEC-008** (any `dku.exports.disable*` key true = Pass, none = Fail), **ADVSEC-009** (the six core headers set with restrictive values = Pass, some header set but not all six = Partial, none = Fail; the other four headers are notes only), **ADVSEC-011** (`disableDataTableLinks` or `dku.feature.dataTableLinks.enabled=false` = Pass, neither = Fail). A missing `dip.properties` means nothing is set (Fail for ADVSEC-007 and 008). With 3a this completes Batch 3.
+- `calibrations.md`: ADVSEC-007 entry, ADVSEC-009 now defines the six core headers and their restrictive values, SEC-006 notes that a proxy documented elsewhere stays Needs Review, `[code-decided]` marks, anchor for ADVSEC-007.
+
 ## [0.34.0] - 2026-10-07
 
 ### Added

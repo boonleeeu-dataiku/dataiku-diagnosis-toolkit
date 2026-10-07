@@ -189,3 +189,90 @@ def users_edit_profile(facts):
 @rule("SEC-007", "Secure Cookies Enabled (security.secureCookies)")
 def secure_cookies(facts):
     return _toggle(facts, "secureCookies", want=True, off_status="Needs Review", label="cookies are marked secure")
+
+
+# --- HTTPS, exports, uploads, links and security headers (Batch 3b; the reader's `server_config` fact) -----------------
+
+def _server(facts):
+    block = fact(facts, "server_config")
+    return block if isinstance(block, dict) else None
+
+
+@rule("SEC-006", "HTTPS Access Configured for DSS")
+def https_configured(facts):
+    cfg = _server(facts)
+    if cfg is None:
+        return _missing("the server settings")
+    ssl, cert = str(cfg.get("ssl", ABSENT)).lower(), cfg.get("ssl_certificate_configured") is True
+    values = {"ssl": cfg.get("ssl", ABSENT), "certificate_configured": cert}
+    if ssl == "true" and cert:
+        return verdict("Pass", "DSS terminates TLS itself (ssl on, certificate configured)", **values)
+    return verdict("Needs Review", "DSS itself is not configured for HTTPS; a TLS-terminating proxy can't be ruled out", **values)
+
+
+@rule("ADVSEC-007", "Restricting types of files that can be uploaded in wikis")
+def wiki_upload_extensions(facts):
+    cfg = _server(facts)
+    if cfg is None:
+        return _missing("the server settings")
+    exts = cfg.get("wiki_upload_extensions", ABSENT)
+    if exts != ABSENT and str(exts).strip():
+        return verdict("Pass", "wiki uploads are restricted to a list of extensions", wiki_upload_extensions=exts)
+    return verdict("Fail", "no wiki upload restriction set (the default allows any file type)", wiki_upload_extensions=ABSENT)
+
+
+@rule("ADVSEC-008", "Restricting exports")
+def export_restriction(facts):
+    cfg = _server(facts)
+    if cfg is None:
+        return _missing("the server settings")
+    exports = cfg.get("exports") if isinstance(cfg.get("exports"), dict) else {}
+    on = sorted(k for k, v in exports.items() if str(v).strip().lower() == "true")
+    if on:
+        return verdict("Pass", f"export restriction set ({on[0]}=true)", exports_enabled=on)
+    return verdict("Fail", "no export restriction set", exports_enabled=[])
+
+
+_CORE_HEADERS = ("content-security-policy", "x-frame-options", "x-content-type-options", "x-xss-protection", "hsts-max-age", "referrer-policy")
+
+
+def _restrictive(name, value):
+    value = str(value).strip()
+    if name == "x-frame-options":
+        return value.upper() in ("SAMEORIGIN", "DENY")
+    if name == "x-content-type-options":
+        return value.lower() == "nosniff"
+    if name == "x-xss-protection":
+        return bool(value) and not value.startswith("0")
+    if name == "hsts-max-age":
+        return value.isdigit() and int(value) > 0
+    return bool(value)
+
+
+@rule("ADVSEC-009", "Setting security-related HTTP headers")
+def security_headers(facts):
+    cfg = _server(facts)
+    if cfg is None:
+        return _missing("the server settings")
+    headers = cfg.get("security_headers") if isinstance(cfg.get("security_headers"), dict) else {}
+    good = [h for h in _CORE_HEADERS if h in headers and _restrictive(h, headers[h])]
+    values = {"headers_set": sorted(headers), "core_headers_restrictive": good,
+              "core_headers_missing_or_weak": [h for h in _CORE_HEADERS if h not in good]}
+    if not headers:
+        return verdict("Fail", "no security header configured in DSS (a proxy may set them)", **values)
+    if len(good) == len(_CORE_HEADERS):
+        return verdict("Pass", "all six core security headers set with restrictive values", **values)
+    return verdict("Partial", f"{len(good)} of 6 core security headers set with restrictive values", **values)
+
+
+@rule("ADVSEC-011", "Preventing links to be clickable in data tables")
+def data_table_links(facts):
+    sec, cfg = _security(facts), _server(facts)
+    flag = sec.get("disableDataTableLinks", ABSENT) if sec else ABSENT
+    dip_off = bool(cfg) and str(cfg.get("data_table_links_enabled", ABSENT)).strip().lower() == "false"
+    values = {"disableDataTableLinks": flag, "dataTableLinks_enabled_in_properties": cfg.get("data_table_links_enabled", ABSENT) if cfg else ABSENT}
+    if flag is True or dip_off:
+        return verdict("Pass", "links in data tables are disabled", **values)
+    if flag is False:
+        return verdict("Fail", "links in data tables are not disabled", **values)
+    return _missing("the data-table links setting")

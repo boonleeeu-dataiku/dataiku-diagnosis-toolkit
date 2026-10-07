@@ -184,3 +184,96 @@ def test_security_block_rules_agree_with_the_fixtures_expected_answers(scenario)
     for check_id, status_ in got.items():
         if check_id in expected:
             assert status_ in expected[check_id]["status"], f"{scenario} {check_id}: verdict {status_}, expected {expected[check_id]['status']}"
+
+
+# --- server settings: HTTPS, exports, uploads, links, headers (Batch 3b) ------------------------------------------------
+
+SERVER_RULES = {"SEC-006", "ADVSEC-007", "ADVSEC-008", "ADVSEC-009", "ADVSEC-011"}
+CORE = {"content-security-policy": "script-src 'self'", "x-frame-options": "SAMEORIGIN", "x-content-type-options": "nosniff",
+        "x-xss-protection": "1;mode=block", "hsts-max-age": "31536000", "referrer-policy": "same-origin"}
+
+
+def server(**kw):
+    base = {"ssl": "ABSENT", "ssl_certificate_configured": False, "security_headers": {}, "dip_properties_present": True,
+            "exports": {}, "wiki_upload_extensions": "ABSENT", "data_table_links_enabled": "ABSENT"}
+    base.update(kw)
+    return base
+
+
+def test_the_server_rules_are_registered():
+    assert SERVER_RULES <= set(verdicts.RULES)
+
+
+@pytest.mark.parametrize("cfg,expected", [
+    (server(ssl="true", ssl_certificate_configured=True), "Pass"),
+    (server(ssl="True", ssl_certificate_configured=True), "Pass"),
+    (server(ssl="true", ssl_certificate_configured=False), "Needs Review"),     # TLS on but no certificate
+    (server(ssl="false", ssl_certificate_configured=True), "Needs Review"),
+    (server(), "Needs Review"),                                                  # plain HTTP: a proxy can't be ruled out, never Fail
+])
+def test_sec006_https(cfg, expected):
+    assert status("SEC-006", facts(server_config=cfg)) == expected
+    assert status("SEC-006", facts()) == "Needs Review"
+
+
+@pytest.mark.parametrize("ext,expected", [("png,jpg,csv", "Pass"), ("ABSENT", "Fail"), ("  ", "Fail")])
+def test_advsec007_wiki_upload_extensions(ext, expected):
+    assert status("ADVSEC-007", facts(server_config=server(wiki_upload_extensions=ext))) == expected
+
+
+@pytest.mark.parametrize("exports,expected", [
+    ({"dku.exports.disableAllExports": "true"}, "Pass"),
+    ({"dku.exports.disableAllDatasetExports": "TRUE", "dku.exports.disableCopySampleToClipboard": "false"}, "Pass"),   # one-of
+    ({"dku.exports.disableCopySampleToClipboard": "false"}, "Fail"),
+    ({}, "Fail"),
+])
+def test_advsec008_exports_any_one_key_true_passes(exports, expected):
+    assert status("ADVSEC-008", facts(server_config=server(exports=exports))) == expected
+
+
+def test_a_missing_dip_properties_file_means_nothing_is_set():
+    cfg = server(dip_properties_present=False)
+    assert status("ADVSEC-007", facts(server_config=cfg)) == "Fail" and status("ADVSEC-008", facts(server_config=cfg)) == "Fail"
+
+
+@pytest.mark.parametrize("headers,expected", [
+    (CORE, "Pass"),
+    ({}, "Fail"),
+    ({"permissions-policy": "geolocation=()"}, "Partial"),                         # set, but none of the core six
+    ({k: v for k, v in CORE.items() if k != "hsts-max-age"}, "Partial"),          # one core header missing
+    ({**CORE, "hsts-max-age": "0"}, "Partial"),                                    # HSTS off
+    ({**CORE, "x-frame-options": "ALLOWALL"}, "Partial"),
+    ({**CORE, "x-content-type-options": "sniff"}, "Partial"),
+    ({**CORE, "x-xss-protection": "0"}, "Partial"),
+    ({**CORE, "content-security-policy": " "}, "Partial"),
+    ({**CORE, "x-frame-options": "deny"}, "Pass"),
+])
+def test_advsec009_six_core_headers(headers, expected):
+    assert status("ADVSEC-009", facts(server_config=server(security_headers=headers))) == expected
+
+
+def test_advsec009_extra_headers_are_notes_only():
+    cfg = server(security_headers={**CORE, "permissions-policy": "x", "cross-origin-opener-policy": "same-origin"})
+    assert status("ADVSEC-009", facts(server_config=cfg)) == "Pass"
+
+
+@pytest.mark.parametrize("flag,prop,expected", [
+    (True, "ABSENT", "Pass"), (False, "false", "Pass"), (False, "FALSE", "Pass"),   # either place counts
+    (False, "ABSENT", "Fail"), (False, "true", "Fail"),
+    ("ABSENT", "false", "Pass"), ("ABSENT", "ABSENT", "Needs Review"),
+])
+def test_advsec011_data_table_links_in_either_place(flag, prop, expected):
+    doc = {**sec(disableDataTableLinks=flag)["facts"], **facts(server_config=server(data_table_links_enabled=prop))["facts"]}
+    assert status("ADVSEC-011", {"facts": doc}) == expected
+
+
+@pytest.mark.parametrize("scenario", sorted(p.stem for p in (FIXTURES / "expected").glob("*.yaml")))
+def test_server_rules_agree_with_the_fixtures_expected_answers(scenario):
+    proc = subprocess.run([sys.executable, "-B", str(FACTS_PY), str(FIXTURES / "bundles" / scenario)], capture_output=True, text=True, check=True)
+    expected = yaml.safe_load((FIXTURES / "expected" / f"{scenario}.yaml").read_text())["items"]
+    rows = [{"id": i, "title": verdicts.RULES[i][0]} for i in SERVER_RULES]
+    got = {v["id"]: v["status"] for v in verdicts.compute(json.loads(proc.stdout), rows)["verdicts"]}
+    assert set(got) == SERVER_RULES
+    for check_id, status_ in got.items():
+        if check_id in expected:
+            assert status_ in expected[check_id]["status"], f"{scenario} {check_id}: verdict {status_}, expected {expected[check_id]['status']}"

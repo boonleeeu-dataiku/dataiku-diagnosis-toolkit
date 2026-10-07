@@ -318,6 +318,52 @@ def security_settings():
     return found(out, f"{src}: security (whitelisted keys; a custom logout URL is reduced to its scheme)")
 
 
+SECURITY_HEADERS = ("content-security-policy", "x-frame-options", "x-content-type-options", "x-xss-protection", "hsts-max-age",
+                    "referrer-policy", "permissions-policy", "cross-origin-embedder-policy", "cross-origin-opener-policy",
+                    "cross-origin-resource-policy")
+EXPORT_KEYS = ("dku.exports.disableAllDatasetExports", "dku.exports.disableAllDataExports", "dku.exports.disableAllExports",
+               "dku.exports.disableCopySampleToClipboard", "dku.exports.disableSQLNotebookCopyResultToClipboard")
+WIKI_UPLOAD_KEY = "dku.wikis.authorizedUploadExtensions"
+TABLE_LINKS_KEY = "dku.feature.dataTableLinks.enabled"
+
+
+def parse_properties(path):
+    """{key: value} for a Java .properties file (key=value lines; # and ! start comments)."""
+    out = {}
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        for raw in fh:
+            line = raw.strip()
+            if line and line[0] not in "#!" and "=" in line:
+                k, v = line.split("=", 1)
+                out[k.strip()] = v.strip()
+    return out
+
+
+@fact("server_config")
+def server_config():
+    """Whitelisted settings from `install.ini` [server] (HTTPS and the security headers) and `config/dip.properties`
+    (export restrictions, wiki upload extensions, data-table links). Certificate and key locations are reduced to
+    yes/no; header values are cut at 200 characters. `dip_properties_present` is false when the file is not in the
+    bundle: DSS only has it once someone customised the instance, so an absent file means none of its keys are set."""
+    ini_path = os.path.join(MIRROR, "install.ini")
+    if not os.path.isfile(ini_path):
+        return absent("install.ini")
+    ini = parse_ini(ini_path)
+    dip_path = os.path.join(MIRROR, "config", "dip.properties")
+    dip_present = os.path.isfile(dip_path)
+    dip = parse_properties(dip_path) if dip_present else {}
+    headers = {h: ini[f"server.{h}"][:200] for h in SECURITY_HEADERS if ini.get(f"server.{h}")}
+    return found({
+        "ssl": ini.get("server.ssl", ABSENT),
+        "ssl_certificate_configured": bool(ini.get("server.ssl_certificate")),
+        "security_headers": headers,
+        "dip_properties_present": dip_present,
+        "exports": {k: dip[k] for k in EXPORT_KEYS if k in dip},
+        "wiki_upload_extensions": dip.get(WIKI_UPLOAD_KEY, ABSENT),
+        "data_table_links_enabled": dip.get(TABLE_LINKS_KEY, ABSENT),
+    }, "install.ini [server], config/dip.properties (whitelisted keys; certificate paths reduced to yes/no)")
+
+
 @fact("user_isolation")
 def user_isolation():
     src = "config/general-settings.json"

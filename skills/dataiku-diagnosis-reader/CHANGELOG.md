@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.16.0] - 2026-10-07
+
+### Added
+
+- `scripts/facts.py` gains `server_config`: whitelisted settings from `install.ini` `[server]` (`ssl`, whether a certificate is configured, and the ten security headers `content-security-policy`, `x-frame-options`, `x-content-type-options`, `x-xss-protection`, `hsts-max-age`, `referrer-policy`, `permissions-policy` and the three `cross-origin-*` ones, only those that are set) and from `config/dip.properties` (the five `dku.exports.disable*` keys that are set, `dku.wikis.authorizedUploadExtensions`, `dku.feature.dataTableLinks.enabled`). Certificate and key locations are reduced to yes/no. `dip_properties_present` is false when the file is not in the bundle (DSS only has it once the instance is customised, so an absent file means none of its keys are set). Verified against the three sample bundles (GE design: `ssl` true and `dku.exports.disableAllExports=true`; the July sample: six headers set and no `ssl`).
+
 ## [0.15.0] - 2026-10-07
 
 ### Added
