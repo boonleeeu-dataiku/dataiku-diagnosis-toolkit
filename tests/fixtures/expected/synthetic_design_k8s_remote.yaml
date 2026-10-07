@@ -85,6 +85,8 @@ items:
   GENAI-006:  # gpt-5.2 is the recommended minimum -> Pass
     status: [Pass]
     mentions_any: ["5.2"]
+  SCALE-006:  # sanity-check output present but empty (no messages) -> Fail
+    status: [Fail]
   SEC-010:    # SSO and LDAP both enabled -> Pass
     status: [Pass]
     mentions_any: [sso]

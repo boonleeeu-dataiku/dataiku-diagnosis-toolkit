@@ -10,6 +10,13 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-10-07
+
+### Added
+
+- Re-sync reader 0.12.0: `facts.py` gains `sanity_check` (whether `run/sanity-check.json` is in the bundle and non-empty, plus message counts by severity).
+- Calibration for **SCALE-006** (instance sanity check): output with messages = Pass, missing or empty = Fail, never Partial or Needs Review. The last round's only split item (Partial vs Pass over the same 15-19 warnings). Fixtures cover both outcomes; the admin-python fixture loses its sanity-check output, so its ARCH-004 becomes Needs Review.
+
 ## [0.29.1] - 2026-10-06
 
 ### Changed

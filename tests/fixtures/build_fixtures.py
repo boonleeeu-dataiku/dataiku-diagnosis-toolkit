@@ -57,6 +57,7 @@ EVAL_ITEM_IDS = [
     "SEC-005",    # JEK-specific cgroup limits: none -> Pass; a JEK target -> Fail
     "GENAI-005",  # BYO LLM: inactive -> Not Applicable; active with project + main LLM -> Pass; either missing -> Fail
     "GENAI-006",  # BYO LLM model version: inactive -> Not Applicable; recommended -> Pass; <= 5.1 -> Fail
+    "SCALE-006",  # sanity-check output with messages -> Pass; missing or empty -> Fail (never Partial)
     "SEC-010",    # SSO + LDAP enabled -> Pass; SSO disabled -> Fail; SSO enabled/LDAP off or settings missing -> Needs Review
     "SCALE-010",  # any non-blank default connection/format/engine preference -> Needs Review; all blank -> Pass
 ]
@@ -293,13 +294,14 @@ def admin_python_bundle(root: Path) -> None:
     scenario is an active, scheduled `custom_python` one: housekeeping can't be confirmed without
     reading its script, so SCALE-004 is Needs Review. It also has no instance id in install.ini
     (SEC-001 Fail), LDAP switched off (SEC-009 Not Applicable) SSO explicitly disabled (SEC-010 Fail), a JEK-specific cgroup target (SEC-005 Fail)
-    and BYO LLM active with an old model and no reference project (GENAI-005 and GENAI-006 Fail)."""
+    no sanity-check output (SCALE-006 Fail; ARCH-004 can no longer be decided, so Needs Review) and BYO LLM active with an old model and no reference project (GENAI-005 and GENAI-006 Fail)."""
     baseline_bundle(root)
     design = root / "data_dataiku" / "design"
     ini = design / "install.ini"
     ini.write_text("".join(ln for ln in ini.read_text().splitlines(True) if not ln.startswith("installid")))
     settings = json.loads((design / "config" / "general-settings.json").read_text())
     settings["ldapSettings"] = {"enabled": False, "authenticationEnabled": False, "authorizedGroups": []}
+    (design / "run" / "sanity-check.json").unlink()
     settings["ssoSettings"] = {"enabled": False}
     settings["cgroupSettings"]["jobExecutionKernels"] = {"targets": [{"cgroupPathTemplate": "DSS/${user}/jek",
                                                                       "limits": [{"key": "memory.max", "value": "8G"}]}]}

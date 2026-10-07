@@ -89,6 +89,8 @@ items:
     status: [Not Applicable]
   GENAI-006:
     status: [Not Applicable]
+  SCALE-006:  # sanity-check output present -> Pass
+    status: [Pass]
   SEC-010:    # no ssoSettings in the bundle -> Needs Review (settings missing)
     status: [Needs Review]
     mentions_any: [sso]

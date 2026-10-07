@@ -257,6 +257,11 @@ matches. Add each new one as its own entry under the right heading; don't overwr
   3. **Otherwise:** state in `notes` that no definitive configuration in the bundle shows whether an
      automation node is deployed, and that it needs verification with the customer.
 
+- **Instance sanity check (SCALE-006):** a presence check only. From `facts.py`'s `sanity_check`: output in
+  the bundle with at least one message (`empty: false`): **Pass** (give the message counts in `notes`; the
+  warnings it lists are judged by the checks they relate to, not here). Output missing (`ABSENT`) **or empty**
+  (`empty: true`, a blank file or no messages): **Fail**. Never Partial or Needs Review.
+
 - **Supported operating system (ARCH-003):** take the OS name and version from the bundle (the reader's
   `root-files` reference says where) and compare them with Dataiku's supported-OS documentation for the
   bundle's DSS **major** version, using the same web lookup as ARCH-002 (official Dataiku docs only, never prior
@@ -316,6 +321,7 @@ and the row together.
 | SCALE-002 | Appropriate Metastore Configured |
 | SCALE-003 | Graphics Export (PDF/Image) Configuration |
 | SCALE-004 | Admin Project for Garbage Collection |
+| SCALE-006 | Usage of Instance Sanity Check |
 | SCALE-007 | Backend.log Error Review |
 | SCALE-008 | Backend Xmx Sizing |
 | SCALE-009 | Flow Limits Sizing (Max Jobs, Max Activities) |

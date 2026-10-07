@@ -48,4 +48,4 @@ Per batch: rule + unit tests on the synthetic fixtures, update `EVAL_ITEM_IDS` a
 - [ ] Codex stages outputs in sandbox work dirs, so the run manifest isn't copied beside the deliverables: add a skill rule to copy it.
 - [ ] Review the remaining Needs Review items (GENAI-004/007/008) for fixed verdicts, if no batch above covers them.
 - [ ] GENAI-005/006 field names (`mainLLMId`, `referenceProjectKey`) are unverified against a populated bundle: confirm when one appears.
-- [ ] Run Codex on 0.29.1 and compare 3 runs (target: 0 differing items).
+- [ ] Run Codex on 0.30.0 and compare 3 runs (last round on 0.29.1: only SCALE-006 differed; fixed in 0.30.0).

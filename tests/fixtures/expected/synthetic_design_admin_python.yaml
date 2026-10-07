@@ -17,9 +17,8 @@ items:
   ARCH-002:   # 12.x is behind any current GA major, with or without a web lookup
     status: [Needs Review]
     mentions: ["12.6"]
-  ARCH-004:   # DSS's own sanity check flags a rotational disk -> authoritative
-    status: [Fail]
-    mentions: [sanity-check]
+  ARCH-004:   # sanity-check output removed and no lsblk blocks -> the disk can't be determined
+    status: [Needs Review]
   ARCH-010:   # no Kubernetes cluster attached -> Not Applicable, not Fail/Needs Review
     status: [Not Applicable]
   ARCH-013:
@@ -90,6 +89,8 @@ items:
   GENAI-006:  # gpt-5.1 is unsupported -> Fail
     status: [Fail]
     mentions_any: ["5.1"]
+  SCALE-006:  # no sanity-check output -> Fail
+    status: [Fail]
   SEC-010:    # SSO explicitly disabled -> Fail (even with LDAP off)
     status: [Fail]
     mentions_any: [sso]

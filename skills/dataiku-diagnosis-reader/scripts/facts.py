@@ -266,6 +266,31 @@ def byo_llm():
                  f"{src}: localAIServerSettings (model ids are names, not secrets; empty or missing reads ABSENT)")
 
 
+@fact("sanity_check")
+def sanity_check():
+    """Whether DSS's own sanity-check output is in the bundle (`empty` is true for a blank file or no messages),
+    and its message counts by severity."""
+    src = "run/sanity-check.json"
+    if not os.path.isfile(os.path.join(MIRROR, src)):
+        return absent(src)
+    try:
+        doc = load_json(src)
+    except ValueError:  # a blank or unparseable file counts as empty output
+        doc = None
+    if not isinstance(doc, dict):
+        return found({"present": True, "empty": True, "messages": 0, "by_severity": {}, "fatal": 0},
+                     f"{src} (file is blank or not a JSON object)")
+    report = doc.get("report") if isinstance(doc.get("report"), dict) else doc  # nested in one sample layout
+    msgs = report.get("messages") if isinstance(report, dict) else None
+    by_severity = {}
+    for m in msgs if isinstance(msgs, list) else []:
+        sev = str((m or {}).get("severity", "UNKNOWN")) if isinstance(m, dict) else "UNKNOWN"
+        by_severity[sev] = by_severity.get(sev, 0) + 1
+    return found({"present": True, "empty": not msgs, "messages": len(msgs) if isinstance(msgs, list) else ABSENT,
+                  "by_severity": by_severity, "fatal": sum(1 for m in msgs or [] if isinstance(m, dict) and m.get("isFatal"))},
+                 f"{src} (the last-run time is only the file's mtime unless the file carries lastRunTimestamp)")
+
+
 @fact("user_isolation")
 def user_isolation():
     src = "config/general-settings.json"

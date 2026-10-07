@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.12.0] - 2026-10-07
+
+### Added
+
+- `scripts/facts.py` gains `sanity_check`: whether `run/sanity-check.json` is in the bundle (`ABSENT` when it is not) plus `empty` (a blank file or no messages), its message count, counts by severity and fatal count. Handles both documented layouts (top-level `messages[]` and nested under `report`). Verified against the three sample bundles.
+
 ## [0.11.0] - 2026-10-06
 
 ### Added

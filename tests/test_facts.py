@@ -143,6 +143,13 @@ def test_missing_install_id_is_absent():
     assert run_facts("synthetic_design_baseline")["node"]["value"]["installid"] == "SYNTHETICINSTALL01"
 
 
+def test_sanity_check_reports_presence_and_counts_or_absent():
+    assert run_facts("synthetic_design_baseline")["sanity_check"]["value"]["present"] is True
+    assert run_facts("synthetic_design_baseline")["sanity_check"]["value"]["empty"] is False
+    assert run_facts("synthetic_design_k8s_remote")["sanity_check"]["value"]["empty"] is True  # {"messages": []}
+    assert run_facts("synthetic_design_admin_python")["sanity_check"]["value"] == "ABSENT"
+
+
 def test_byo_llm_is_active_only_when_a_main_llm_or_reference_project_is_set():
     assert run_facts("synthetic_design_baseline")["byo_llm"]["value"] == "ABSENT"  # no localAIServerSettings block
     on = run_facts("synthetic_design_k8s_remote")["byo_llm"]["value"]
