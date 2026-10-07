@@ -2,7 +2,7 @@
 
 ## Status and start here (updated 2026-10-07)
 
-Versions: toolkit **0.38.0** (tag `v0.38.0`), reader **0.19.0** (`skill-v0.19.0`, upstream repo `../Diagnosis Reader/`), Checklist Generator
+Versions: toolkit **0.38.1** (tag `v0.38.1`, local only; 0.38.0 is the Codex-ready rule release), reader **0.19.0** (`skill-v0.19.0`, upstream repo `../Diagnosis Reader/`), Checklist Generator
 **0.4.0** (`v0.4.0`, `../Dataiku Checklist Generator/`; ids and titles frozen in its `config/id_registry.yaml`). Everything is pushed.
 
 Done: the verdict framework (Batch 0) and rules for **46 of 67 checks**: SEC-001/002/004/005/006/007/009/010, SCALE-001/006/009/011,

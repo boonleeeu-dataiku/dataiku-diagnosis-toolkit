@@ -16,7 +16,9 @@ spreadsheet, plus add/update a Summary tab.
 ## Reference files (in this skill's `references/` directory)
 
 - `calibrations.md` — **read in full before evaluating any row** (step 4). It holds the user's
-  check-specific interpretations, which override a literal reading of the checklist.
+  check-specific interpretations, which override a literal reading of the checklist: what to write around a
+  rule-decided status, and the status logic of the checks no rule decides.
+- `verdict-rules.md` — the spec of the code-decided rules. Not needed during a review.
 - `summary-layout.md` — manual Summary layout. Read only if `write_summary` is unavailable (step 6).
 - `linked-computer.md` — device staging and commit-verify loop. Read only on a linked computer (step 0).
 
@@ -128,7 +130,7 @@ its title is about something else, don't apply the entry. Where a row's
 `insufficient_evidence_handling` says what to do when the bundle lacks the evidence, follow it; a
 matching calibration overrides it.
 
-A row that has a verdict (see Verdicts, in step 1) takes that status; its calibration entry only explains the rule.
+A row that has a verdict (see Verdicts, in step 1) takes that status; `calibrations.md` then only tells you what to add to its `evidence_found` and `notes`.
 
 For each checklist item, decide one of a small fixed set of statuses (keep
 this consistent across the whole workbook): **Pass**, **Fail**, **Partial**,

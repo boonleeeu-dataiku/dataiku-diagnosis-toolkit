@@ -1,6 +1,6 @@
 """Verdict rules for the security checks (judgment only; see verdicts.py for the contract).
 
-Each rule's text is the human-readable spec in `references/calibrations.md`, which stays authoritative on intent. A fact
+Each rule's text is the human-readable spec in `references/verdict-rules.md`, which stays authoritative on intent. A fact
 that is missing from the bundle is Needs Review, never an assumed Fail: the bundle may simply not carry the setting."""
 from __future__ import annotations
 
@@ -87,7 +87,7 @@ def jek_cgroup_unconfigured(facts):
 
 # --- the instance's `security` settings block (Batch 3a) ------------------------------------------------------------
 #
-# Policy (calibrations.md, Security): a secure toggle that is on is Pass; one that is off is Fail, except where the
+# Policy (verdict-rules.md, Security): a secure toggle that is on is Pass; one that is off is Fail, except where the
 # checklist itself allows a deliberate choice (ADVSEC-005, 010, 012, SEC-007), which is Needs Review (ask for the
 # documented need). A setting missing from the bundle is Needs Review.
 

@@ -1,6 +1,6 @@
 # Check-specific calibrations
 
-> Judgment only: this file says which status to give, never where or how to find something in the
+> Judgment only: this file says which status to give and what to write, never where or how to find something in the
 > bundle. That belongs to the reader (`dataiku-diagnosis-reader` skill), which is vendored from
 > upstream. If a calibration needs a new "where/how to read" fact, add it to the reader's references
 > upstream, re-sync, and point to it from here. See `CLAUDE.md`.
@@ -13,9 +13,11 @@ title each id had when its entry was written. If a row's id and title disagree w
 trust the topic, not the id, and say so in `notes`. Never apply an entry to a row just because the id
 matches. Add each new one as its own entry under the right heading; don't overwrite prior ones.
 
-**Entries marked `[code-decided]`** have their status computed by `scripts/run_step.py verdicts` (rules in
-`scripts/rules_security.py`; SKILL.md, Verdicts). Use the verdict's status exactly; the entry then explains the rule and
-holds the `Action:` guidance for `notes`. The rule and its entry must agree: a change to one is a change to the other.
+**Two kinds of check.** Most checks are **rule-decided**: `scripts/run_step.py verdicts` computes the status in code
+(`scripts/rules_*.py`) and you write it exactly as given (SKILL.md, Verdicts). The spec of those rules is
+`references/verdict-rules.md`, which you do not need to read. For them this file holds only what you add around the
+status: the `evidence_found` and `notes` guidance and the `Action:` lines (next section). The rest are **model-decided**:
+no rule exists, and the entries after that section give the status and the reasoning.
 
 ## General principles (apply to every check)
 
@@ -33,284 +35,87 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
   `data-dir-config` reference ("Finding a setting reliably") describes.
 - **Version gate beats feature gate.** If the check's stated minimum DSS version is above the bundle's
   `product_version`, mark **Needs Review** (the capability can't exist yet, so Fail would be unfair)
-  and name the introducing version in `notes`, even if the feature is also conditional (e.g. Cobuild
-  default LLMs, GENAI-007, on an older DSS). Upgrade planning is the actionable point.
+  and name the introducing version in `notes`, even if the feature is also conditional. Upgrade planning is the
+  actionable point. The rules do not apply this gate themselves: when a verdict looks wrong for an old DSS,
+  say so in your final summary.
 - **Optional feature off but the checklist asks for acceptance or enablement (GenAI, graphics export):**
-  **Needs Review** (ask whether it is intentional), not Fail. Security controls follow their own entries
-  below. A setting or section absent from the bundle is **Needs Review**, never treated as off.
+  **Needs Review** (ask whether it is intentional), not Fail. Security controls follow their own rules.
+  A setting or section absent from the bundle is **Needs Review**, never treated as off.
+- **A verdict whose reason says "ask whether intentional"** is a Needs Review: put one `Action:` bullet naming the team
+  to ask (see "Format of `notes`" in SKILL.md).
 
-## Kubernetes, containers and Spark
+## Rule-decided checks: what to write
 
-- **Kubernetes-conditional checks in general (ARCH-007, ARCH-010, ARCH-011, ARCH-013, ARCH-016, ARCH-017 [code-decided]; Spark-on-K8s, containerized execution,
-  cluster configuration):** first determine whether a Kubernetes cluster is attached to the instance at
-  all (the reader's `data-dir-config` reference says how). None attached: **Not Applicable** for any
-  check that depends on Kubernetes/Elastic Compute. Attached: a valid containerized execution
-  configuration is a must-have; if none is defined, **Fail**. This holds even when execution configs aimed at Kubernetes
-  are defined without an attached cluster (an implicit cluster). Decided from `facts.py`'s `kubernetes`. ARCH-014 (topology, autoscaling) and
-  ARCH-015 (cluster sizing) stay with the model: they need node-group and capacity data a bundle never holds (Needs Review
-  with an `Action:` when a cluster is attached, Not Applicable without one).
+The status comes from the verdict. Quote its `deciding_values` and add only the following.
 
-- **Valid Spark configuration (ARCH-005) [code-decided]:** Spark off: **Not Applicable**. Enabled with at least one execution
-  config that sets executor or driver resources: **Pass**; enabled with none: **Fail**. The enabled flag missing: **Needs Review**.
+**Security**
+- **SEC-001:** whether the id matches the customer's inventory or tracking tool is a live check: an `Action:`.
+- **SEC-002:** whether the OS identities the rules map to exist is a live check (`notes` only).
+- **SEC-004:** give the percentage and tier, e.g. `190G = 75.7% of 251 GiB; tier target 75%`. Host RAM is `MemTotal` in GiB and
+  the cgroup "G" is GiB: never mix GB and GiB. Empty per-workload placements are an observation, not a downgrade.
+- **SEC-005:** whether the live OS hierarchy matches is an `Action:`.
+- **SEC-006:** DSS's own config shows only whether DSS itself terminates TLS. On Needs Review, one bullet says the bundle can't
+  confirm or rule out a TLS-terminating proxy, plus an `Action:` to verify with the infrastructure team. Quote the raw server
+  block in `evidence_found`. A proxy documented elsewhere in the bundle is not read by the rule: it stays Needs Review.
+- **SEC-009:** give the count of authorized groups, never the names.
+- **SEC-010:** give the protocol, never any secret. On Fail, `Action:` discuss the benefits of SSO with the customer.
+- **ADVSEC-006:** when not applicable, say the default logged-out page is in use.
+- **ADVSEC-008:** other export or clipboard keys that are set are `notes` only.
+- **ADVSEC-009:** say a proxy may set the headers (the bundle can't show that). The four non-core headers are `notes` only.
 
-- **Containerized configs and cluster (ARCH-010, ARCH-013) [code-decided]:** attached with at least one Kubernetes execution
-  config that sets a memory limit: Pass (configs without any limit: Needs Review; none at all: Fail). A Kubernetes cluster
-  definition in the bundle: Pass; attached with no definition in the bundle: Needs Review.
-
-- **Global defaults (ARCH-016) [code-decided]:** with a cluster attached, a default cluster set: **Pass**; no default cluster set: **Fail**;
-  no cluster attached: **Not Applicable**; anything else, such as an unreadable attachment or default-cluster setting: **Needs Review**. The default execution config (and its memory limit) is `notes` only.
-
-- **Containerized visual recipes (ARCH-017) [code-decided]:** the feature on and a default visual-recipe execution config set: **Pass**;
-  anything else on an attached cluster: **Needs Review** (offloading intent unknown), never Fail. Base-image build evidence stays a `notes` item.
-
-- **Spark validation on a non-Kubernetes estate (ARCH-008):** worded for Spark on Kubernetes (executor
-  pods). No cluster attached and Spark on YARN/Hadoop: **Not Applicable**, per the rule above.
-
-- **Containerized execution baseline (ARCH-011) [code-decided]; e.g. 'Standard' ~200MB/16000MB, 'Webapp' ~500MB/500MB):**
-  the checklist's baseline is an illustrative example, not names or sizes to match. **Pass** when there
-  are **two or more configs whose memory or CPU requests/limits genuinely differ**, whatever the names.
-  If all configs are identically sized despite different names, that is a real gap: say so in `notes`. A single config or identical sizing is **Needs Review**; none with a cluster attached is **Fail**.
-
-- **Spark baseline configs (ARCH-006) [code-decided]:** same logic, baseline illustrative. Spark explicitly off: **Not Applicable**. Two or more Spark execution
-  configs whose sizing genuinely differs: **Pass**. Only one, or all identically sized: **Needs Review**.
-  None: **Fail**.
-
-- **Per-user Kubernetes namespace (ARCH-007) [code-decided]; (Spark or containerized configs, e.g. `dss-ns-${dssUserLogin}`):**
-  for a **managed** cluster, a namespace parameter provisioned with a dynamic/templated variable (such as
-  `${namespace}`) is sufficient: **Pass** (not Needs Review) without tracing the variable, and note the
-  field/value seen in `evidence_found`. For a **manual**/externally-registered cluster, namespace
-  behaviour may be governed outside DSS, so judge it on its own merits. (The reader's `data-dir-config`
-  reference says where the namespace fields live and how to tell managed from manual.) In code: every Kubernetes-targeting config templated = **Pass**; a fixed namespace
-  or a missing one = **Needs Review** (managed or manual cluster alike). Spark configs that don't target Kubernetes (YARN) are ignored.
-
-## GenAI
-
-- **Feature-conditional GenAI checks (Cobuild default LLMs, Bring-your-own-LLM mode, local Hugging Face;
-  Agent Hub has its own rule below):** first confirm the feature is in use (the reader's
-  `data-dir-config` reference lists the signals it has verified and which it has not). Not in use:
-  **Not Applicable**. Turned off but the checklist asks for acceptance or enablement (e.g. AI Services
-  terms not accepted while all AI features are disabled): **Needs Review**. For "AI assistant debug data
-  in the bundle" checks, a bundle that lacks the section is **Needs Review**, not Fail.
-
-- **Internal code environments for LLM Mesh (GENAI-001; RAG, document extraction, PII detection) [code-decided]:** judge
-  only whether the internal code envs are in use. Say in `notes` which envs you saw.
-  - **Pass:** the defaults are the internal code envs (the reader's `data-dir-config` and
-    `data-dir-runtime-and-codeenvs` references say how to tell). Don't downgrade for a container
-    execution mode of `INHERIT` when no container config exists, and don't require separate evidence for
-    each of the three categories.
-  - **Needs Review:** a non-internal code env is used for any of them.
-  - **Fail:** nothing is set up (no default env for retrieval or PII detection). The GenAI settings missing from the bundle altogether: Needs Review.
-  - Decided from `facts.py`'s `genai_settings` (retrieval and PII detection envs; document extraction has no env of its own).
-
-- **Trace Explorer (GENAI-003) [code-decided]:** the default project and web app both set (`trace_explorer`
-  configured): **Pass**. The block present but no default set: **Fail**. The block missing from the bundle: **Needs Review**.
-
-- **AI Services (GENAI-004) [code-decided]:** terms accepted and at least one AI Services flag on (`genai_settings`): **Pass**.
-  Terms not accepted, or accepted with nothing enabled, or the flag missing: **Needs Review** (an optional feature; ask whether
-  it is intentional), never Fail. Outbound connectivity to the AI gateway can't be verified from a bundle.
-
-- **Cobuild default LLMs (GENAI-007) [code-decided]:** all three default ids set (`genai_settings.cobuild_default_llms_set`):
-  **Pass**. Any unset, or the block missing (DSS before the Cobuild settings, or Cobuild never used): **Needs Review**, naming
-  the unset ids. Whether Cobuild is in use isn't verified, so this is never Fail or Not Applicable.
-
-- **Bring Your Own LLM (GENAI-005, GENAI-006) [code-decided]:** BYO mode counts as active only when `facts.py`'s `byo_llm`
-  reports `active: true` (a main LLM id or a reference project key is set). A custom LLM connection alone does
-  not make it active. Inactive (or the block missing): **Not Applicable** for both.
-  - **GENAI-005:** active with both the reference project key and a main LLM set: **Pass**; either missing: **Fail**.
-  - **GENAI-006:** judge the model ids `byo_llm` reports. A recommended version (OpenAI ChatGPT 5.2 or later):
-    **Pass**; a known unsupported one (ChatGPT 5.1 or earlier): **Fail**; non-OpenAI, ambiguous or
-    undeterminable: **Needs Review** (name the id in `notes`). Applied to every LLM id reported (main, response-format-aware,
-    fast/light): any unsupported one is Fail, else any undeterminable one is Needs Review. A `gpt-5` without a minor number counts as 5.0.
-
-- **Agent Hub deployer permissions (GENAI-009) [code-decided]:** the bundle can't verify who may deploy, so don't infer
-  it from the project owner or group grants. Agent Hub installed (the reader's `data-dir-config`
-  reference lists the signal): **Needs Review**. Not installed (or no plugin configuration in the bundle at all): **Not Applicable**. Never Pass or Fail.
-
-## Security
-
-- **Security toggles in the `security` settings block (ADVSEC-001, ADVSEC-002, ADVSEC-005, ADVSEC-010, ADVSEC-012, SEC-007)
-  [code-decided]:** judge each from its value (`facts.py`, `security_settings`). A secure toggle that is on is **Pass**; one that
-  is off is **Fail** (ADVSEC-001 hide error stacks, ADVSEC-002 hide version info). Where the checklist itself allows a
-  deliberate choice, a deviation is **Needs Review** (ask for the documented need): ADVSEC-005 (restricted visibility off),
-  ADVSEC-012 (users may edit their name and email), SEC-007 (secure cookies off: only safe once all access is HTTPS, which a
-  proxy can hide). ADVSEC-010: iframe hosting off (`sameSiteNoneCookies` false) is **Pass**; on with secure cookies off is **Fail**
-  (the checklist requires them together); on with secure cookies on is **Needs Review**. A setting or the block missing from the
-  bundle is **Needs Review**.
-
-- **HTTPS (SEC-006) [code-decided]:** DSS's own config shows only whether DSS itself terminates TLS; an external
-  reverse proxy (nginx, ALB, API gateway) is invisible to the bundle.
-  - **Pass:** DSS terminates TLS itself (SSL on and a certificate configured; `facts.py`, `server_config`). Don't
-    downgrade because a proxy might also exist. A proxy documented elsewhere in the bundle is not something the code
-    reads: it stays Needs Review, with the `Action:` below. Quote the raw server block in `evidence_found`, so a
-    misread is visible.
-  - **Needs Review:** DSS is not itself configured for HTTPS (e.g. plain HTTP). Never Fail. One `notes`
-    bullet says the bundle can't confirm or rule out a TLS-terminating proxy, plus an `Action:` to verify
-    with the customer/infrastructure team.
-  - **Fail:** only on positive evidence that no HTTPS exists anywhere (e.g. explicit customer
-    confirmation on record), not on absence from the bundle.
-
-- **Session expiry, single session per user, clickable links in data tables (ADVSEC-003, ADVSEC-004,
-  ADVSEC-011) [code-decided]:** these settings are in the bundle (the reader's `data-dir-config` reference says where),
-  so judge them from the value, never Needs Review because a checklist hint calls them UI-only.
-  - Timeouts: `0` means unlimited. **Fail** when both are `0`; **Pass** when either is finite.
-  - Single-session or disable-links toggle: off is **Fail**, on is **Pass**.
-  - **Needs Review** only when the settings block itself is missing.
-
-- **Wiki upload restriction (ADVSEC-007) [code-decided]:** an upload-extension list configured: **Pass**. None configured
-  (including a bundle without the instance's properties file, which means nothing was customised): **Fail**, because the default allows
-  any file type.
-
-- **Custom post-logout redirect (ADVSEC-006) [code-decided]:** optional hardening; the default logout page is not a
-  security concern. None configured: **Not Applicable** (say the default page is in use). Valid
-  http/https redirect: **Pass**. **Fail** only when one is configured but invalid.
-
-- **Instance identification (SEC-001) [code-decided]:** **Pass** when the node's instance (install) id is present in the
-  bundle (the reader's `facts.py` reports it under `node`); **Fail** when it is missing. Whether it
-  matches a customer inventory or tracking tool is a live check: an `Action:` in `notes`, never the status.
-
-- **LDAP authorized groups (SEC-009) [code-decided]:** conditional on LDAP being enabled (`facts.py`, `sso_and_ldap`).
-  Enabled with one or more authorized groups: **Pass** (give the count, never the names). Enabled with
-  none: **Needs Review** (ask whether intentional). LDAP not enabled: **Not Applicable**.
-
-- **SSO enablement (SEC-010) [code-decided]:** judge from `facts.py` `sso_and_ldap` (the SSO enabled flag; give the
-  protocol, never any secret). SSO enabled: **Pass** (whatever LDAP is). SSO disabled: **Fail**, with an
-  `Action:` in `notes` to discuss the benefits of SSO with the customer. The SSO flag missing from the bundle: **Needs Review**.
-
-- **UIF (SEC-002) [code-decided]:** impersonation enabled with at least one user or group rule (the reader's lookup
-  table says where): **Pass**. Whether the OS identities exist is a live check (`notes` only).
-  Disabled: **Fail**. Enabled but with no user or group rule: **Partial**. The enabled flag missing from the bundle:
-  **Needs Review**.
-
-- **JEK-specific cgroup limits (SEC-005) [code-decided]:** the check wants none configured. From `facts.py`'s `cgroups`,
-  `target_counts` gives the cgroup targets configured per workload category. The Job Execution Kernel (JEK) category
-  with 0 targets, or no JEK category at all: **Pass**. One or more JEK targets configured: **Fail**, even when cgroups are disabled overall. The cgroup settings missing
-  from the bundle: **Needs Review**. Whether the live OS hierarchy matches is an `Action:` in `notes`, never the status.
-
-- **cgroups memory limit (SEC-004) [code-decided]:** the recommended cap depends on host RAM, so judge the limit against
-  its tier, not a flat percentage. Host RAM `R` is `MemTotal` in GiB and the cap `L` is the memory cgroup
-  limit in GiB (the cgroup "G" is GiB; never mix GB and GiB). Quote the percentage from the reader's
-  `facts.py`. The checklist's tiers give the recommended cap `T`:
-
-  | Host RAM | Recommended cap `T` |
-  |---|---|
-  | over 120 GiB | 75% of `R` |
-  | 60-120 GiB | 66% of `R` |
-  | 30-60 GiB | `R` minus 20 GiB |
-  | under 30 GiB | 50% of `R` |
-
-  - **Disabled:** **Fail**. Cgroup settings missing from the bundle: **Needs Review**.
-  - **`L` is 80% of `R` or more:** **Needs Review**, naming the risk of over-allocating memory to cgroups
-    (too little left for the OS and DSS's own processes). Check this first; it overrides the band below.
-  - **`L` within 10% of `T`** (either side): **Pass**, including slightly above `T`.
-  - **`L` more than 10% away from `T`, or enabled with no memory limit:** **Needs Review** (ask whether
-    it is intentional).
-  - In `notes`, give the percentage and tier, e.g. `190G = 75.7% of 251 GiB; tier target 75%`. Empty
-    per-workload placements are a `notes` observation, not a downgrade.
-
-- **Export restriction (ADVSEC-008) [code-decided]:** the check lists alternative keys (`one_of`), so any one set to
-  true is **Pass**; the others (e.g. clipboard keys) are `notes` only. None set: **Fail**.
-
-- **Security HTTP headers (ADVSEC-009) [code-decided]:** none of the ten listed headers configured in DSS: **Fail**.
-  Pass needs the six core headers set with restrictive values: content-security-policy (non-empty), x-frame-options
-  (SAMEORIGIN or DENY), x-content-type-options (nosniff), x-xss-protection (set and not `0`), hsts-max-age (above 0) and
-  referrer-policy (non-empty). Some header set but not all six core ones restrictive: **Partial**. The other four
-  (permissions-policy and the three cross-origin ones) are `notes` only. In `notes`, say a proxy may set them
-  (the bundle can't show that).
-
-## Platform, sizing and runtime
-
-- **Remove the `filesystem_root` connection (SCALE-011) [code-decided]:** the default connection pointing at the server's root
-  filesystem is still present: **Fail** (whether a project uses it is a live check: an `Action:` in `notes`, never the
-  status). Absent: **Pass**. The connections list missing from the bundle: **Needs Review**.
-
-- **Backend Xmx sizing (SCALE-008) [code-decided]:** apply the full rule from the checklist, not just the RAM tier.
-  Check all of: (1) `backend.xmx` against the RAM tier; (2) `backend.xmx` >= 3x the size of the
-  `config/` folder (use `facts.py`'s `config_folder_size`, which sums the listing; never size it from the partial mirror); (3) not in the
-  32-48GB dead zone; (4) the other components' heaps (`jek.xmx`/`fek.xmx`) not oversized; (5) no
-  `OutOfMemoryError` in the backend logs. State which you checked in `evidence_found`; never assume a
-  tier from RAM alone.
-  - **Fail:** any confirmed miss: below the RAM tier (4g above 12 GiB, 8g above 30, 16g above 95; the tier is a minimum),
-    under 3x the config folder, in the 32-48 GB dead zone, or any `OutOfMemoryError` mention in the backend logs
-    (`facts.py`'s `backend_log`, counted per file with its time window).
-  - **Pass:** none missed and every input was available.
-  - **Needs Review:** none missed but an input is missing (host memory, config folder size or the logs), or `backend.xmx` itself
-    is missing. A confirmed miss still decides Fail when another input is missing.
-  - `jek.xmx`/`fek.xmx` oversizing stays in `notes` (no threshold is defined).
-
-- **Flow limits sizing (SCALE-009) [code-decided]:** a concurrency or sizing limit that sits in a different place than
-  its name suggests still counts. A value of `0` (or blank) means unsized: **Fail**, even when the other
-  concurrency limit is in range. None is 0 but max activities is outside 30-50 or activities per job is not 5:
-  **Needs Review** (ask whether the sizing is justified). All three in range: **Pass**. A limit missing from the bundle:
-  **Needs Review**.
-
-- **Preferred connections and engines (SCALE-010) [code-decided]:** the check wants the default dataset-creation
-  connection, upload connection, storage formats and recipe engine preferences left blank unless a use case
-  justifies them (`facts.py`, `default_preferences`). Any of them non-blank: **Needs Review** (ask whether it
-  is intentional; name the values in `notes`, and call a non-blank engine preference the riskier one).
-  All blank or absent: **Pass**. The storage-format list DSS ships with (`CSV_ESCAPING_NOGZIP_FORHIVE,CSV_EXCEL_GZIP,PARQUET_HIVE`) counts as blank.
-
-- **Connection-detail gaps (SCALE-012):** gaps DSS itself flagged are real evidence. Report **Partial**
-  rather than Not Applicable just because the storage is HDFS and not a cloud object store.
-
-- **Log-error review (SCALE-007) [code-decided]:** the status is mechanical, so every run gives the same one:
-  - Any ERROR, FATAL or WARN entries in the backend logs: **Needs Review**, however few or benign-looking.
-    Never Fail or Partial.
-  - No errors and no warnings at all: **Pass**.
-  - Logs missing from the bundle: **Needs Review** (the checklist's `insufficient_evidence_handling`).
-
-  Still make the finding useful. The bundle usually holds only a few hours of backend log, so quote
-  counts with their window (e.g. `214 in ~2.6h`) in both `evidence_found` and `notes`, and group by
-  message pattern (digits and ids normalised), not by raw line. When one pattern dominates (e.g. repeated
-  rejected WebSocket sessions that were not logged in), say so in `notes` with its share, and put the
-  `Action:` on the real failures (e.g. failing API calls). The reader's `data-dir-runtime-and-codeenvs`
+**Platform, sizing and logs**
+- **ARCH-004:** name the data directory and the disk(s) in `evidence_found`. When the row is `undecided` (older facts without
+  sanity-check codes), read the sanity-check text: a message about a rotational, HDD or SSD disk is Fail; otherwise judge from the disks.
+- **SCALE-001:** loopback PostgreSQL is a pass with a `notes` bullet that it is installed locally on the DSS host (a backup and
+  availability caveat). Pool size against `max_connections` and backups are `notes` only. When `facts.py`'s `internal_database`
+  reports `password_stored_in_plaintext: true`, `notes` carries `Action: rotate the stored database credential and move it to a
+  secrets store` (never the value); it does not change the status. False or ABSENT: add nothing.
+- **SCALE-002:** name the flavor and the estate signal in `evidence_found`; whether managed datasets actually sync is a live check.
+- **SCALE-004:** say a scenario's script was not read; run history, whether cleanup runs, and whether it covers logs, idle kernels
+  or both are `notes` only.
+- **SCALE-006:** give the message counts; the warnings it lists are judged by the checks they relate to, not here.
+- **SCALE-007:** make the finding useful. The bundle usually holds only a few hours of backend log, so quote counts with their
+  window (e.g. `214 in ~2.6h`) in both `evidence_found` and `notes`, and group by message pattern (digits and ids normalised), not
+  by raw line. When one pattern dominates (e.g. repeated rejected WebSocket sessions that were not logged in), say so in `notes`
+  with its share, and put the `Action:` on the real failures (e.g. failing API calls). The reader's `data-dir-runtime-and-codeenvs`
   reference says how to count and get the window.
+- **SCALE-008:** state in `evidence_found` which of the five checks you used (RAM tier, 3x config folder, dead zone, the
+  `OutOfMemoryError` count with its window); never assume a tier from RAM alone. `jek.xmx` and `fek.xmx` oversizing has no
+  threshold: `notes` only.
+- **SCALE-009:** on Needs Review, ask whether the sizing is justified. A limit that sits in a different place than its name suggests
+  still counts.
+- **SCALE-010:** name the non-blank values; call a non-blank engine preference the riskier one.
+- **SCALE-011:** whether a project uses the connection is a live check: an `Action:`.
 
-- **External PostgreSQL runtime database (SCALE-001) [code-decided]:** judge the internal database's type and host (the
-  reader's `data-dir-config` reference says where). PostgreSQL on a non-local host: **Pass**. On the same
-  host (loopback): also **Pass**, with a `notes` bullet saying it is installed locally on the DSS host (a backup and
-  availability caveat, not a status change). Not PostgreSQL: **Fail**. Pool size against
-  `max_connections` and backups are `notes` only.
-  When `facts.py`'s `internal_database` reports `password_stored_in_plaintext: true`, `notes` carries
-  `Action: rotate the stored database credential and move it to a secrets store` (never the value). It does
-  not change the status. False or ABSENT: add nothing.
+**Kubernetes and Spark**
+- **ARCH-007:** note the namespace field and value seen in `evidence_found` (a templated variable such as `${namespace}` needs
+  no tracing).
+- **ARCH-006, ARCH-011:** the baseline sizes in the checklist are illustrative, not names or sizes to match. Identical sizing under
+  different names is a real gap: say so in `notes`.
 
-- **Metastore (SCALE-002) and graphics export (SCALE-003) [code-decided]:** decide from the setting, never Needs Review
-  for want of a functional test.
-  - **Metastore** (the reader's lookup table says where the flavor lives): **Pass** when it matches the
-    estate (Hive on a Hadoop/YARN estate, Glue on AWS, DSS internal otherwise); **Needs Review** only
-    when the estate can't be told. Decided from `metastore_and_exports`: Hive with Hive enabled or Hadoop in the host environment
-    is Pass (Hive without a Hadoop signal: Needs Review); a DSS-internal flavor is Pass without a Hadoop signal and Needs Review
-    with one; Glue is always Needs Review (AWS integration can't be verified); an unrecognised or missing flavor is Needs Review.
-  - **Graphics export:** on is **Pass**; off is **Needs Review** (ask if intentional); setting absent
-    from the bundle is **Needs Review**, never off.
+**GenAI**
+- **GENAI-001:** say which envs you saw.
+- **GENAI-004:** outbound connectivity to the AI gateway can't be verified from a bundle: an `Action:`.
+- **GENAI-006:** name the model id when it can't be determined.
+- **GENAI-007:** name the unset default ids.
+- **GENAI-009:** the bundle can't verify who may deploy; never infer it from the project owner or group grants. `Action:` check the
+  deployer's permissions in the security groups.
 
-- **Admin project garbage collection (SCALE-004) [code-decided]:** there is no fixed project name; the reader's lookup
-  table says how to find candidate projects and read their scenarios. Judge only scenarios that are
-  active with an active trigger. Never open or grep the script behind a Python-based scenario.
-  - **Pass:** an active scheduled step-based scenario whose steps clearly clear logs, purge, delete or
-    clean up.
-  - **Needs Review:** an active scheduled scenario whose purpose is only inferable from its name or that
-    runs a script (say in `notes` the script was not read); or a candidate project with scenarios but
-    none both active and scheduled.
-  - **Fail:** no candidate project, or one whose scenarios are all inactive or absent.
-  - The project list missing from the bundle: **Needs Review**. A cleanup step is one whose name says clear, purge, delete,
-    clean, remove, vacuum or prune; a scenario counts as scheduled when it has an active time-based trigger.
+## Model-decided checks
 
-  Run history, whether the cleanup actually runs, and whether it covers logs, idle kernels or both are
-  `notes` only.
+- **Kubernetes-conditional checks without a rule (ARCH-008, ARCH-014, ARCH-015):** first determine whether a Kubernetes cluster is
+  attached (the reader's `data-dir-config` reference says how). None attached: **Not Applicable**. ARCH-008 is worded for Spark on
+  Kubernetes (executor pods): no cluster and Spark on YARN or Hadoop is Not Applicable. ARCH-014 (topology, autoscaling) and ARCH-015
+  (cluster sizing) need node-group and capacity data a bundle never holds: **Needs Review** with an `Action:` when a cluster is
+  attached.
 
-## Architecture and version
+- **Feature-conditional GenAI checks without a rule (local Hugging Face, AI assistant debug data):** first confirm the feature is in
+  use (the reader's `data-dir-config` reference lists the signals it has verified and which it has not). Not in use: **Not
+  Applicable**. Turned off but the checklist asks for acceptance or enablement: **Needs Review**. For "AI assistant debug data in
+  the bundle" checks, a bundle that lacks the section is **Needs Review**, not Fail.
 
-- **SSD storage (ARCH-004) [code-decided]:** decide from the host's disks, because DSS's own sanity check may be missing
-  from the bundle. Use the reader's `data_volume_device` fact: every disk behind the data directory
-  non-rotational: **Pass**; any rotational: **Fail**; the fact is `ABSENT` (data directory, disk listing or
-  matching mount not found): **Needs Review**. DSS's own sanity check flagging a rotational disk is also
-  **Fail**; its absence is not evidence either way. Name the data directory and disk(s) in `evidence_found`.
-  The verdict combines both: a sanity-check message whose code mentions rotational, HDD or SSD is **Fail** (even when the
-  disks could not be read); otherwise any rotational disk is **Fail**, every disk non-rotational is **Pass**, and disks
-  unknown is **Needs Review**. Only a `facts.py` without message codes leaves the row `undecided`: read the sanity-check
-  text and decide as above.
-
+- **Connection-detail gaps (SCALE-012):** gaps DSS itself flagged are real evidence. Report **Partial** rather than Not
+  Applicable just because the storage is HDFS and not a cloud object store.
 
 - **Automation-node existence / Design-Automation separation (ARCH-001), on a design-node bundle:** the
   automation node is a separate host with its own bundle, so a design bundle can never confirm one
@@ -329,11 +134,6 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
      project bundles are weak supporting evidence either way.
   3. **Otherwise:** state in `notes` that no definitive configuration in the bundle shows whether an
      automation node is deployed, and that it needs verification with the customer.
-
-- **Instance sanity check (SCALE-006) [code-decided]:** a presence check only. From `facts.py`'s `sanity_check`: output in
-  the bundle with at least one message (`empty: false`): **Pass** (give the message counts in `notes`; the
-  warnings it lists are judged by the checks they relate to, not here). Output missing (`ABSENT`) **or empty**
-  (`empty: true`, a blank file or no messages): **Fail**. Never Partial or Needs Review.
 
 - **Supported operating system (ARCH-003):** take the OS name and version from the bundle (the reader's
   `root-files` reference says where) and compare them with Dataiku's supported-OS documentation for the
@@ -369,43 +169,26 @@ and the row together.
 
 | Id | Title when written |
 |---|---|
-| ADVSEC-001 | Hiding error stacks |
-| ADVSEC-002 | Hiding version info |
-| ADVSEC-003 | Expiring sessions |
-| ADVSEC-004 | Forcing a single session per user |
-| ADVSEC-005 | Restricting visibility of groups and users |
 | ADVSEC-006 | Redirecting to a custom URL after logout |
-| ADVSEC-007 | Restricting types of files that can be uploaded in wikis |
 | ADVSEC-008 | Restricting exports |
 | ADVSEC-009 | Setting security-related HTTP headers |
-| ADVSEC-010 | Allowing DSS to be hosted inside an iframe |
-| ADVSEC-011 | Preventing links to be clickable in data tables |
-| ADVSEC-012 | Allowing DSS users to edit their display names and emails |
 | ARCH-001 | Separation of Design and Automation Nodes |
 | ARCH-002 | Regular DSS Version Upgrades |
 | ARCH-003 | Supported Operating System Version |
 | ARCH-004 | SSD Storage for DSS |
-| ARCH-005 | Valid Spark Configuration for Spark Jobs |
 | ARCH-006 | Baseline Spark Configuration Set (High/Standard/Large-memory/High I/O) |
 | ARCH-007 | Kubernetes Namespace and Auth Recommendations for Spark |
 | ARCH-008 | Functional Validation of Spark Execution (Recipe & Notebook) |
-| ARCH-010 | Valid Containerized Execution Configuration |
 | ARCH-011 | Baseline Container Execution Configs (Standard, Webapp) and Namespace Settings |
-| ARCH-013 | Valid Cluster Configuration for Elastic Compute |
 | ARCH-014 | Recommended Cluster Topology (Single Managed Cluster, Node Groups, Autoscaling) |
 | ARCH-015 | Appropriate Cluster Sizing |
-| ARCH-016 | Global Default Cluster and Default Execution Config Set (if Elastic AI used) |
-| ARCH-017 | Containerized Visual Recipes (CDE) Enabled and Base Image Built |
 | GENAI-001 | Internal Code Environments for RAG, Document Extraction, PII Detection |
-| GENAI-003 | Trace Explorer Default Configuration |
 | GENAI-004 | AI Services Terms of Use Acceptance & Enablement |
-| GENAI-005 | Bring Your Own LLM Mode - Reference Project & Main Model |
 | GENAI-006 | Bring Your Own LLM - Recommended Model Versions |
 | GENAI-007 | Cobuild Default LLM Configuration |
 | GENAI-009 | Agent Hub Deployment Required Permissions |
 | SCALE-001 | External PostgreSQL Runtime Database |
 | SCALE-002 | Appropriate Metastore Configured |
-| SCALE-003 | Graphics Export (PDF/Image) Configuration |
 | SCALE-004 | Admin Project for Garbage Collection |
 | SCALE-006 | Usage of Instance Sanity Check |
 | SCALE-007 | Backend.log Error Review |
@@ -419,6 +202,5 @@ and the row together.
 | SEC-004 | CGroups Enabled with Memory Limit per Sizing Heuristic |
 | SEC-005 | JEK-Specific CGroup Limits Left Unconfigured |
 | SEC-006 | HTTPS Access Configured for DSS |
-| SEC-007 | Secure Cookies Enabled (security.secureCookies) |
 | SEC-009 | LDAP Authorized Groups Configured |
 | SEC-010 | SSO Enablement Reviewed |

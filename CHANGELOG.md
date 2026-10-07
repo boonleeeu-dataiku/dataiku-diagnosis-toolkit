@@ -10,6 +10,18 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.38.1] - 2026-10-07
+
+### Changed
+
+- **`calibrations.md` restructured.** It is the file the model reads in full before every review, and 37 of its entries had become the specs of rules that code now decides, so it re-stated logic the model never applies (about 4,900 words). It now holds only what the model needs: the general principles, a compact "what to write" list (the `evidence_found`, `notes` and `Action:` guidance around each rule-decided status), and the status logic of the model-decided checks (ARCH-001, 002, 003, 008, 014, 015, SCALE-012, local Hugging Face, AI assistant debug data). About 2,400 words, the anchors table now listing only the ids it cites.
+- **New `references/verdict-rules.md`**: the human-readable spec of all 46 rules as one table per rule module, with the conventions (missing fact = Needs Review, the known version-gate gap). The model does not read it during a review. SKILL.md, CLAUDE.md and the rule modules' docstrings point to it.
+- Stale wording fixed: the rule-module reference (four modules, not one), ARCH-007's managed-versus-manual prose (the rule treats every cluster alike), ARCH-004's duplicated explanation, and the "Fail only on positive evidence" HTTPS line (the rule never Fails).
+
+### Added
+
+- `tests/test_verdict_rules_doc.py`: every registered rule has exactly one row in `verdict-rules.md`, and a row sits under its rule module's section. It caught a missing SEC-004 row while this was written.
+
 ## [0.38.0] - 2026-10-07
 
 ### Changed
