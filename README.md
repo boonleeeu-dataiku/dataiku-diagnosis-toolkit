@@ -19,7 +19,8 @@ spreadsheet.
   check-specific calibrations (e.g. Kubernetes-conditional items, version currency, HTTPS behind
   a reverse proxy, automation-node existence from a design-node bundle) — see the skill's
   `references/calibrations.md`. Its `scripts/run_step.py` runs the reader's `orient` and `facts`
-  scripts, records that they ran in a run manifest, and `verify`s the finished review. Authored
+  scripts, computes rule-based status verdicts (`verdicts.py`), records every step in a run manifest, and `verify`s the finished review
+  (including that statuses equal their verdicts). Authored
   directly in this repo.
 - **`skills/dataiku-review-deck-builder/`** — step 2 of the workflow: turns a completed checklist
   (produced by `dataiku-diagnosis-checklist-review`) into a branded, customer-facing Platform

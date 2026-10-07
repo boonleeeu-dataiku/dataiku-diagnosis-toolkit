@@ -81,6 +81,20 @@ cgroups, connections, GenAI and plugin presence), each with its `source`, and an
 that isn't in the bundle. How to use it is in step 4. If it can't run or errors, say so in your final summary and
 use the reader's normal procedure.
 
+### Verdicts
+
+Then run `scripts/run_step.py verdicts <bundle_root> --manifest <stem>_run_manifest.json --checklist <checklist.xlsx>`
+(it only reads the checklist; use the file you were given). It prints JSON and saves it as `<stem>_verdicts.json`.
+`verdicts` lists, for each row whose status the facts decide by rule, its `id`, `status`, `reason` and `deciding_values`.
+
+- Write each listed `status` as that row's `validation_status`, exactly. Code is final: do not change it even if you would
+  judge differently, because `verify` fails naming any row whose workbook status differs. Make `evidence_found` and
+  `notes` agree with it and quote the `deciding_values`. If you think a rule is wrong, say so in your final summary (never
+  in the workbook) so the rule gets fixed.
+- A row that is not listed has no rule: decide it as in step 4. The list may be empty.
+- `title_mismatch` and `probable_renumber` name rows whose id and title don't both match a rule (usually a changed
+  checklist). They get no verdict: decide them as in step 4 and name them in your final summary.
+
 ## 2. Read the checklist fully
 
 Dump every sheet's rows into a working file — don't try to hold 50+ rows of context in your head.
@@ -112,6 +126,8 @@ check is about, not by id alone: ids can change between checklists, so if a row'
 its title is about something else, don't apply the entry. Where a row's
 `insufficient_evidence_handling` says what to do when the bundle lacks the evidence, follow it; a
 matching calibration overrides it.
+
+A row that has a verdict (see Verdicts, in step 1) takes that status; its calibration entry only explains the rule.
 
 For each checklist item, decide one of a small fixed set of statuses (keep
 this consistent across the whole workbook): **Pass**, **Fail**, **Partial**,
@@ -227,7 +243,8 @@ texts `Overall Status Counts`, `Per-Section Breakdown`,
 
 Before delivering, run `scripts/run_step.py verify <bundle_root> --manifest <stem>_run_manifest.json
 --checklist <review.xlsx>` (add `--deck <deck.pptx>` when a deck was built) and put its one `RUN VERIFY` line in your
-final summary. On FAIL, fix the named problem (usually a skipped step or a stale Summary) and run it again. If the
+final summary. It also fails when a row with a verdict has a different status in the workbook. On FAIL, fix the named problem
+(usually a skipped step, a stale Summary or a status that differs from its verdict) and run it again. If the
 bundle sits on a separate computer the scripts can't reach, say the run could not be verified. Then check: every id has one of the five statuses; each `notes` is within budget with
 no file paths or secrets; the Summary was written after the last edit.
 

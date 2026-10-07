@@ -21,24 +21,29 @@ def _checklist(path, *, summary=True, total=2):
     if summary:
         wb["Summary"].append(["Total", total])
     ws = wb.create_sheet("Section")
-    ws.append(["id", "validation_status"])
-    ws.append(["A-1", "Pass"])
-    ws.append(["A-2", "Fail"])
+    ws.append(["id", "title", "validation_status"])
+    ws.append(["A-1", "First check", "Pass"])
+    ws.append(["A-2", "Second check", "Fail"])
     wb.save(path)
 
 
 def _record_both(manifest):
+    """Record the two reader steps and the verdicts step (no rules exist for the A-n ids, so nothing is judged)."""
     for step in ("orient", "facts"):
         assert _sh("run", step, BUNDLE, "--manifest", manifest).returncode == 0
+    xlsx = manifest.parent / "recorded.xlsx"
+    _checklist(xlsx)
+    assert _sh("verdicts", BUNDLE, "--manifest", manifest, "--checklist", xlsx).returncode == 0
 
 
 def test_run_records_steps_and_saves_facts(tmp_path):
     manifest = tmp_path / "r_run_manifest.json"
     _record_both(manifest)
     data = json.loads(manifest.read_text())
-    assert set(data["steps"]) == {"orient", "facts"} and data["reader_version"] != "unknown"
+    assert set(data["steps"]) == {"orient", "facts", "verdicts"} and data["reader_version"] != "unknown"
     assert all(s["exit_status"] == 0 and len(s["stdout_sha256"]) == 64 for s in data["steps"].values())
     assert "facts" in json.loads((tmp_path / "r_facts.json").read_text())
+    assert json.loads((tmp_path / "r_verdicts.json").read_text())["verdicts"] == []  # Batch 0: no rules yet
 
 
 def test_verify_passes_on_a_complete_run(tmp_path):
@@ -52,6 +57,8 @@ def test_verify_passes_on_a_complete_run(tmp_path):
 def test_verify_fails_when_facts_never_ran_or_hash_is_wrong(tmp_path):
     manifest, xlsx = tmp_path / "r_run_manifest.json", tmp_path / "r.xlsx"
     _checklist(xlsx)
+    out = _sh("verify", BUNDLE, "--manifest", manifest, "--checklist", xlsx).stdout
+    assert "orient not recorded" in out and "verdicts not recorded" in out
     assert "orient not recorded" in _sh("verify", BUNDLE, "--manifest", manifest, "--checklist", xlsx).stdout
     _record_both(manifest)
     data = json.loads(manifest.read_text())

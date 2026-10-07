@@ -15,7 +15,7 @@ Per batch: rule + unit tests on the synthetic fixtures, update `EVAL_ITEM_IDS` a
 4 manifests + CHANGELOG, `scripts/test.sh fast`, then a 3-run Codex round to confirm zero differing items.
 
 ### Batch 0 - foundation and design decisions (do first, after the hygiene check)
-- [ ] **Depends on generator 0.4.0 (stable ids).** Rules are keyed by check id, so don't start them until the Dataiku Checklist Generator's
+- [x] **Depends on generator 0.4.0 (stable ids).** Rules are keyed by check id, so don't start them until the Dataiku Checklist Generator's
   `config/id_registry.yaml` (ids and titles frozen from the current 67; see that repo's README, "Stable ids and titles") has shipped and this
   repo's `checklist_template.xlsx` is re-synced (`scripts/sync_to_toolkit.py --apply` there; no diff expected today). With ids locked, the title
   anchor below is a cheap guard, not the main defence. Any later retitle or retirement in the registry means updating the calibrations anchors
@@ -23,14 +23,14 @@ Per batch: rule + unit tests on the synthetic fixtures, update `EVAL_ITEM_IDS` a
 - [x] Override policy decided: **code status is final**. `verify` fails, naming the item, on any workbook/verdict mismatch. No escape hatch by default.
 - [x] Delivery decided: a separate `run_step.py verdicts` step (records in the manifest, saves `<stem>_verdicts.json`) and a new SKILL.md
   step after facts. `write_summary` key-point statuses come from that JSON.
-- [ ] Decide rule matching: id only, or id + title anchor (like `test_calibration_ids.py`) so a renumbered user checklist can't be
-  forced to a wrong verdict. Recommendation: id + anchor; an unmatched row falls back to the model.
-- [ ] Decide whether to keep an explicit, logged escape hatch for edge-case bundles (default: no).
-- [ ] Module skeleton, verdict JSON schema, `run_step.py verdicts` command, `verify` comparison, test harness on `tests/fixtures`.
-- [ ] Extend `tests/test_skill_boundaries.py` to cover `scripts/verdicts.py` and `run_step.py` (judgment only: no file paths or JSON-layout knowledge).
-- [ ] `run_step.py` rework for the new step: split `STEPS` into reader steps (orient, facts) and the local `verdicts` command (today `STEPS`
+- [x] Rule matching decided: id first, with the title anchor as a guard. A row gets a verdict only when id and title both match (normalised);
+  mismatches are reported and fall back to the model.
+- [x] Escape hatch decided: none. A wrong rule is fixed in code with a test.
+- [x] Module skeleton, verdict JSON schema, `run_step.py verdicts` command, `verify` comparison (0.31.0; tests inject rules, real rules start in Batch 1).
+- [x] Extend `tests/test_skill_boundaries.py` to cover `scripts/verdicts.py` and `run_step.py` (judgment only: no file paths or JSON-layout knowledge).
+- [x] `run_step.py` rework for the new step: split `STEPS` into reader steps (orient, facts) and the local `verdicts` command (today `STEPS`
   drives `verify`, argparse choices and the "recorded" check, and runs reader scripts); generalise `facts_path` into a `sibling(manifest, suffix)` helper.
-- [ ] `verify` should hash the saved `<stem>_facts.json` against the manifest's recorded facts hash, so a hand-edited file can't feed
+- [x] `verify` hashes the saved `<stem>_facts.json` against the manifest's recorded facts hash, so a hand-edited file can't feed
   verdicts. Cheap, and it may replace the second `facts.py` run.
 - [ ] Neutral `validated_by`: change `Claude (AI-assisted review of <bundle>)` to `<agent name> (AI-assisted review of <bundle>)` in
   SKILL.md (including the `reviewer` rule), update `tests/test_contracts.py` and `check_review_output`, and drop the Codex override.
@@ -67,7 +67,7 @@ only the `notes`/`evidence_found` wording may differ between clients.
 
 - [ ] Replace Claude-specific wording in shared files ("load the `xlsx` skill", web-search mode, `WebFetch`, `ToolSearch`, `device_*` names in
   `linked-computer.md`; add a scope header there) so the Codex overrides can go.
-- [ ] Write the verdicts step in agent-neutral wording: "run this command, use this JSON". No dependence on skill loading, the `xlsx`
+- [x] Write the verdicts step in agent-neutral wording: "run this command, use this JSON". No dependence on skill loading, the `xlsx`
   skill or Claude-only tool names.
 - [ ] Document minimum client requirements (shell, Python 3, openpyxl, file access to the bundle; optional MCP and web search) and what
   degrades without them: no MCP -> manual Summary layout; no web search -> ARCH-002/003 Needs Review.

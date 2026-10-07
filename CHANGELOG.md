@@ -10,6 +10,24 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-10-07
+
+### Added
+
+- Deterministic verdicts, foundation (Batch 0; no rules yet, so reviews are unchanged): `scripts/verdicts.py` holds the rule registry
+  (`@rule(id, anchor_title)`), the verdict shape (`id`, `status`, `reason`, `deciding_values`) and the five fixed statuses, and
+  `run_step.py verdicts` computes verdicts from the saved facts and a checklist, saves `<stem>_verdicts.json` and records the step.
+  Code is final: `run_step.py verify` now requires the verdicts step, hashes the saved `<stem>_facts.json` against the manifest, and fails
+  naming any ruled row whose workbook status differs from its verdict. A rule applies only when the row's id and title both match
+  (case, punctuation and spacing ignored); rows that match on one only are reported, never judged.
+- SKILL.md: a "Verdicts" step (agent-neutral: run the command, copy each status exactly).
+
+### Changed
+
+- `run_step.py` robustness: a missing reader script, a corrupt manifest or an unreadable checklist now end in a one-line error or a
+  `RUN VERIFY: FAIL`, never a traceback; a crashed or timed-out fresh `facts.py` run is reported as such.
+- `tests/test_skill_boundaries.py` also scans the skill's scripts for reader-owned layout terms.
+
 ## [0.30.0] - 2026-10-07
 
 ### Added

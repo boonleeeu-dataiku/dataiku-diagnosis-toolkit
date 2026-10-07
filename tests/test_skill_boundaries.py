@@ -25,7 +25,8 @@ READER_OWNED_TERMS = ["ROTA", "lsblk", "[ERROR]", "defaultK8sClusterId", "hs_err
 
 
 def _files():
-    return [REVIEW_DIR / "SKILL.md", *sorted((REVIEW_DIR / "references").glob("*.md"))]
+    return [REVIEW_DIR / "SKILL.md", *sorted((REVIEW_DIR / "references").glob("*.md")),
+            *sorted((REVIEW_DIR / "scripts").glob("*.py"))]
 
 
 @pytest.mark.parametrize("path", _files(), ids=lambda p: p.name)
