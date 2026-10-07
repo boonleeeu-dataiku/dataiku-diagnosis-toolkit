@@ -102,3 +102,29 @@ def test_run_creates_the_manifest_directory_and_rejects_a_corrupt_manifest(tmp_p
     manifest.write_text("{not json")
     out = _sh("run", "orient", BUNDLE, "--manifest", manifest)
     assert out.returncode == 2 and "cannot run orient" in out.stderr and "Traceback" not in out.stderr
+
+
+def test_verify_passes_when_the_bundle_is_at_a_different_path_than_the_run(tmp_path):
+    """facts.py prints the absolute bundle path; the recorded hash must not depend on it (staging copies, other machines)."""
+    import shutil
+
+    manifest, xlsx = tmp_path / "r_run_manifest.json", tmp_path / "r.xlsx"
+    _record_both(manifest)
+    _checklist(xlsx)
+    moved = tmp_path / "elsewhere" / "copy_of_bundle"
+    shutil.copytree(BUNDLE, moved)
+    out = _sh("verify", moved, "--manifest", manifest, "--checklist", xlsx)
+    assert out.returncode == 0 and "PASS" in out.stdout, out.stdout
+
+
+def test_verify_still_accepts_a_manifest_hash_recorded_before_the_path_fix(tmp_path):
+    import hashlib
+
+    manifest, xlsx = tmp_path / "r_run_manifest.json", tmp_path / "r.xlsx"
+    _record_both(manifest)
+    _checklist(xlsx)
+    raw = (tmp_path / "r_facts.json").read_text()
+    data = json.loads(manifest.read_text())
+    data["steps"]["facts"]["stdout_sha256"] = hashlib.sha256(raw.encode()).hexdigest()
+    manifest.write_text(json.dumps(data))
+    assert _sh("verify", BUNDLE, "--manifest", manifest, "--checklist", xlsx).returncode == 0

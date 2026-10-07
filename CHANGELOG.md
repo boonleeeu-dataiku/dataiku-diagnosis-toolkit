@@ -10,6 +10,12 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.32.2] - 2026-10-07
+
+### Fixed
+
+- `run_step.py`: the facts hash in the run manifest no longer depends on where the bundle sits. `facts.py` prints the absolute bundle location (`bundle_root`, `mirror`), so `verify` failed with "a fresh facts.py run does not match the recorded hash" whenever the bundle was verified from another path than the run used (a staging copy, another machine). Those two fields are now left out of the hash. Manifests recorded before this still verify, from their original path.
+
 ## [0.32.1] - 2026-10-07
 
 ### Changed

@@ -8,7 +8,8 @@ Usage:
 
 `run` executes the reader script, passes its output through unchanged, and records the step, exit status,
 UTC time and a sha256 of the output in the manifest (hashes and statuses only, no bundle content). `facts`
-output is also saved next to the manifest as `<stem>_facts.json`.
+output is also saved next to the manifest as `<stem>_facts.json`; its hash ignores the absolute-path fields
+(`bundle_root`, `mirror`), so `verify` works on the same bundle at another path.
 
 `verdicts` (run after `facts`) computes, with `verdicts.py`, the status of every checklist row that a rule
 decides from the saved facts, prints them as JSON, saves them as `<stem>_verdicts.json` and records the step.
@@ -62,9 +63,29 @@ def sibling(manifest: Path, name: str) -> Path:
     return manifest.with_name(re.sub(r"_run_manifest$", "", manifest.stem) + f"_{name}.json")
 
 
+PATH_FIELDS = ("bundle_root", "mirror")  # facts.py prints the absolute bundle location; it is not part of the facts
+
+
+def facts_digest(text: str) -> str:
+    """sha256 of facts.py output without its absolute-path fields, so the same bundle at another path (a staging copy,
+    another machine) hashes the same."""
+    try:
+        doc = json.loads(text)
+        canonical = json.dumps({k: v for k, v in doc.items() if k not in PATH_FIELDS}, sort_keys=True)
+    except (ValueError, AttributeError):
+        canonical = text
+    return hashlib.sha256(canonical.encode()).hexdigest()
+
+
+def facts_match(text: str, recorded: str) -> bool:
+    """Recorded hashes from before 0.32.2 were of the raw output; accept those too."""
+    return recorded in (facts_digest(text), hashlib.sha256(text.encode()).hexdigest())
+
+
 def record(data: dict, step: str, returncode: int, stdout: str) -> None:
+    digest = facts_digest(stdout) if step == "facts" else hashlib.sha256(stdout.encode()).hexdigest()
     data["steps"][step] = {"exit_status": returncode, "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                           "stdout_sha256": hashlib.sha256(stdout.encode()).hexdigest()}
+                           "stdout_sha256": digest}
 
 
 def run(step: str, bundle: str, manifest: Path) -> int:
@@ -151,7 +172,7 @@ def status_problems(manifest: Path, checklist: Path, steps: dict) -> list[str]:
         saved = sibling(manifest, "facts").read_text(encoding="utf-8")
     except OSError as e:
         return [f"saved facts missing: {e}"]
-    if hashlib.sha256(saved.encode()).hexdigest() != steps["facts"]["stdout_sha256"]:
+    if not facts_match(saved, steps["facts"]["stdout_sha256"]):
         return ["the saved facts file does not match the recorded hash (edited after the run)"]
     try:
         rows = read_rows(checklist)
@@ -179,7 +200,7 @@ def verify(bundle: str, manifest: Path, checklist: Path, deck: Path | None) -> l
         else:
             if fresh.returncode != 0:
                 problems.append(f"fresh facts.py run exited {fresh.returncode}")
-            elif hashlib.sha256(fresh.stdout.encode()).hexdigest() != steps["facts"]["stdout_sha256"]:
+            elif not facts_match(fresh.stdout, steps["facts"]["stdout_sha256"]):
                 problems.append("a fresh facts.py run does not match the recorded hash")
     problems += checklist_problems(checklist)
     problems += status_problems(manifest, checklist, steps)
