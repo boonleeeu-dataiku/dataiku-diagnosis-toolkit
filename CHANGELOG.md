@@ -10,6 +10,14 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-10-07
+
+### Added
+
+- Deterministic verdicts, Batch 3a: `scripts/rules_security.py` decides the checks that read the instance's `security` settings block, from the new reader fact `security_settings` (reader 0.15.0, whitelisted keys only, the custom logout URL reduced to its scheme): **ADVSEC-001** (hide error stacks) and **ADVSEC-002** (hide version info): on = Pass, off = Fail; **ADVSEC-003** (both session timeouts 0 = Fail, either set = Pass); **ADVSEC-004** (one session per user: on = Pass, off = Fail); **ADVSEC-005**, **ADVSEC-012** and **SEC-007** (restricted visibility off, users may edit their name and email, secure cookies off): a deviation is Needs Review, because the checklist allows a deliberate choice; **ADVSEC-006** (no custom redirect = Not Applicable, valid http/https redirect = Pass, configured but invalid = Fail); **ADVSEC-010** (iframe hosting off = Pass, on with secure cookies off = Fail, on with secure cookies on = Needs Review). A missing setting or block is Needs Review.
+- `calibrations.md`: new entry for the simple toggles, the `[code-decided]` marks, and anchors for the new ids.
+- `tests/test_skill_boundaries.py`: rule modules may name the keys the reader publishes in `security_settings` (read from the reader's `SECURITY_KEYS`); every other reader-owned layout term is still rejected there.
+
 ## [0.33.2] - 2026-10-07
 
 ### Changed

@@ -111,3 +111,76 @@ def test_every_rule_anchor_equals_its_title_in_the_bundled_checklist():
     for check_id, (anchor, _) in verdicts.RULES.items():
         assert check_id in titles, f"{check_id} is not in the bundled checklist"
         assert verdicts.norm(titles[check_id]) == verdicts.norm(anchor), f"{check_id}: anchor {anchor!r} vs template {titles[check_id]!r}"
+
+
+# --- the `security` settings block (Batch 3a) --------------------------------------------------------------------
+
+SEC_BLOCK = {"ADVSEC-001", "ADVSEC-002", "ADVSEC-003", "ADVSEC-004", "ADVSEC-005", "ADVSEC-006", "ADVSEC-010", "ADVSEC-012", "SEC-007"}
+
+
+def sec(**kw):
+    base = {"hideErrorStacks": "ABSENT", "hideVersionStringsWhenNotLogged": "ABSENT", "sessionsMaxTotalTimeMinutes": "ABSENT",
+            "sessionsMaxIdleTimeMinutes": "ABSENT", "forceSingleSessionPerUser": "ABSENT", "restrictUsersAndGroupsVisibility": "ABSENT",
+            "postLogoutBehavior": "ABSENT", "sameSiteNoneCookies": "ABSENT", "secureCookies": "ABSENT",
+            "enableEmailAndDisplayNameModification": "ABSENT", "disableDataTableLinks": "ABSENT", "postLogoutCustomURL_scheme": "ABSENT"}
+    base.update(kw)
+    return facts(security_settings=base)
+
+
+def test_the_security_block_rules_are_registered():
+    assert SEC_BLOCK <= set(verdicts.RULES)
+
+
+@pytest.mark.parametrize("check_id,key,on,off,off_status", [
+    ("ADVSEC-001", "hideErrorStacks", True, False, "Fail"),
+    ("ADVSEC-002", "hideVersionStringsWhenNotLogged", True, False, "Fail"),
+    ("ADVSEC-004", "forceSingleSessionPerUser", True, False, "Fail"),
+    ("ADVSEC-005", "restrictUsersAndGroupsVisibility", True, False, "Needs Review"),   # may be deliberately left off
+    ("SEC-007", "secureCookies", True, False, "Needs Review"),                          # only safe once all access is HTTPS
+    ("ADVSEC-012", "enableEmailAndDisplayNameModification", False, True, "Needs Review"),  # secure value is false
+])
+def test_simple_toggles(check_id, key, on, off, off_status):
+    assert status(check_id, sec(**{key: on})) == "Pass"
+    assert status(check_id, sec(**{key: off})) == off_status
+    assert status(check_id, sec()) == "Needs Review"                 # key missing from the block
+    assert status(check_id, facts()) == "Needs Review"               # whole block missing
+
+
+@pytest.mark.parametrize("total,idle,expected", [
+    (0, 0, "Fail"), (480, 0, "Pass"), (0, 30, "Pass"), (480, 30, "Pass"),
+    ("ABSENT", "ABSENT", "Needs Review"), (0, "ABSENT", "Needs Review"), ("ABSENT", 30, "Pass"),
+])
+def test_advsec003_session_timeouts_zero_means_unlimited(total, idle, expected):
+    assert status("ADVSEC-003", sec(sessionsMaxTotalTimeMinutes=total, sessionsMaxIdleTimeMinutes=idle)) == expected
+
+
+@pytest.mark.parametrize("behavior,scheme,expected", [
+    ("LOGGED_OUT_PAGE", "ABSENT", "Not Applicable"), ("ABSENT", "ABSENT", "Not Applicable"),
+    ("CUSTOM_URL", "https", "Pass"), ("CUSTOM_URL_POST", "http", "Pass"),
+    ("CUSTOM_URL", "other", "Fail"), ("CUSTOM_URL", "ABSENT", "Fail"),
+])
+def test_advsec006_custom_logout_redirect(behavior, scheme, expected):
+    assert status("ADVSEC-006", sec(postLogoutBehavior=behavior, postLogoutCustomURL_scheme=scheme)) == expected
+
+
+@pytest.mark.parametrize("same_site,secure,expected", [
+    (False, True, "Pass"), (False, False, "Pass"), (False, "ABSENT", "Pass"),
+    (True, True, "Needs Review"),            # enabled with secure cookies: ask for the documented iframe need
+    (True, False, "Fail"),                   # enabled without secure cookies
+    (True, "ABSENT", "Needs Review"),
+    ("ABSENT", True, "Needs Review"),
+])
+def test_advsec010_iframe_hosting(same_site, secure, expected):
+    assert status("ADVSEC-010", sec(sameSiteNoneCookies=same_site, secureCookies=secure)) == expected
+
+
+@pytest.mark.parametrize("scenario", sorted(p.stem for p in (FIXTURES / "expected").glob("*.yaml")))
+def test_security_block_rules_agree_with_the_fixtures_expected_answers(scenario):
+    proc = subprocess.run([sys.executable, "-B", str(FACTS_PY), str(FIXTURES / "bundles" / scenario)], capture_output=True, text=True, check=True)
+    expected = yaml.safe_load((FIXTURES / "expected" / f"{scenario}.yaml").read_text())["items"]
+    rows = [{"id": i, "title": verdicts.RULES[i][0]} for i in SEC_BLOCK]
+    got = {v["id"]: v["status"] for v in verdicts.compute(json.loads(proc.stdout), rows)["verdicts"]}
+    assert set(got) == SEC_BLOCK
+    for check_id, status_ in got.items():
+        if check_id in expected:
+            assert status_ in expected[check_id]["status"], f"{scenario} {check_id}: verdict {status_}, expected {expected[check_id]['status']}"

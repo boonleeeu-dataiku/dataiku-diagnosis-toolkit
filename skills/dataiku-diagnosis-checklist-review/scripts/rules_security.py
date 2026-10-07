@@ -85,3 +85,107 @@ def jek_cgroup_unconfigured(facts):
     if jek:
         return verdict("Fail", f"{jek} JEK-specific cgroup target(s) configured", jek_targets=jek)
     return verdict("Pass", "no JEK-specific cgroup target", jek_targets=jek if jek is not None else 0)
+
+
+# --- the instance's `security` settings block (Batch 3a) ------------------------------------------------------------
+#
+# Policy (calibrations.md, Security): a secure toggle that is on is Pass; one that is off is Fail, except where the
+# checklist itself allows a deliberate choice (ADVSEC-005, 010, 012, SEC-007), which is Needs Review (ask for the
+# documented need). A setting missing from the bundle is Needs Review.
+
+def _security(facts):
+    block = fact(facts, "security_settings")
+    return block if isinstance(block, dict) else None
+
+
+def _toggle(facts, key, *, want, off_status, label):
+    """Pass when `key` equals `want`; otherwise `off_status`; Needs Review when the setting is missing."""
+    sec = _security(facts)
+    if sec is None:
+        return _missing("security settings")
+    value = sec.get(key, ABSENT)
+    if not isinstance(value, bool):
+        return _missing(f"{key}")
+    if value is want:
+        return verdict("Pass", f"{label}: {key}={str(value).lower()}", **{key: value})
+    reason = f"{label}: {key}={str(value).lower()}"
+    if off_status == "Needs Review":
+        reason += " (ask whether intentional)"
+    return verdict(off_status, reason, **{key: value})
+
+
+@rule("ADVSEC-001", "Hiding error stacks")
+def hide_error_stacks(facts):
+    return _toggle(facts, "hideErrorStacks", want=True, off_status="Fail", label="error stacks are hidden")
+
+
+@rule("ADVSEC-002", "Hiding version info")
+def hide_version_info(facts):
+    return _toggle(facts, "hideVersionStringsWhenNotLogged", want=True, off_status="Fail", label="version info is hidden before login")
+
+
+@rule("ADVSEC-003", "Expiring sessions")
+def expiring_sessions(facts):
+    sec = _security(facts)
+    if sec is None:
+        return _missing("security settings")
+    total, idle = sec.get("sessionsMaxTotalTimeMinutes", ABSENT), sec.get("sessionsMaxIdleTimeMinutes", ABSENT)
+    values = {"sessionsMaxTotalTimeMinutes": total, "sessionsMaxIdleTimeMinutes": idle}
+    nums = [v for v in (total, idle) if isinstance(v, int) and not isinstance(v, bool)]
+    if any(v > 0 for v in nums):
+        return verdict("Pass", "a session timeout is set (0 means unlimited)", **values)
+    if len(nums) == 2:
+        return verdict("Fail", "both session timeouts are 0 (unlimited)", **values)
+    return _missing("the session timeout settings")
+
+
+@rule("ADVSEC-004", "Forcing a single session per user")
+def single_session(facts):
+    return _toggle(facts, "forceSingleSessionPerUser", want=True, off_status="Fail", label="one session per user is forced")
+
+
+@rule("ADVSEC-005", "Restricting visibility of groups and users")
+def restrict_visibility(facts):
+    return _toggle(facts, "restrictUsersAndGroupsVisibility", want=True, off_status="Needs Review",
+                   label="users and groups are hidden from other users")
+
+
+@rule("ADVSEC-006", "Redirecting to a custom URL after logout")
+def post_logout_redirect(facts):
+    sec = _security(facts)
+    if sec is None:
+        return _missing("security settings")
+    behavior, scheme = sec.get("postLogoutBehavior", ABSENT), sec.get("postLogoutCustomURL_scheme", ABSENT)
+    values = {"postLogoutBehavior": behavior, "postLogoutCustomURL_scheme": scheme}
+    if behavior in ("CUSTOM_URL", "CUSTOM_URL_POST"):
+        if scheme in ("http", "https"):
+            return verdict("Pass", f"a custom logout redirect is configured ({scheme} URL)", **values)
+        return verdict("Fail", "a custom logout redirect is configured but its URL is not http or https", **values)
+    return verdict("Not Applicable", "no custom logout redirect; the default logged-out page is used", **values)
+
+
+@rule("ADVSEC-010", "Allowing DSS to be hosted inside an iframe")
+def iframe_hosting(facts):
+    sec = _security(facts)
+    if sec is None:
+        return _missing("security settings")
+    same_site, secure = sec.get("sameSiteNoneCookies", ABSENT), sec.get("secureCookies", ABSENT)
+    values = {"sameSiteNoneCookies": same_site, "secureCookies": secure}
+    if not isinstance(same_site, bool):
+        return _missing("sameSiteNoneCookies")
+    if same_site is False:
+        return verdict("Pass", "iframe hosting is not enabled (sameSiteNoneCookies=false)", **values)
+    if secure is False:
+        return verdict("Fail", "iframe hosting is enabled without secure cookies", **values)
+    return verdict("Needs Review", "iframe hosting is enabled (ask for the documented need)", **values)
+
+
+@rule("ADVSEC-012", "Allowing DSS users to edit their display names and emails")
+def users_edit_profile(facts):
+    return _toggle(facts, "enableEmailAndDisplayNameModification", want=False, off_status="Needs Review",
+                   label="users cannot edit their display name and email")
+
+
+@rule("SEC-007", "Secure Cookies Enabled (security.secureCookies)")
+def secure_cookies(facts):
+    return _toggle(facts, "secureCookies", want=True, off_status="Needs Review", label="cookies are marked secure")

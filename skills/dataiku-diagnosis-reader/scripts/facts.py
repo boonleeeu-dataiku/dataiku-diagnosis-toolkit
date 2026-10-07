@@ -295,6 +295,29 @@ def sanity_check():
                  f"{src} (the last-run time is only the file's mtime unless the file carries lastRunTimestamp)")
 
 
+SECURITY_KEYS = ("hideErrorStacks", "hideVersionStringsWhenNotLogged", "sessionsMaxTotalTimeMinutes", "sessionsMaxIdleTimeMinutes",
+                 "forceSingleSessionPerUser", "restrictUsersAndGroupsVisibility", "postLogoutBehavior", "sameSiteNoneCookies",
+                 "secureCookies", "enableEmailAndDisplayNameModification", "disableDataTableLinks")
+
+
+@fact("security_settings")
+def security_settings():
+    """The instance's security toggles from `general-settings.json` > `security`, whitelisted keys only. The custom
+    post-logout URL is reduced to its scheme (`postLogoutCustomURL_scheme`: http, https, other, or ABSENT when unset)."""
+    src = "config/general-settings.json"
+    gs = load_json(src)
+    if gs is None:
+        return absent(src)
+    sec = dig(gs, "security")
+    if sec == ABSENT or not isinstance(sec, dict):
+        return absent(f"{src}: security")
+    out = {k: (sec[k] if isinstance(sec.get(k), (bool, int, str)) else ABSENT) for k in SECURITY_KEYS}
+    url = sec.get("postLogoutCustomURL")
+    out["postLogoutCustomURL_scheme"] = (ABSENT if not isinstance(url, str) or not url.strip()
+                                         else url.split(":", 1)[0].lower() if url.lower().startswith(("http://", "https://")) else "other")
+    return found(out, f"{src}: security (whitelisted keys; a custom logout URL is reduced to its scheme)")
+
+
 @fact("user_isolation")
 def user_isolation():
     src = "config/general-settings.json"

@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.15.0] - 2026-10-07
+
+### Added
+
+- `scripts/facts.py` gains `security_settings`: the instance's security toggles from `config/general-settings.json` > `security`, as a whitelist (`hideErrorStacks`, `hideVersionStringsWhenNotLogged`, `sessionsMaxTotalTimeMinutes`, `sessionsMaxIdleTimeMinutes`, `forceSingleSessionPerUser`, `restrictUsersAndGroupsVisibility`, `postLogoutBehavior`, `sameSiteNoneCookies`, `secureCookies`, `enableEmailAndDisplayNameModification`, `disableDataTableLinks`), each `ABSENT` when not set. A custom post-logout URL is reduced to its scheme (`postLogoutCustomURL_scheme`) so no URL is printed. `ABSENT` as a whole when the file or its `security` block is missing. Verified against the three sample bundles (all carry every whitelisted key).
+
 ## [0.14.0] - 2026-10-07
 
 ### Added

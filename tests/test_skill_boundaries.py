@@ -29,10 +29,23 @@ def _files():
             *sorted((REVIEW_DIR / "scripts").glob("*.py"))]
 
 
+def _reader_fact_keys():
+    """The key names the reader publishes in its `security_settings` fact (facts.py SECURITY_KEYS). A rule must name the keys of
+    the fact it reads, so rule modules may use these; every other layout term is still forbidden there."""
+    import ast
+
+    tree = ast.parse((REPO_ROOT / "skills" / "dataiku-diagnosis-reader" / "scripts" / "facts.py").read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and any(getattr(t, "id", "") == "SECURITY_KEYS" for t in node.targets):
+            return set(ast.literal_eval(node.value))
+    return set()
+
+
 @pytest.mark.parametrize("path", _files(), ids=lambda p: p.name)
 def test_checklist_skill_does_not_document_bundle_layout(path):
     text = path.read_text(encoding="utf-8")
-    found = [t for t in READER_OWNED_TERMS if t in text]
+    allowed = _reader_fact_keys() if path.name.startswith("rules_") else set()
+    found = [t for t in READER_OWNED_TERMS if t in text and not any(t in key for key in allowed)]
     assert not found, f"{path.name} documents reader-owned layout {found}; put it in the reader (upstream)"
 
 
@@ -40,3 +53,10 @@ def test_checklist_skill_makes_the_reader_a_prerequisite():
     text = (REVIEW_DIR / "SKILL.md").read_text(encoding="utf-8")
     for phrase in ("load the `dataiku-diagnosis-reader` skill", "orient.sh", "facts.py", "limitations.md"):
         assert phrase in text, f"SKILL.md no longer says {phrase!r}"
+
+
+def test_the_reader_fact_key_exemption_is_limited_to_rule_modules_and_to_the_published_keys():
+    keys = _reader_fact_keys()
+    assert {"sessionsMaxTotalTimeMinutes", "forceSingleSessionPerUser"} <= keys
+    # SKILL.md and the references stay fully covered, and a layout term outside the fact keys is still caught in a rule module
+    assert not any(t in key for t in READER_OWNED_TERMS if t in ("general-settings.json", "install.ini", "lsblk") for key in keys)

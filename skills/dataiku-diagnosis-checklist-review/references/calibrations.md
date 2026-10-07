@@ -98,6 +98,15 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
 
 ## Security
 
+- **Security toggles in the `security` settings block (ADVSEC-001, ADVSEC-002, ADVSEC-005, ADVSEC-010, ADVSEC-012, SEC-007)
+  [code-decided]:** judge each from its value (`facts.py`, `security_settings`). A secure toggle that is on is **Pass**; one that
+  is off is **Fail** (ADVSEC-001 hide error stacks, ADVSEC-002 hide version info). Where the checklist itself allows a
+  deliberate choice, a deviation is **Needs Review** (ask for the documented need): ADVSEC-005 (restricted visibility off),
+  ADVSEC-012 (users may edit their name and email), SEC-007 (secure cookies off: only safe once all access is HTTPS, which a
+  proxy can hide). ADVSEC-010: iframe hosting off (`sameSiteNoneCookies` false) is **Pass**; on with secure cookies off is **Fail**
+  (the checklist requires them together); on with secure cookies on is **Needs Review**. A setting or the block missing from the
+  bundle is **Needs Review**.
+
 - **HTTPS (SEC-006):** DSS's own config shows only whether DSS itself terminates TLS; an external
   reverse proxy (nginx, ALB, API gateway) is invisible to the bundle.
   - **Pass:** DSS terminates TLS itself (SSL on and a certificate configured, as the reader's
@@ -110,14 +119,14 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
   - **Fail:** only on positive evidence that no HTTPS exists anywhere (e.g. explicit customer
     confirmation on record), not on absence from the bundle.
 
-- **Session expiry, single session per user, clickable links in data tables (ADVSEC-003, ADVSEC-004,
-  ADVSEC-011):** these settings are in the bundle (the reader's `data-dir-config` reference says where),
+- **Session expiry, single session per user, clickable links in data tables (ADVSEC-003 and ADVSEC-004
+  [code-decided], ADVSEC-011):** these settings are in the bundle (the reader's `data-dir-config` reference says where),
   so judge them from the value, never Needs Review because a checklist hint calls them UI-only.
   - Timeouts: `0` means unlimited. **Fail** when both are `0`; **Pass** when either is finite.
   - Single-session or disable-links toggle: off is **Fail**, on is **Pass**.
   - **Needs Review** only when the settings block itself is missing.
 
-- **Custom post-logout redirect (ADVSEC-006):** optional hardening; the default logout page is not a
+- **Custom post-logout redirect (ADVSEC-006) [code-decided]:** optional hardening; the default logout page is not a
   security concern. None configured: **Not Applicable** (say the default page is in use). Valid
   http/https redirect: **Pass**. **Fail** only when one is configured but invalid.
 
@@ -313,12 +322,17 @@ and the row together.
 
 | Id | Title when written |
 |---|---|
+| ADVSEC-001 | Hiding error stacks |
+| ADVSEC-002 | Hiding version info |
 | ADVSEC-003 | Expiring sessions |
 | ADVSEC-004 | Forcing a single session per user |
+| ADVSEC-005 | Restricting visibility of groups and users |
 | ADVSEC-006 | Redirecting to a custom URL after logout |
 | ADVSEC-008 | Restricting exports |
 | ADVSEC-009 | Setting security-related HTTP headers |
+| ADVSEC-010 | Allowing DSS to be hosted inside an iframe |
 | ADVSEC-011 | Preventing links to be clickable in data tables |
+| ADVSEC-012 | Allowing DSS users to edit their display names and emails |
 | ARCH-001 | Separation of Design and Automation Nodes |
 | ARCH-002 | Regular DSS Version Upgrades |
 | ARCH-003 | Supported Operating System Version |
@@ -350,5 +364,6 @@ and the row together.
 | SEC-004 | CGroups Enabled with Memory Limit per Sizing Heuristic |
 | SEC-005 | JEK-Specific CGroup Limits Left Unconfigured |
 | SEC-006 | HTTPS Access Configured for DSS |
+| SEC-007 | Secure Cookies Enabled (security.secureCookies) |
 | SEC-009 | LDAP Authorized Groups Configured |
 | SEC-010 | SSO Enablement Reviewed |

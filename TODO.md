@@ -45,8 +45,12 @@ Per batch: rule + unit tests on the synthetic fixtures, update `EVAL_ITEM_IDS` a
 - Moved out: SCALE-008 needs `OutOfMemoryError` counts from the backend logs (and the config-folder size is often absent); now in Batch 4c with SCALE-007.
 - [ ] Codex run on 0.33.0 (once): the six rules match their verdicts, `RUN VERIFY: PASS`, run files beside the workbook.
 
-### Batch 3 - security settings toggles (14; needs a new reader `security_settings` fact)
-- [ ] ADVSEC-001 to ADVSEC-012, SEC-006, SEC-007
+### Batch 3a - security toggles in the `security` settings block (9; reader 0.15.0 `security_settings`)
+- [x] ADVSEC-001, 002, 003, 004, 005, 006, 010, 012, SEC-007 (0.34.0). Off = Fail for ADVSEC-001/002/004; Needs Review where the checklist allows a deliberate choice (ADVSEC-005, 010, 012, SEC-007); ADVSEC-010 on with secure cookies off = Fail.
+- [ ] Codex run on 0.34.0 (once): the nine rules match their verdicts, `RUN VERIFY: PASS`.
+
+### Batch 3b - settings in `dip.properties` and `install.ini` (5; needs a second reader fact, e.g. `server_config`)
+- [ ] ADVSEC-007 (upload extensions), ADVSEC-008 (export restriction, one-of), ADVSEC-009 (security headers: none = Fail, some = Partial, all restrictive = Pass; needs a definition of restrictive), ADVSEC-011 (`disableDataTableLinks` or the `dip.properties` alternative; its `security` half is already in `security_settings`), SEC-006 (HTTPS: does DSS terminate TLS itself).
 
 ### Batch 4a - Kubernetes, Spark and containers (10; conditional on a cluster; may need reader facts)
 - [ ] ARCH-005, ARCH-006, ARCH-007, ARCH-010, ARCH-011, ARCH-013, ARCH-014, ARCH-015, ARCH-016, ARCH-017
@@ -62,7 +66,7 @@ Per batch: rule + unit tests on the synthetic fixtures, update `EVAL_ITEM_IDS` a
 - Live or external checks (Needs Review plus an `Action:`): ARCH-001, ARCH-008, ARCH-009, ARCH-012, SEC-003, SEC-008, SEC-011,
   SCALE-005, SCALE-016, GENAI-008, GENAI-009, GENAI-010
 
-(Count check: 5 + 6 + 14 + 10 + 8 + 10 + 14 = 67.)
+(Count check: 5 + 6 + 9 + 5 + 10 + 8 + 10 + 14 = 67.)
 
 ## Multi-LLM portability (cross-cutting; applies to every batch)
 
