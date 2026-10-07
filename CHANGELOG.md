@@ -10,6 +10,12 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.33.1] - 2026-10-07
+
+### Changed
+
+- **SCALE-001**: PostgreSQL on the same host (loopback) is now **Pass**, not Partial, with a `notes` comment that it is installed locally on the DSS host. Non-local PostgreSQL is still Pass and another database type is still Fail. The calibration entry, the rule, the unit test and the two fixtures' expected answers (baseline, admin-python) are updated together.
+
 ## [0.33.0] - 2026-10-07
 
 ### Added

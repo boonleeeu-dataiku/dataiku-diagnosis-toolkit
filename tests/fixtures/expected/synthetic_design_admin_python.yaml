@@ -58,8 +58,8 @@ items:
     status: [Fail]
   ADVSEC-009: # no security headers configured in DSS -> Fail
     status: [Fail]
-  SCALE-001:  # PostgreSQL, but on loopback -> Partial
-    status: [Partial]
+  SCALE-001:  # PostgreSQL on loopback -> Pass, with a note that it is installed locally
+    status: [Pass]
     mentions_any: [127.0.0.1, loopback, local]
   SCALE-002:  # Hive metastore on a Hadoop estate -> Pass without a functional test
     status: [Pass]

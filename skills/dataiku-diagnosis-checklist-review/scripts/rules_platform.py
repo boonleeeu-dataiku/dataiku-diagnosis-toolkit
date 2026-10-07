@@ -63,7 +63,7 @@ def external_postgresql(facts):
     if str(kind).lower() != "postgresql":
         return verdict("Fail", f"internal database is {kind}, not PostgreSQL", **values)
     if loopback is True:
-        return verdict("Partial", "PostgreSQL runtime database on the same host (loopback)", **values)
+        return verdict("Pass", "PostgreSQL runtime database, locally installed on the DSS host (loopback)", **values)
     if loopback is False:
         return verdict("Pass", "PostgreSQL runtime database on a non-local host", **values)
     return _missing("the database host")

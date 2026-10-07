@@ -79,7 +79,7 @@ def test_sec004_uses_the_largest_memory_limit_when_several_are_listed():
 
 @pytest.mark.parametrize("db,expected", [
     ({"type": "PostgreSQL", "host_is_loopback": False}, "Pass"),
-    ({"type": "postgresql", "host_is_loopback": True}, "Partial"),
+    ({"type": "postgresql", "host_is_loopback": True}, "Pass"),   # locally installed: Pass, with a comment
     ({"type": "H2", "host_is_loopback": "ABSENT"}, "Fail"),
     ({"type": "ABSENT", "host_is_loopback": "ABSENT"}, "Needs Review"),
     ({"type": "PostgreSQL", "host_is_loopback": "ABSENT"}, "Needs Review"),
@@ -142,6 +142,12 @@ WARN, QUIET = {"empty": False, "messages": 2}, {"empty": True, "messages": 0}
 ])
 def test_arch004_disks_and_sanity_check(vol, sanity, expected):
     assert run("ARCH-004", facts(data_volume_device=vol, sanity_check=sanity)) == expected
+
+
+def test_scale001_loopback_reason_says_it_is_installed_locally():
+    out = verdicts.compute(facts(internal_database={"type": "PostgreSQL", "host_is_loopback": True}),
+                           [{"id": "SCALE-001", "title": verdicts.RULES["SCALE-001"][0]}])["verdicts"][0]
+    assert out["status"] == "Pass" and "locally installed" in out["reason"]
 
 
 def test_an_undecided_row_is_listed_and_gets_no_verdict():

@@ -215,7 +215,8 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
 
 - **External PostgreSQL runtime database (SCALE-001) [code-decided]:** judge the internal database's type and host (the
   reader's `data-dir-config` reference says where). PostgreSQL on a non-local host: **Pass**. On the same
-  host (loopback or the DSS host itself): **Partial**. Not PostgreSQL: **Fail**. Pool size against
+  host (loopback): also **Pass**, with a `notes` bullet saying it is installed locally on the DSS host (a backup and
+  availability caveat, not a status change). Not PostgreSQL: **Fail**. Pool size against
   `max_connections` and backups are `notes` only.
   When `facts.py`'s `internal_database` reports `password_stored_in_plaintext: true`, `notes` carries
   `Action: rotate the stored database credential and move it to a secrets store` (never the value). It does
