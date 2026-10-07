@@ -13,7 +13,7 @@ Why this isn't a `claude plugin eval` case: plugin evals have no custom-code gra
 LLM judges refuse binary files, so a .xlsx can't be scored item by item there. The
 behavioural cases that can be graded from the reply or the tool calls live in evals/.
 
-Each run costs real model usage (a full review of 11 items). Results go to
+Each run costs real model usage (a full review of 34 items). Results go to
 evals/results/review/<timestamp>/, which is gitignored. --save-baseline also copies the
 summary to evals/baselines/review-<model>.json for tests/evals/compare.py.
 """

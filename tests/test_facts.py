@@ -4,6 +4,7 @@ Runs it on the synthetic fixture bundles only (never a real bundle). A value mis
 missed by hand is what made repeat reviews disagree, so these pin the contract: explicit
 ABSENT, leaf-key search finds a limit under jekSettings, loopback detection, no secret values."""
 
+import functools
 import json
 import shutil
 import subprocess
@@ -17,11 +18,31 @@ FACTS = REPO_ROOT / "skills" / "dataiku-diagnosis-reader" / "scripts" / "facts.p
 BUNDLES = FIXTURES / "bundles"
 
 
-def run_facts(bundle):
-    proc = subprocess.run([sys.executable, "-B", str(FACTS), str(BUNDLES / bundle)],
-                          capture_output=True, text=True, check=False)
+def _run(bundle_dir):
+    proc = subprocess.run([sys.executable, "-B", str(FACTS), str(bundle_dir)], capture_output=True, text=True, check=False)
     assert proc.returncode == 0, proc.stderr
-    return json.loads(proc.stdout)["facts"]
+    return proc.stdout
+
+
+@functools.lru_cache(maxsize=None)
+def _fixture_facts(bundle):
+    """The fixture bundles are read-only, so one run per bundle serves every test."""
+    return json.loads(_run(BUNDLES / bundle))["facts"]
+
+
+def run_facts(bundle):
+    return _fixture_facts(bundle)
+
+
+def mutated_bundle(tmp_path, src, edit):
+    """Copy a fixture bundle and apply edit(general_settings_dict); return the new bundle dir."""
+    bundle = tmp_path / "bundle"
+    shutil.copytree(BUNDLES / src, bundle)
+    settings = next(bundle.rglob("general-settings.json"))
+    doc = json.loads(settings.read_text())
+    edit(doc)
+    settings.write_text(json.dumps(doc))
+    return bundle
 
 
 def test_loopback_database_and_limit_under_jek_settings():
@@ -48,14 +69,9 @@ def test_missing_settings_are_explicit_absent_never_false_or_zero():
 
 def test_absent_marker_is_not_masked_by_secret_key_redaction(tmp_path):
     """A missing key whose name looks secret-ish ("authenticationEnabled") must still read ABSENT."""
-    bundle = tmp_path / "bundle"
-    shutil.copytree(BUNDLES / "synthetic_design_baseline", bundle)
-    settings = next(bundle.rglob("general-settings.json"))
-    doc = json.loads(settings.read_text())
-    doc.pop("ldapSettings")
-    settings.write_text(json.dumps(doc))
-    proc = subprocess.run([sys.executable, "-B", str(FACTS), str(bundle)], capture_output=True, text=True, check=True)
-    assert json.loads(proc.stdout)["facts"]["sso_and_ldap"]["value"]["ldapSettings.authenticationEnabled"] == "ABSENT"
+    bundle = mutated_bundle(tmp_path, "synthetic_design_baseline", lambda doc: doc.pop("ldapSettings"))
+    facts = json.loads(_run(bundle))["facts"]
+    assert facts["sso_and_ldap"]["value"]["ldapSettings.authenticationEnabled"] == "ABSENT"
 
 
 def test_cgroup_limit_is_reported_as_a_percentage_of_host_memory():
@@ -73,20 +89,16 @@ def test_no_fact_errors(bundle):
 
 def test_plaintext_database_password_is_flagged_but_never_printed(tmp_path):
     secret = "Sup3r-S3cret-Value"
-    bundle = tmp_path / "bundle"
-    shutil.copytree(BUNDLES / "synthetic_design_baseline", bundle)
-    settings = next(bundle.rglob("general-settings.json"))
-    doc = json.loads(settings.read_text())
-    doc["internalDatabase"]["connection"].setdefault("params", {})["password"] = secret
-    settings.write_text(json.dumps(doc))
-    proc = subprocess.run([sys.executable, "-B", str(FACTS), str(bundle)], capture_output=True, text=True, check=True)
-    assert secret not in proc.stdout
-    assert json.loads(proc.stdout)["facts"]["internal_database"]["value"]["password_stored_in_plaintext"] is True
+    bundle = mutated_bundle(tmp_path, "synthetic_design_baseline",
+                            lambda doc: doc["internalDatabase"]["connection"].setdefault("params", {}).update(password=secret))
+    out = _run(bundle)
+    assert secret not in out
+    assert json.loads(out)["facts"]["internal_database"]["value"]["password_stored_in_plaintext"] is True
 
 
 def _facts_for(bundle_dir):
-    proc = subprocess.run([sys.executable, "-B", str(FACTS), str(bundle_dir)], capture_output=True, text=True, check=True)
-    return proc.stdout, json.loads(proc.stdout)["facts"]
+    out = _run(bundle_dir)
+    return out, json.loads(out)["facts"]
 
 
 def test_data_volume_device_follows_the_data_dir_to_its_disk_rota():
@@ -117,13 +129,8 @@ def test_admin_cleanup_scenarios_summarise_type_activity_and_triggers_without_re
 
 def test_deployer_reports_target_host_and_never_the_api_key(tmp_path):
     key = "Zk9-deployer-API-key-value"
-    bundle = tmp_path / "bundle"
-    shutil.copytree(BUNDLES / "synthetic_design_k8s_remote", bundle)
-    settings = next(bundle.rglob("general-settings.json"))
-    doc = json.loads(settings.read_text())
-    doc["deployerClientSettings"]["apiKey"] = key
-    doc["deployerClientSettings"]["nodeUrl"] = "https://user:pw@deployer.synthetic.example:11200/x"
-    settings.write_text(json.dumps(doc))
+    bundle = mutated_bundle(tmp_path, "synthetic_design_k8s_remote", lambda doc: doc["deployerClientSettings"].update(
+        apiKey=key, nodeUrl="https://user:pw@deployer.synthetic.example:11200/x"))
     out, facts = _facts_for(bundle)
     dep = facts["deployer"]["value"]
     assert dep["mode"] == "REMOTE" and dep["target_host"] == "deployer.synthetic.example:11200"
@@ -133,8 +140,8 @@ def test_deployer_reports_target_host_and_never_the_api_key(tmp_path):
 
 def test_ldap_authorized_groups_are_counted_not_named():
     assert run_facts("synthetic_design_baseline")["sso_and_ldap"]["value"]["ldapSettings.authorizedGroups_count"] == 0
-    stdout, facts = _facts_for(BUNDLES / "synthetic_design_k8s_remote")
-    assert facts["sso_and_ldap"]["value"]["ldapSettings.authorizedGroups_count"] == 2
+    stdout = _run(BUNDLES / "synthetic_design_k8s_remote")
+    assert json.loads(stdout)["facts"]["sso_and_ldap"]["value"]["ldapSettings.authorizedGroups_count"] == 2
     assert "dss-users" not in stdout
 
 

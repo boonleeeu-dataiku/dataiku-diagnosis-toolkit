@@ -18,15 +18,19 @@ spreadsheet.
   own directory) if the user doesn't have their own checklist. Applies a set of user-defined
   check-specific calibrations (e.g. Kubernetes-conditional items, version currency, HTTPS behind
   a reverse proxy, automation-node existence from a design-node bundle) — see the skill's
-  `references/calibrations.md`. Authored directly in this repo.
+  `references/calibrations.md`. Its `scripts/run_step.py` runs the reader's `orient` and `facts`
+  scripts, records that they ran in a run manifest, and `verify`s the finished review. Authored
+  directly in this repo.
 - **`skills/dataiku-review-deck-builder/`** — step 2 of the workflow: turns a completed checklist
   (produced by `dataiku-diagnosis-checklist-review`) into a branded, customer-facing Platform
   Review `.pptx` deck, via the `mcp-server-review-generator` tools below. Authored directly in
   this repo. It builds the verdict-first "v2" deck (about 20 slides: verdict on Pass / applicable with
   N/A excluded, instance snapshot, three risks, quick wins, what we need from you, roadmap, then an
-  appendix of Fail / Partial / Needs Review rows), with a `narrative.json` that Claude drafts
+  appendix of Fail / Partial / Needs Review rows), with a `narrative.json` that the agent drafts
   from each bundle's own checklist on every run (the tool validates it against item statuses). A build
   without a narrative, possible only from the plain script, falls back to generic text derived from cells.
+- **`codex-skills/dataiku-codex-workflow/`** — Codex-only companion skill that translates tool and
+  file-access instructions for Codex (see [Codex plugin](#codex-plugin)).
 - **`mcp-server-review-generator/`** — a local Python MCP server exposing
   `build_platform_review_deck`, `validate_deck`, `analyze_checklist` and `write_summary` tools that generate/validate the deck and
   return the facts its narrative must cite. Vendored
@@ -61,7 +65,7 @@ The Claude desktop app has the same flow under its Claude Code panel: **+** → 
 install.
 
 Caveat: a local-path install loads live from that directory (no separate cache copy), so the
-`.venv/` from [One-time setup](#one-time-setup) below persist indefinitely and
+`.venv/` from [One-time setup](#one-time-setup) below persists indefinitely and
 `/plugin marketplace update` is a no-op. A GitHub-sourced install instead caches each commit
 under `~/.claude/plugins/cache/...`; every time it's updated to a new commit, that's a **new**
 cache directory with no prior build, so the lazy-bootstrap in `.mcp.json` reruns the full
@@ -99,8 +103,7 @@ all, the skill falls back to a standard, unbranded v2 deck (`allow_standard_deck
 
 ## Security / privacy
 
-This server only ever touches paths explicitly passed as `bundle_root`/`relative_path` by the
-calling agent. **No diagnosis bundle data ships with this plugin** — never point it at, or copy
+The review generator only reads the checklist, narrative and logo paths the calling agent gives it. **No diagnosis bundle data ships with this plugin** — never point it at, or copy
 into it, real customer diagnosis bundles; treat any such bundle as private data to be supplied
 by whoever is running a review, not part of the toolkit itself.
 
@@ -117,7 +120,7 @@ changing a skill, a calibration, or the model you use.
 | Tier | What | Command | Cost |
 |---|---|---|---|
 | 1. Unit | The review generator's own suite, vendored from upstream: `mcp-server-review-generator/tests/` (pytest) | `scripts/test.sh fast` | none |
-| 2. Toolkit | Cross-component contracts (template ↔ deck generator schema, skill ↔ tool wording), manifest consistency, vendored-copy drift against the sibling upstream checkouts, and the review-output checker | `scripts/test.sh fast` | none |
+| 2. Toolkit | Cross-component contracts (template ↔ deck generator schema, skill ↔ tool wording), manifest consistency, vendored-copy drift against the sibling upstream checkouts, and the review-output checker | same command (`fast` runs tiers 1 and 2) | none |
 | 3. LLM evals | The skills end to end with a real model, against synthetic bundles. `evals/` holds `claude plugin eval` cases for the deck builder, with mocked MCP tools. `tests/evals/run_review_eval.py` runs the checklist-review skill and scores its workbook item by item | `scripts/test.sh eval [--model <id>] [--runs 3]` | model usage |
 
 **Tiers 1–2** need the one-time setup. `scripts/test.sh` adds `pytest` to the review generator's

@@ -1,6 +1,7 @@
 # mcp-server-review-generator build/runtime artifacts
 mcp-server-review-generator/.venv/
 *.pyc
+__pycache__/
 
 # 134MB, user-supplied branding asset -- see README's One-time setup
 mcp-server-review-generator/resources/Dataiku Branding Template 2026.pptx

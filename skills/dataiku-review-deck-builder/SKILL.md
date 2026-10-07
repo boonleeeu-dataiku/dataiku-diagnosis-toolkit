@@ -64,7 +64,6 @@ Rules:
   never state counts you tallied yourself (e.g. "nine options fail"); the validator rejects them, so
   rephrase without the number or use one the cells carry.
 - Never cite a Pass item as a problem unless it is under `caveats`. Effort is indicative.
-- If the tool rejects the narrative, fix the narrative (or the checklist), not the tool.
 
 **Length budgets.** `validate_deck` checks structure, never layout, and the generator does not shrink or
 clip narrative text, so text that is too long overlaps its neighbour on the slide. Treat these budgets,

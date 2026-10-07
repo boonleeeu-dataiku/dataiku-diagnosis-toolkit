@@ -166,3 +166,16 @@ def test_notes_format_lint(rg_builder, tmp_path):
     ]}
     path = rg_builder.build_checklist(tmp_path / "x.xlsx", sections)
     assert "ARCH-001: notes is 400 chars (max ~350)." in cro.check(path).structure
+
+
+def test_eval_item_ids_agree_across_builder_checklist_and_expected_files():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("build_fixtures", FIXTURES / "build_fixtures.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    wanted = set(module.EVAL_ITEM_IDS)
+    assert {it.id for items in eval_items().values() for it in items} == wanted
+    for scenario in SCENARIOS:
+        spec = yaml.safe_load((FIXTURES / "expected" / f"{scenario}.yaml").read_text())
+        assert set(spec["items"]) == wanted, scenario

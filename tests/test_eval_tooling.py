@@ -33,7 +33,7 @@ def test_summarize_rates():
 
 
 def test_compare_flags_only_real_drops():
-    ids = [f"I{n}" for n in range(11)]  # the eval checklist's size
+    ids = [f"I{n}" for n in range(34)]  # the eval checklist's size
     perfect = {i: True for i in ids}
     base = run_review_eval.summarize([run("s", r, perfect) for r in (1, 2, 3)], "old")
 

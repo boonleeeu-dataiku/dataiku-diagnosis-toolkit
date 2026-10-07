@@ -5,11 +5,10 @@ holds checklist judgment only, and must point at the reader instead of re-docume
 A new "where/how do I read X" fact belongs in the reader's references (upstream, then re-sync), not
 in the checklist skill. When this test fails, move the fact to the reader and point to it."""
 
-from pathlib import Path
-
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+from conftest import REPO_ROOT
+
 REVIEW_DIR = REPO_ROOT / "skills" / "dataiku-diagnosis-checklist-review"
 
 # Reader-owned layout facts: they must not creep into the checklist skill's own text.

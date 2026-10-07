@@ -34,8 +34,16 @@ def reader_version() -> str:
     return m.group(1) if m else "unknown"
 
 
+FACTS_TIMEOUT = 600
+
+
 def load(manifest: Path) -> dict:
-    return json.loads(manifest.read_text(encoding="utf-8")) if manifest.exists() else {"steps": {}}
+    if not manifest.exists():
+        return {"steps": {}}
+    data = json.loads(manifest.read_text(encoding="utf-8"))
+    if not isinstance(data.get("steps"), dict):
+        raise ValueError("manifest has no 'steps' map")
+    return data
 
 
 def facts_path(manifest: Path) -> Path:
@@ -43,11 +51,16 @@ def facts_path(manifest: Path) -> Path:
 
 
 def run(step: str, bundle: str, manifest: Path) -> int:
-    proc = subprocess.run([*STEPS[step], bundle], capture_output=True, text=True)
+    try:
+        proc = subprocess.run([*STEPS[step], bundle], capture_output=True, text=True)
+        data = load(manifest)
+        data["reader_version"] = reader_version()
+    except (OSError, ValueError) as e:
+        print(f"run_step.py: cannot run {step}: {e}", file=sys.stderr)
+        return 2
     sys.stdout.write(proc.stdout)
     sys.stderr.write(proc.stderr)
-    data = load(manifest)
-    data["reader_version"] = reader_version()
+    manifest.parent.mkdir(parents=True, exist_ok=True)
     data["steps"][step] = {"exit_status": proc.returncode, "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                            "stdout_sha256": hashlib.sha256(proc.stdout.encode()).hexdigest()}
     manifest.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
@@ -59,11 +72,17 @@ def run(step: str, bundle: str, manifest: Path) -> int:
 def checklist_problems(path: Path) -> list[str]:
     import openpyxl
 
-    wb = openpyxl.load_workbook(path, read_only=True)
-    if wb.sheetnames[0] != "Summary":
-        return ["checklist's first sheet is not Summary (write_summary not run)"]
-    total = next((row[1] for row in wb["Summary"].iter_rows(values_only=True) if row and row[0] == "Total"), None)
-    rows = sum(1 for ws in wb.worksheets[1:] for r in ws.iter_rows(min_row=2, values_only=True) if r and r[0])
+    try:
+        wb = openpyxl.load_workbook(path, read_only=True)
+    except Exception as e:  # missing, unreadable or not an xlsx
+        return [f"cannot open checklist {path}: {e}"]
+    try:
+        if wb.sheetnames[0] != "Summary":
+            return ["checklist's first sheet is not Summary (write_summary not run)"]
+        total = next((row[1] for row in wb["Summary"].iter_rows(values_only=True) if row and row[0] == "Total"), None)
+        rows = sum(1 for ws in wb.worksheets[1:] for r in ws.iter_rows(min_row=2, values_only=True) if r and r[0])
+    finally:
+        wb.close()
     if total != rows:
         return [f"Summary Total {total} != {rows} checklist rows (Summary is stale or missing)"]
     return []
@@ -71,16 +90,25 @@ def checklist_problems(path: Path) -> list[str]:
 
 def verify(bundle: str, manifest: Path, checklist: Path, deck: Path | None) -> list[str]:
     problems = []
-    steps = load(manifest)["steps"]
+    try:
+        steps = load(manifest)["steps"]
+    except (OSError, ValueError) as e:
+        return [f"cannot read manifest {manifest}: {e}"]
     for step in STEPS:
         if step not in steps:
             problems.append(f"{step} not recorded in the manifest")
         elif steps[step]["exit_status"] != 0:
             problems.append(f"{step} exited {steps[step]['exit_status']}")
     if "facts" in steps:
-        fresh = subprocess.run([*STEPS["facts"], bundle], capture_output=True, text=True)
-        if hashlib.sha256(fresh.stdout.encode()).hexdigest() != steps["facts"]["stdout_sha256"]:
-            problems.append("a fresh facts.py run does not match the recorded hash")
+        try:
+            fresh = subprocess.run([*STEPS["facts"], bundle], capture_output=True, text=True, timeout=FACTS_TIMEOUT)
+        except (OSError, subprocess.TimeoutExpired) as e:
+            problems.append(f"fresh facts.py run failed: {e}")
+        else:
+            if fresh.returncode != 0:
+                problems.append(f"fresh facts.py run exited {fresh.returncode}")
+            elif hashlib.sha256(fresh.stdout.encode()).hexdigest() != steps["facts"]["stdout_sha256"]:
+                problems.append("a fresh facts.py run does not match the recorded hash")
     problems += checklist_problems(checklist)
     if deck is not None:
         narrative = checklist.with_name(checklist.stem + "_narrative.json")

@@ -200,7 +200,7 @@ def check(workbook: Path, bundle: Path | None = None, expected: Path | None = No
                         f"Summary {block} lists {sorted(map(str, got_ids))}, expected {sorted(expected_ids)}."
                     )
         except read_checklist.ChecklistFormatError:
-            pass  # reported by collect_data_warnings below
+            report.structure.append("checklist format could not be parsed for the Summary comparison")
         try:
             for w in data_checks.collect_data_warnings(workbook):
                 report.structure.append(f"data_warning: {w}")

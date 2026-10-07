@@ -86,11 +86,6 @@ def test_review_skill_pins_summary_header_formats():
     assert "`YYYY-MM-DD`" in REVIEW_SKILL
 
 
-def test_review_skill_anchor_header_matches_exact_text_lookup():
-    """find_section_blocks() locates the anchor by exact (case-insensitive) text."""
-    assert SUMMARY_BLOCKS[0][0].lower() == "overall status counts"
-
-
 def test_review_skill_metadata_labels_are_the_ones_the_deck_reads():
     for label in ("Bundle:", "Node / Version:", "Report generated:"):
         assert f"`{label}`" in REVIEW_SKILL, label

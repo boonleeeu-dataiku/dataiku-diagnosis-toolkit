@@ -73,3 +73,25 @@ def test_verify_fails_on_missing_or_stale_summary_and_missing_deck(tmp_path):
     _checklist(xlsx)
     out = _sh("verify", BUNDLE, "--manifest", manifest, "--checklist", xlsx, "--deck", tmp_path / "d.pptx")
     assert out.returncode == 1 and "missing" in out.stdout
+
+
+def test_verify_reports_a_bad_checklist_or_manifest_as_a_fail_line_not_a_traceback(tmp_path):
+    manifest = tmp_path / "r_run_manifest.json"
+    _record_both(manifest)
+    bad = tmp_path / "bad.xlsx"
+    bad.write_text("not a workbook")
+    out = _sh("verify", BUNDLE, "--manifest", manifest, "--checklist", bad)
+    assert out.returncode == 1 and "cannot open checklist" in out.stdout and "Traceback" not in out.stderr
+    manifest.write_text("{not json")
+    xlsx = tmp_path / "r.xlsx"
+    _checklist(xlsx)
+    out = _sh("verify", BUNDLE, "--manifest", manifest, "--checklist", xlsx)
+    assert out.returncode == 1 and "cannot read manifest" in out.stdout and "Traceback" not in out.stderr
+
+
+def test_run_creates_the_manifest_directory_and_rejects_a_corrupt_manifest(tmp_path):
+    manifest = tmp_path / "new" / "dir" / "r_run_manifest.json"
+    assert _sh("run", "orient", BUNDLE, "--manifest", manifest).returncode == 0 and manifest.exists()
+    manifest.write_text("{not json")
+    out = _sh("run", "orient", BUNDLE, "--manifest", manifest)
+    assert out.returncode == 2 and "cannot run orient" in out.stderr and "Traceback" not in out.stderr

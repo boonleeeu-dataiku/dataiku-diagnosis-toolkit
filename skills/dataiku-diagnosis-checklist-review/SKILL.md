@@ -75,11 +75,11 @@ If it shows a node type the reader hasn't verified (e.g. `deployer`) or no data-
 the bundle cannot support and mark the rows that depend on it **Needs Review**, not Fail.
 
 Then run `scripts/run_step.py run facts <bundle_root> --manifest <stem>_run_manifest.json` once (it runs the
-reader's `facts.py` and saves the JSON beside the manifest as `<stem>_facts.json`). It prints the values many checks depend on (heap sizes, host memory, config folder size, database
-host, concurrency limits, SSO, user isolation, cgroups, connections, GenAI and plugin presence), each with
-its `source`, and an explicit `ABSENT` for a setting that isn't in the bundle. This replaces hand-reading
-the big settings files, which repeat runs have mis-stated or missed. If it can't run or errors, say so in
-your final summary and use the reader's normal procedure.
+reader's `facts.py` and saves the JSON beside the manifest as `<stem>_facts.json`). It prints the values many checks
+depend on (heap sizes, host memory, config folder size, database host, concurrency limits, SSO, user isolation,
+cgroups, connections, GenAI and plugin presence), each with its `source`, and an explicit `ABSENT` for a setting
+that isn't in the bundle. How to use it is in step 4. If it can't run or errors, say so in your final summary and
+use the reader's normal procedure.
 
 ## 2. Read the checklist fully
 
