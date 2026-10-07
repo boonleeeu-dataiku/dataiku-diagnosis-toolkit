@@ -2,8 +2,8 @@
 
 ## Status and start here (updated 2026-10-07)
 
-Versions: toolkit **0.37.0** (tag `v0.37.0`, local only), reader **0.18.0** (`skill-v0.18.0`, local only, upstream repo `../Diagnosis Reader/`), Checklist Generator
-**0.4.0** (`v0.4.0`, `../Dataiku Checklist Generator/`; ids and titles frozen in its `config/id_registry.yaml`). 0.37.0 and reader 0.18.0 are committed and tagged, not pushed.
+Versions: toolkit **0.37.0** (tag `v0.37.0`), reader **0.18.0** (`skill-v0.18.0`, upstream repo `../Diagnosis Reader/`), Checklist Generator
+**0.4.0** (`v0.4.0`, `../Dataiku Checklist Generator/`; ids and titles frozen in its `config/id_registry.yaml`). Everything is pushed.
 
 Done: the verdict framework (Batch 0) and rules for **38 of 67 checks**: SEC-001/002/004/005/006/007/009/010, SCALE-001/006/009/011,
 ARCH-004, ADVSEC-001 to 012 and (0.36.0) GENAI-001/003/004/005/006/007/009 and (0.37.0) SCALE-002/003/004/007/008/010. `run_step.py verdicts` computes them, `verify` fails on any workbook status that differs.
