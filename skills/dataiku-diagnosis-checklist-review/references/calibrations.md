@@ -41,30 +41,47 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
 
 ## Kubernetes, containers and Spark
 
-- **Kubernetes-conditional checks in general (ARCH-010, ARCH-013, Spark-on-K8s, containerized execution,
+- **Kubernetes-conditional checks in general (ARCH-007, ARCH-010, ARCH-011, ARCH-013, ARCH-016, ARCH-017 [code-decided]; Spark-on-K8s, containerized execution,
   cluster configuration):** first determine whether a Kubernetes cluster is attached to the instance at
   all (the reader's `data-dir-config` reference says how). None attached: **Not Applicable** for any
   check that depends on Kubernetes/Elastic Compute. Attached: a valid containerized execution
-  configuration is a must-have; if none is defined, **Fail**.
+  configuration is a must-have; if none is defined, **Fail**. This holds even when execution configs aimed at Kubernetes
+  are defined without an attached cluster (an implicit cluster). Decided from `facts.py`'s `kubernetes`. ARCH-014 (topology, autoscaling) and
+  ARCH-015 (cluster sizing) stay with the model: they need node-group and capacity data a bundle never holds (Needs Review
+  with an `Action:` when a cluster is attached, Not Applicable without one).
+
+- **Valid Spark configuration (ARCH-005) [code-decided]:** Spark off: **Not Applicable**. Enabled with at least one execution
+  config that sets executor or driver resources: **Pass**; enabled with none: **Fail**. The enabled flag missing: **Needs Review**.
+
+- **Containerized configs and cluster (ARCH-010, ARCH-013) [code-decided]:** attached with at least one Kubernetes execution
+  config that sets a memory limit: Pass (configs without any limit: Needs Review; none at all: Fail). A Kubernetes cluster
+  definition in the bundle: Pass; attached with no definition in the bundle: Needs Review.
+
+- **Global defaults (ARCH-016) [code-decided]:** with a cluster attached, a default cluster set: **Pass**; no default cluster set: **Fail**;
+  no cluster attached: **Not Applicable**; anything else, such as an unreadable attachment or default-cluster setting: **Needs Review**. The default execution config (and its memory limit) is `notes` only.
+
+- **Containerized visual recipes (ARCH-017) [code-decided]:** the feature on and a default visual-recipe execution config set: **Pass**;
+  anything else on an attached cluster: **Needs Review** (offloading intent unknown), never Fail. Base-image build evidence stays a `notes` item.
 
 - **Spark validation on a non-Kubernetes estate (ARCH-008):** worded for Spark on Kubernetes (executor
   pods). No cluster attached and Spark on YARN/Hadoop: **Not Applicable**, per the rule above.
 
-- **Containerized execution baseline (ARCH-011; e.g. 'Standard' ~200MB/16000MB, 'Webapp' ~500MB/500MB):**
+- **Containerized execution baseline (ARCH-011) [code-decided]; e.g. 'Standard' ~200MB/16000MB, 'Webapp' ~500MB/500MB):**
   the checklist's baseline is an illustrative example, not names or sizes to match. **Pass** when there
   are **two or more configs whose memory or CPU requests/limits genuinely differ**, whatever the names.
-  If all configs are identically sized despite different names, that is a real gap: say so in `notes`.
+  If all configs are identically sized despite different names, that is a real gap: say so in `notes`. A single config or identical sizing is **Needs Review**; none with a cluster attached is **Fail**.
 
-- **Spark baseline configs (ARCH-006):** same logic, baseline illustrative. Two or more Spark execution
-  configs whose sizing genuinely differs: **Pass**. Only one, or all identically sized: **Partial**.
+- **Spark baseline configs (ARCH-006) [code-decided]:** same logic, baseline illustrative. Spark explicitly off: **Not Applicable**. Two or more Spark execution
+  configs whose sizing genuinely differs: **Pass**. Only one, or all identically sized: **Needs Review**.
   None: **Fail**.
 
-- **Per-user Kubernetes namespace (ARCH-007; Spark or containerized configs, e.g. `dss-ns-${dssUserLogin}`):**
+- **Per-user Kubernetes namespace (ARCH-007) [code-decided]; (Spark or containerized configs, e.g. `dss-ns-${dssUserLogin}`):**
   for a **managed** cluster, a namespace parameter provisioned with a dynamic/templated variable (such as
   `${namespace}`) is sufficient: **Pass** (not Needs Review) without tracing the variable, and note the
   field/value seen in `evidence_found`. For a **manual**/externally-registered cluster, namespace
   behaviour may be governed outside DSS, so judge it on its own merits. (The reader's `data-dir-config`
-  reference says where the namespace fields live and how to tell managed from manual.)
+  reference says where the namespace fields live and how to tell managed from manual.) In code: every Kubernetes-targeting config templated = **Pass**; a fixed namespace
+  or a missing one = **Needs Review** (managed or manual cluster alike). Spark configs that don't target Kubernetes (YARN) are ignored.
 
 ## GenAI
 
@@ -153,12 +170,11 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
 
 - **LDAP authorized groups (SEC-009) [code-decided]:** conditional on LDAP being enabled (`facts.py`, `sso_and_ldap`).
   Enabled with one or more authorized groups: **Pass** (give the count, never the names). Enabled with
-  none: **Fail**. LDAP not enabled: **Not Applicable**.
+  none: **Needs Review** (ask whether intentional). LDAP not enabled: **Not Applicable**.
 
-- **SSO enablement (SEC-010) [code-decided]:** judge from `facts.py` `sso_and_ldap` (SSO and LDAP enabled flags; give the
-  protocol, never any secret). Check in this order: SSO disabled: **Fail** (whatever LDAP is), with an
-  `Action:` in `notes` to discuss the benefits of SSO with the customer. SSO and LDAP both enabled: **Pass**.
-  SSO enabled but LDAP disabled, or either setting missing from the bundle: **Needs Review**.
+- **SSO enablement (SEC-010) [code-decided]:** judge from `facts.py` `sso_and_ldap` (the SSO enabled flag; give the
+  protocol, never any secret). SSO enabled: **Pass** (whatever LDAP is). SSO disabled: **Fail**, with an
+  `Action:` in `notes` to discuss the benefits of SSO with the customer. The SSO flag missing from the bundle: **Needs Review**.
 
 - **UIF (SEC-002) [code-decided]:** impersonation enabled with at least one user or group rule (the reader's lookup
   table says where): **Pass**. Whether the OS identities exist is a live check (`notes` only).
@@ -369,12 +385,17 @@ and the row together.
 | ARCH-002 | Regular DSS Version Upgrades |
 | ARCH-003 | Supported Operating System Version |
 | ARCH-004 | SSD Storage for DSS |
+| ARCH-005 | Valid Spark Configuration for Spark Jobs |
 | ARCH-006 | Baseline Spark Configuration Set (High/Standard/Large-memory/High I/O) |
 | ARCH-007 | Kubernetes Namespace and Auth Recommendations for Spark |
 | ARCH-008 | Functional Validation of Spark Execution (Recipe & Notebook) |
 | ARCH-010 | Valid Containerized Execution Configuration |
 | ARCH-011 | Baseline Container Execution Configs (Standard, Webapp) and Namespace Settings |
 | ARCH-013 | Valid Cluster Configuration for Elastic Compute |
+| ARCH-014 | Recommended Cluster Topology (Single Managed Cluster, Node Groups, Autoscaling) |
+| ARCH-015 | Appropriate Cluster Sizing |
+| ARCH-016 | Global Default Cluster and Default Execution Config Set (if Elastic AI used) |
+| ARCH-017 | Containerized Visual Recipes (CDE) Enabled and Base Image Built |
 | GENAI-001 | Internal Code Environments for RAG, Document Extraction, PII Detection |
 | GENAI-003 | Trace Explorer Default Configuration |
 | GENAI-004 | AI Services Terms of Use Acceptance & Enablement |

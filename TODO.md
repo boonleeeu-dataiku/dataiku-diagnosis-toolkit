@@ -2,15 +2,15 @@
 
 ## Status and start here (updated 2026-10-07)
 
-Versions: toolkit **0.37.0** (tag `v0.37.0`), reader **0.18.0** (`skill-v0.18.0`, upstream repo `../Diagnosis Reader/`), Checklist Generator
-**0.4.0** (`v0.4.0`, `../Dataiku Checklist Generator/`; ids and titles frozen in its `config/id_registry.yaml`). Everything is pushed.
+Versions: toolkit **0.38.0** (tag `v0.38.0`, local only), reader **0.19.0** (`skill-v0.19.0`, local only, upstream repo `../Diagnosis Reader/`), Checklist Generator
+**0.4.0** (`v0.4.0`, `../Dataiku Checklist Generator/`; ids and titles frozen in its `config/id_registry.yaml`). 0.38.0 and reader 0.19.0 are committed and tagged, not pushed.
 
-Done: the verdict framework (Batch 0) and rules for **38 of 67 checks**: SEC-001/002/004/005/006/007/009/010, SCALE-001/006/009/011,
-ARCH-004, ADVSEC-001 to 012 and (0.36.0) GENAI-001/003/004/005/006/007/009 and (0.37.0) SCALE-002/003/004/007/008/010. `run_step.py verdicts` computes them, `verify` fails on any workbook status that differs.
+Done: the verdict framework (Batch 0) and rules for **46 of 67 checks**: SEC-001/002/004/005/006/007/009/010, SCALE-001/006/009/011,
+ARCH-004, ADVSEC-001 to 012 and (0.36.0) GENAI-001/003/004/005/006/007/009 (0.37.0) SCALE-002/003/004/007/008/010 and (0.38.0) ARCH-005/006/007/010/011/013/016/017. `run_step.py verdicts` computes them, `verify` fails on any workbook status that differs.
 Codex runs reviewed (2026-10-07: 0.35.0 added): 0.32.0 (found two gaps, fixed in 0.32.1), 0.33.1 (all six Batch 2 rules matched, `RUN VERIFY: PASS`).
 0.35.0 (Batch 3, 14 rules matched, `RUN VERIFY: PASS`).
 
-**Next: Batch 4a** (needs a Kubernetes reader fact first) or the rest of 4c (SCALE-012 to 015, needs a connections fact). 4b and most of 4c are done. Codex run on 0.37.0 (covers 0.36.0 too) still to do.
+**Next: SCALE-012 to 015** (needs a reader connections fact); 4a is done apart from ARCH-014/015, which stay with the model. Codex run on 0.38.0 (covers 0.36.0 and 0.37.0 too) still to do.
 
 ### Playbook for a batch (what worked)
 1. Read the checklist rows and the matching `calibrations.md` entries for the batch (`openpyxl` on `skills/dataiku-diagnosis-checklist-review/resources/checklist_template.xlsx`).
@@ -70,7 +70,7 @@ Per batch: see the playbook above. The Codex check is a single run per release (
   SKILL.md (including the `reviewer` rule), update `tests/test_contracts.py` and `check_review_output`, and drop the Codex override.
 
 ### Batch 1 - pilot: flags and counts already in `facts.py` (5)
-- [x] SEC-001, SEC-002, SEC-005, SEC-009, SEC-010 (0.32.0). SEC-005 needed the new reader fact `cgroups.target_counts` (reader 0.13.0). SEC-002 enabled with no rules = Partial.
+- [x] SEC-001, SEC-002, SEC-005, SEC-009, SEC-010 (0.32.0). SEC-005 needed the new reader fact `cgroups.target_counts` (reader 0.13.0). SEC-002 enabled with no rules = Partial. SEC-009 LDAP on with no groups = Needs Review and SEC-010 SSO on = Pass whatever LDAP is (both changed in 0.38.0).
 - [x] Codex run on 0.32.0 reviewed (one run, by the owner's choice to save usage; further rounds only on request): the five ruled items matched their verdicts; the run left no manifest beside the workbook and wrote `Claude` as reviewer, both fixed in 0.32.1.
 
 ### Batch 2 - numeric and tiered rules, facts exist (6)
@@ -88,7 +88,9 @@ Per batch: see the playbook above. The Codex check is a single run per release (
 
 ### Batch 4a - Kubernetes, Spark and containers (10; conditional on a cluster; needs reader facts first)
 - Prerequisite: a reader fact for Kubernetes cluster attachment (see Other open items); the Kubernetes calibrations are in `calibrations.md`, section "Kubernetes, containers and Spark" (None attached = Not Applicable; attached with no valid container config = Fail). Inspect the rows and the real bundles' container, Spark and cluster settings before deciding what else is needed.
-- [ ] ARCH-005, ARCH-006, ARCH-007, ARCH-010, ARCH-011, ARCH-013, ARCH-014, ARCH-015, ARCH-016, ARCH-017
+- [x] ARCH-005, 006, 007, 010, 011, 013, 016, 017 (0.38.0; reader 0.19.0 `kubernetes`). No cluster attached = Not Applicable for the Kubernetes-only ones; ARCH-005/006 Spark off = Not Applicable; ARCH-006 one or identical configs and ARCH-007 fixed namespace = Needs Review; ARCH-011 one or identical configs = Needs Review; ARCH-016 cluster attached: default cluster set = Pass, none = Fail, no cluster = Not Applicable; ARCH-017 unset = Needs Review.
+- [ ] ARCH-014 and ARCH-015 stay with the model (topology, autoscaling and cluster capacity are never in a bundle): Needs Review plus an `Action:` with a cluster, Not Applicable without.
+- [ ] Codex run on 0.38.0 (once; also covers 0.36.0 and 0.37.0).
 
 ### Batch 4b - GenAI (8; 6 ruled in 0.36.0 plus GENAI-009)
 - Existing facts: `byo_llm`, `trace_explorer`, `plugins`, `default_preferences`. GENAI-005/006 field names are unverified against a populated bundle (see Other open items). Version gate: a check's minimum DSS version above the bundle's = Needs Review, never Fail or Not Applicable. Check each row's calibration in the "GenAI" section before writing rules.

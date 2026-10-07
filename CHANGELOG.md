@@ -10,6 +10,23 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-10-07
+
+### Changed
+
+- **SEC-010**: SSO enabled is Pass whatever LDAP is (the "SSO on, LDAP off = Needs Review" case is removed); SSO disabled stays Fail, a missing SSO flag Needs Review.
+- **SEC-009**: LDAP enabled with no authorized groups is now Needs Review (was Fail); with groups it stays Pass, LDAP off Not Applicable.
+
+### Added
+
+- Deterministic verdicts, Batch 4a (partial), `scripts/rules_k8s.py`, from the new reader fact `kubernetes` (reader 0.19.0): **ARCH-005** (Spark off = Not Applicable; enabled with resource-setting configs = Pass, none = Fail; flag missing = Needs Review), **ARCH-006** (Spark off = Not Applicable; two or more differently sized configs = Pass, one or all identical = Needs Review, none = Fail), **ARCH-007** (per-user templated namespaces = Pass; a fixed or missing namespace = Needs Review), **ARCH-010** (a Kubernetes config with a memory limit = Pass, none defined = Fail), **ARCH-011** (two differently sized container configs = Pass, one or identical = Needs Review, none = Fail), **ARCH-013** (a Kubernetes cluster definition = Pass), **ARCH-016** (cluster attached: default cluster set = Pass, none set = Fail, no cluster attached = Not Applicable, anything else = Needs Review; the default execution config is a note only), **ARCH-017** (feature on with a default visual-recipe config = Pass, else Needs Review). With no cluster attached (no cluster file and no default cluster id) the Kubernetes-only checks are Not Applicable, even if Kubernetes execution configs are defined.
+- ARCH-014 and ARCH-015 stay with the model (they need node-group and capacity data a bundle never holds).
+- Eval fixtures cover ARCH-005, 007, 011, 016 and 017 (eval checklist now 41 items).
+
+### Changed
+
+- Reader re-synced to 0.19.0. `calibrations.md`: `[code-decided]` marks, the new Spark and Kubernetes case lists and anchors.
+
 ## [0.37.0] - 2026-10-07
 
 ### Added

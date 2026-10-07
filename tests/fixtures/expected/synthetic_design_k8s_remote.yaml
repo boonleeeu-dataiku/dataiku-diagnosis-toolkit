@@ -87,7 +87,7 @@ items:
     mentions_any: ["5.2"]
   SCALE-006:  # sanity-check output present but empty (no messages) -> Fail
     status: [Fail]
-  SEC-010:    # SSO and LDAP both enabled -> Pass
+  SEC-010:    # SSO enabled -> Pass
     status: [Pass]
     mentions_any: [sso]
   SCALE-010:  # all default connection/format/engine preferences blank -> Pass
@@ -96,3 +96,13 @@ items:
     status: [Pass]
   GENAI-004:  # terms accepted and AI Services enabled -> Pass
     status: [Pass]
+  ARCH-005:   # Spark enabled with configs that set resources -> Pass
+    status: [Pass]
+  ARCH-007:   # container namespaces are the ${namespace} template -> Pass
+    status: [Pass]
+  ARCH-011:   # two differently sized container configs -> Pass
+    status: [Pass]
+  ARCH-016:   # cluster attached and a default cluster set -> Pass
+    status: [Pass]
+  ARCH-017:   # containerized visual recipes not set up -> Needs Review (intent unknown)
+    status: [Needs Review]

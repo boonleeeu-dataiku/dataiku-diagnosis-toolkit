@@ -36,6 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import verdicts  # noqa: E402
 import rules_platform  # noqa: E402,F401  (registers the rules with verdicts.RULES)
 import rules_genai  # noqa: E402,F401
+import rules_k8s  # noqa: E402,F401
 import rules_security  # noqa: E402,F401
 
 READER = Path(__file__).resolve().parents[2] / "dataiku-diagnosis-reader"

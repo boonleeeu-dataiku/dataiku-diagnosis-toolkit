@@ -100,3 +100,13 @@ items:
     status: [Fail]
   GENAI-004:  # terms not accepted -> Needs Review (optional feature, ask whether intentional)
     status: [Needs Review]
+  ARCH-005:   # no Spark enabled flag in the bundle -> Needs Review
+    status: [Needs Review]
+  ARCH-007:   # no cluster attached -> Not Applicable
+    status: [Not Applicable]
+  ARCH-011:
+    status: [Not Applicable]
+  ARCH-016:
+    status: [Not Applicable]
+  ARCH-017:
+    status: [Not Applicable]

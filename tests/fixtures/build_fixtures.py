@@ -52,13 +52,18 @@ EVAL_ITEM_IDS = [
     "ARCH-006",   # differently sized Spark configs -> Pass; none -> Fail
     "GENAI-007",  # Cobuild on a pre-gate DSS -> Needs Review (version gate beats feature gate)
     "SEC-001",    # instance id present in the bundle -> Pass; missing -> Fail
-    "SEC-009",    # LDAP authorized groups: set -> Pass; empty -> Fail; LDAP off -> Not Applicable
+    "SEC-009",    # LDAP authorized groups: set -> Pass; empty -> Needs Review; LDAP off -> Not Applicable
     "ARCH-003",   # supported OS: web lookup -> listed Pass / not listed Fail; no lookup -> Needs Review
     "SEC-005",    # JEK-specific cgroup limits: none -> Pass; a JEK target -> Fail
     "GENAI-005",  # BYO LLM: inactive -> Not Applicable; active with project + main LLM -> Pass; either missing -> Fail
     "GENAI-006",  # BYO LLM model version: inactive -> Not Applicable; recommended -> Pass; <= 5.1 -> Fail
     "SCALE-006",  # sanity-check output with messages -> Pass; missing or empty -> Fail (never Partial)
-    "SEC-010",    # SSO + LDAP enabled -> Pass; SSO disabled -> Fail; SSO enabled/LDAP off or settings missing -> Needs Review
+    "SEC-010",    # SSO enabled -> Pass (LDAP irrelevant); SSO disabled -> Fail; SSO settings missing -> Needs Review
+    "ARCH-005",   # valid Spark config: enabled with resources -> Pass; Spark flag missing -> Needs Review
+    "ARCH-007",   # per-user namespaces: templated -> Pass; no cluster -> Not Applicable
+    "ARCH-011",   # baseline container configs: two differing -> Pass; no cluster -> Not Applicable
+    "ARCH-016",   # default cluster + default execution config with a memory limit -> Pass; no cluster -> Not Applicable
+    "ARCH-017",   # containerized visual recipes: unset on an attached cluster -> Needs Review
     "GENAI-003",  # Trace Explorer default web app: set -> Pass; empty -> Fail; block missing -> Needs Review
     "GENAI-004",  # AI Services: terms accepted and enabled -> Pass; not accepted or settings missing -> Needs Review
     "SCALE-010",  # any non-blank default connection/format/engine preference -> Needs Review; all blank -> Pass
@@ -241,7 +246,7 @@ backend.xmx = 8g
                  "kubernetesResources": {"memRequestMB": 8192, "memLimitMB": 32768, "cpuRequest": 2, "cpuLimit": 8}},
             ],
         },
-        "sparkSettings": {"executionConfigs": [
+        "sparkSettings": {"sparkEnabled": True, "executionConfigs": [
             {"name": "spark-standard", "conf": [{"key": "spark.executor.memory", "value": "4g"}]},
             {"name": "spark-large-memory", "conf": [{"key": "spark.executor.memory", "value": "12g"}]},
         ]},

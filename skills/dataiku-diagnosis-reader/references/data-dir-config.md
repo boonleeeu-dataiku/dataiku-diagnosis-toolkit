@@ -61,6 +61,8 @@ if a manual cluster is targeted) → cgroup/K8s enforcement, cross-checked at ru
 Spark/join recipe; other recipe, scenario, or notebook types may expose the same selection under
 different field names — verify before asserting for those.
 
+**Where the container defaults live.** `defaultExecutionConfig`, `defaultExecutionConfigForVisualRecipesWorkloads` and `cdeEnabled` (containerized visual recipes) are keys of `containerSettings`, not top-level (an empty string means unset; `cdeEnabled` is true in all three samples). `facts.py` `kubernetes` reports them with the cluster attachment and each container and Spark execution config's sizing, reduced to names and numbers (a namespace reads `templated`, `fixed` or `ABSENT`, never the name). A Spark config's resources come from its `conf` entries, and `kubernetesSettings.managedKubernetes` false means it targets YARN or standalone Spark, not Kubernetes (both GE 2026-08 samples).
+
 **Is a Kubernetes cluster attached?** Check both places, not one: a cluster is attached when
 `config/clusters/` holds a `<name>.json` **or** `general-settings.json` has a non-empty top-level
 `defaultK8sClusterId`. No attached cluster = `config/clusters/` empty/absent **and** no

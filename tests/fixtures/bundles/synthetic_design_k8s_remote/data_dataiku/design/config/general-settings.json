@@ -58,6 +58,7 @@
     ]
   },
   "sparkSettings": {
+    "sparkEnabled": true,
     "executionConfigs": [
       {
         "name": "spark-standard",

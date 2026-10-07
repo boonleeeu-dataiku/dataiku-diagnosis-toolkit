@@ -61,18 +61,18 @@ def test_the_security_rules_are_registered():
     ("SEC-005", facts(cgroups={"enabled": True}), "Needs Review"),                          # older facts.py without target_counts
     # SEC-009: LDAP authorized groups
     ("SEC-009", facts(sso_and_ldap=sso(ldap=True, groups=2)), "Pass"),
-    ("SEC-009", facts(sso_and_ldap=sso(ldap=True, groups=0)), "Fail"),
+    ("SEC-009", facts(sso_and_ldap=sso(ldap=True, groups=0)), "Needs Review"),
     ("SEC-009", facts(sso_and_ldap=sso(ldap=False)), "Not Applicable"),
     ("SEC-009", facts(sso_and_ldap=sso(ldap="ABSENT")), "Needs Review"),
     ("SEC-009", facts(sso_and_ldap=sso(ldap=True, groups="ABSENT")), "Needs Review"),
     ("SEC-009", facts(), "Needs Review"),
-    # SEC-010: SSO (checked in the calibration's order: SSO disabled is Fail whatever LDAP is)
+    # SEC-010: SSO on is Pass and off is Fail, whatever LDAP is
     ("SEC-010", facts(sso_and_ldap=sso(sso_enabled=False, ldap=False)), "Fail"),
     ("SEC-010", facts(sso_and_ldap=sso(sso_enabled=False, ldap=True)), "Fail"),
     ("SEC-010", facts(sso_and_ldap=sso(sso_enabled=False)), "Fail"),
     ("SEC-010", facts(sso_and_ldap=sso(sso_enabled=True, ldap=True)), "Pass"),
-    ("SEC-010", facts(sso_and_ldap=sso(sso_enabled=True, ldap=False)), "Needs Review"),
-    ("SEC-010", facts(sso_and_ldap=sso(sso_enabled=True)), "Needs Review"),
+    ("SEC-010", facts(sso_and_ldap=sso(sso_enabled=True, ldap=False)), "Pass"),
+    ("SEC-010", facts(sso_and_ldap=sso(sso_enabled=True)), "Pass"),
     ("SEC-010", facts(sso_and_ldap=sso()), "Needs Review"),
     ("SEC-010", facts(), "Needs Review"),
 ])
@@ -83,7 +83,7 @@ def test_rule_status_on_edge_cases(check_id, doc, expected):
 def test_verdict_reasons_never_carry_secret_looking_values():
     out = verdicts.compute(facts(node={"installid": "X1"}, sso_and_ldap=sso(sso_enabled=True, ldap=True)),
                            [{"id": "SEC-010", "title": verdicts.RULES["SEC-010"][0]}])["verdicts"][0]
-    assert set(out["deciding_values"]) == {"sso_enabled", "ldap_enabled", "sso_protocol"}
+    assert set(out["deciding_values"]) == {"sso_enabled", "sso_protocol"}
 
 
 @pytest.mark.parametrize("scenario", sorted(p.stem for p in (FIXTURES / "expected").glob("*.yaml")))

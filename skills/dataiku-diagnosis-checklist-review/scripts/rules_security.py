@@ -56,7 +56,7 @@ def ldap_authorized_groups(facts):
         return _missing("the LDAP enabled flag or authorized-group count")
     if count >= 1:
         return verdict("Pass", f"LDAP enabled with {count} authorized group(s)", **values)
-    return verdict("Fail", "LDAP enabled with no authorized groups", **values)
+    return verdict("Needs Review", "LDAP enabled with no authorized groups (ask whether intentional)", **values)
 
 
 @rule("SEC-010", "SSO Enablement Reviewed")
@@ -64,15 +64,13 @@ def sso_enabled(facts):
     block = _sso_ldap(facts)
     if block is None:
         return _missing("SSO and LDAP settings")
-    sso, ldap = block.get("ssoSettings.enabled", ABSENT), block.get("ldapSettings.enabled", ABSENT)
-    values = {"sso_enabled": sso, "ldap_enabled": ldap, "sso_protocol": block.get("ssoSettings.protocol", ABSENT)}
+    sso = block.get("ssoSettings.enabled", ABSENT)
+    values = {"sso_enabled": sso, "sso_protocol": block.get("ssoSettings.protocol", ABSENT)}
+    if sso is True:
+        return verdict("Pass", "SSO is enabled", **values)
     if sso is False:
         return verdict("Fail", "SSO is disabled", **values)
-    if sso is True and ldap is True:
-        return verdict("Pass", "SSO and LDAP both enabled", **values)
-    if sso is True and ldap is False:
-        return verdict("Needs Review", "SSO enabled but LDAP disabled", **values)
-    return _missing("the SSO or LDAP enabled flag")
+    return _missing("the SSO enabled flag")
 
 
 @rule("SEC-005", "JEK-Specific CGroup Limits Left Unconfigured")

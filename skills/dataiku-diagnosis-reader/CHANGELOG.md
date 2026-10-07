@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.19.0] - 2026-10-07
+
+### Added
+
+- `scripts/facts.py` gains `kubernetes`: whether a Kubernetes cluster is attached (a `config/clusters/*.json` file or a default cluster id; the cluster files' `type` and `architecture` only), `implicit_cluster`, each container execution config (type, memory and CPU request/limit, namespace kind), each Spark execution config (executor and driver sizing, whether resources are set, `managed_kubernetes`, namespace kind, authentication mode), the container defaults (`default_execution_config` (the config's name), `default_visual_recipes_config_set`, `containerized_visual_recipes_enabled`) and `spark_enabled`. Namespaces read `templated`, `fixed` or `ABSENT`; no registry URLs or names are printed. Verified against the three sample bundles (the July design sample has a manual cluster, five container and three managed Spark configs; both GE August samples have three YARN-side Spark configs and no cluster). `references/data-dir-config.md` notes that the container defaults and `cdeEnabled` live inside `containerSettings`.
+
 ## [0.18.0] - 2026-10-07
 
 ### Added

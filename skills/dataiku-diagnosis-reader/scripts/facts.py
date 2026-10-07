@@ -522,6 +522,70 @@ def backend_log():
                  f"{rel}/backend.log*: line counts by level and OutOfMemoryError mentions (no log text)")
 
 
+def _num(v):
+    return v if isinstance(v, (int, float)) and not isinstance(v, bool) else ABSENT
+
+
+def _namespace_kind(ns):
+    """How a namespace field is set, without printing it: templated (a ${...} variable), fixed (a literal name) or ABSENT."""
+    if not isinstance(ns, str) or not ns.strip():
+        return ABSENT
+    return "templated" if "${" in ns else "fixed"
+
+
+@fact("kubernetes")
+def kubernetes():
+    """Kubernetes/Elastic Compute and Spark settings, reduced to what the checks judge: whether a cluster is attached
+    (a `config/clusters/*.json` file or a default cluster id), each container and Spark execution config's sizing and
+    namespace kind, and the container defaults (default and visual-recipe execution configs, containerized visual recipes).
+    Names and numbers only: no registry URLs, secrets or literal namespace names."""
+    src = "config/general-settings.json"
+    gs = load_json(src)
+    if gs is None:
+        return absent(src)
+    cdir = os.path.join(MIRROR, "config", "clusters")
+    files = sorted(n for n in os.listdir(cdir) if n.endswith(".json")) if os.path.isdir(cdir) else []
+    clusters = []
+    for n in files:
+        try:
+            with open(os.path.join(cdir, n), encoding="utf-8") as fh:
+                c = json.load(fh)
+            clusters.append({"type": c.get("type", ABSENT), "architecture": c.get("architecture", ABSENT)})
+        except (OSError, ValueError):
+            clusters.append({"type": "ERROR", "architecture": "ERROR"})
+    default_cluster = gs.get("defaultK8sClusterId")
+    cs, sp = gs.get("containerSettings"), gs.get("sparkSettings")
+    cs, sp = (cs if isinstance(cs, dict) else {}), (sp if isinstance(sp, dict) else {})
+    containers = []
+    for e in cs.get("executionConfigs") or []:
+        r = e.get("kubernetesResources") if isinstance(e.get("kubernetesResources"), dict) else {}
+        containers.append({"name": e.get("name", ABSENT), "type": e.get("type", ABSENT),
+                           "mem_request_mb": _num(r.get("memRequestMB")), "mem_limit_mb": _num(r.get("memLimitMB")),
+                           "cpu_request": _num(r.get("cpuRequest")), "cpu_limit": _num(r.get("cpuLimit")),
+                           "namespace": _namespace_kind(e.get("kubernetesNamespace"))})
+    spark = []
+    for e in sp.get("executionConfigs") or []:
+        conf = {c.get("key"): c.get("value") for c in e.get("conf") or [] if isinstance(c, dict)}
+        k = e.get("kubernetesSettings") if isinstance(e.get("kubernetesSettings"), dict) else {}
+        spark.append({"name": e.get("name", ABSENT), "resources_set": any(str(key).startswith(("spark.executor.", "spark.driver.")) for key in conf),
+                      **{key.split(".", 1)[1].replace(".", "_"): conf.get(key, ABSENT)
+                         for key in ("spark.executor.instances", "spark.executor.memory", "spark.executor.cores", "spark.driver.memory")},
+                      "managed_kubernetes": k.get("managedKubernetes", ABSENT),
+                      "namespace": _namespace_kind(k.get("managedNamespace")), "authentication_mode": k.get("authenticationMode", ABSENT)})
+    flag = lambda v: v if isinstance(v, bool) else ABSENT  # noqa: E731
+    return found({"cluster_attached": bool(clusters) or (isinstance(default_cluster, str) and bool(default_cluster.strip())),
+                  "cluster_files": clusters, "default_cluster_set": isinstance(default_cluster, str) and bool(default_cluster.strip()),
+                  "implicit_cluster": flag(gs.get("useImplicitK8sCluster")),
+                  "container_configs": containers,
+                  "default_execution_config": (cs["defaultExecutionConfig"].strip() if isinstance(cs.get("defaultExecutionConfig"), str)
+                                               and cs["defaultExecutionConfig"].strip() else ABSENT),
+                  "default_visual_recipes_config_set": bool(isinstance(cs.get("defaultExecutionConfigForVisualRecipesWorkloads"), str)
+                                                            and cs["defaultExecutionConfigForVisualRecipesWorkloads"].strip()),
+                  "containerized_visual_recipes_enabled": flag(cs.get("cdeEnabled")),
+                  "spark_enabled": flag(sp.get("sparkEnabled")), "spark_configs": spark},
+                 f"{src}: containerSettings, sparkSettings, defaultK8sClusterId; config/clusters/*.json (type and architecture only)")
+
+
 @fact("default_preferences")
 def default_preferences():
     src = "config/general-settings.json"
