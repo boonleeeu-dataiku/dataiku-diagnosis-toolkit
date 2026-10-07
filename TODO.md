@@ -15,6 +15,11 @@ Per batch: rule + unit tests on the synthetic fixtures, update `EVAL_ITEM_IDS` a
 4 manifests + CHANGELOG, `scripts/test.sh fast`, then a 3-run Codex round to confirm zero differing items.
 
 ### Batch 0 - foundation and design decisions (do first, after the hygiene check)
+- [ ] **Depends on generator 0.4.0 (stable ids).** Rules are keyed by check id, so don't start them until the Dataiku Checklist Generator's
+  `config/id_registry.yaml` (ids and titles frozen from the current 67; see that repo's README, "Stable ids and titles") has shipped and this
+  repo's `checklist_template.xlsx` is re-synced (`scripts/sync_to_toolkit.py --apply` there; no diff expected today). With ids locked, the title
+  anchor below is a cheap guard, not the main defence. Any later retitle or retirement in the registry means updating the calibrations anchors
+  and the rules for that id.
 - [x] Override policy decided: **code status is final**. `verify` fails, naming the item, on any workbook/verdict mismatch. No escape hatch by default.
 - [x] Delivery decided: a separate `run_step.py verdicts` step (records in the manifest, saves `<stem>_verdicts.json`) and a new SKILL.md
   step after facts. `write_summary` key-point statuses come from that JSON.
