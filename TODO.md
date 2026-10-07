@@ -2,18 +2,29 @@
 
 ## Status and start here (updated 2026-10-07)
 
-Versions: toolkit **0.38.1** (tag `v0.38.1`, local only; 0.38.0 is the Codex-ready rule release), reader **0.19.0** (`skill-v0.19.0`, upstream repo `../Diagnosis Reader/`), Checklist Generator
+Versions: toolkit **0.38.1** (tag `v0.38.1`), reader **0.19.0** (`skill-v0.19.0`, upstream repo `../Diagnosis Reader/`), Checklist Generator
 **0.4.0** (`v0.4.0`, `../Dataiku Checklist Generator/`; ids and titles frozen in its `config/id_registry.yaml`). Everything is pushed.
 
-Done: the verdict framework (Batch 0) and rules for **46 of 67 checks**: SEC-001/002/004/005/006/007/009/010, SCALE-001/006/009/011,
-ARCH-004, ADVSEC-001 to 012 and (0.36.0) GENAI-001/003/004/005/006/007/009 (0.37.0) SCALE-002/003/004/007/008/010 and (0.38.0) ARCH-005/006/007/010/011/013/016/017. `run_step.py verdicts` computes them, `verify` fails on any workbook status that differs.
-Codex runs reviewed (2026-10-07: 0.35.0 added): 0.32.0 (found two gaps, fixed in 0.32.1), 0.33.1 (all six Batch 2 rules matched, `RUN VERIFY: PASS`).
-0.35.0 (Batch 3, 14 rules matched, `RUN VERIFY: PASS`).
+Done: the verdict framework (Batch 0) and rules for **46 of 67 checks**, one module per area: `rules_security.py` (SEC-001/002/005/006/007/009/010,
+ADVSEC-001 to 012), `rules_platform.py` (SEC-004, ARCH-004, SCALE-001/002/003/004/006/007/008/009/010/011), `rules_genai.py`
+(GENAI-001/003/004/005/006/007/009) and `rules_k8s.py` (ARCH-005/006/007/010/011/013/016/017). `run_step.py verdicts` computes them, `verify` fails on any
+workbook status that differs.
 
-**Next: SCALE-012 to 015** (needs a reader connections fact); 4a is done apart from ARCH-014/015, which stay with the model. Codex run on 0.38.0 (covers 0.36.0 and 0.37.0 too) still to do.
+The rule specs are in `skills/dataiku-diagnosis-checklist-review/references/verdict-rules.md` (one row per rule, kept in step by
+`tests/test_verdict_rules_doc.py`; the model does not read it). `calibrations.md` was restructured in 0.38.1 (4,900 to 2,400 words): it now
+holds only the model's `notes`/`Action:` guidance for rule-decided checks and the status logic of the 21 model-decided ones.
+
+Codex runs reviewed: 0.32.0 (found two gaps, fixed in 0.32.1), 0.33.1 (all six Batch 2 rules matched, `RUN VERIFY: PASS`), 0.35.0 (Batch 3, 14 rules
+matched, `RUN VERIFY: PASS`). **Not yet run in Codex: 0.38.x**, which covers Batch 4a, 4b and 4c (0.36.0 to 0.38.0, 32 rules); owner runs it once.
+Policy changes made after the 0.38.0 review of the rule table: ARCH-006/011 one or identical configs = Needs Review; ARCH-007 fixed namespace =
+Needs Review; ARCH-016 default cluster set = Pass, none = Fail, no cluster = Not Applicable; the Kubernetes-only checks are Not Applicable with no
+cluster attached; SEC-009 LDAP on with no groups = Needs Review; SEC-010 SSO on = Pass whatever LDAP is.
+
+**Next:** (1) the Codex run on 0.38.x, compare to `<stem>_verdicts.json`; (2) SCALE-012 to 015, which need a reader connections fact (details readable by,
+HDFS interface, fast-write flags per type; field names unverified); (3) optional: apply the DSS version gate in code (see Other open items).
 
 ### Playbook for a batch (what worked)
-1. Read the checklist rows and the matching `calibrations.md` entries for the batch (`openpyxl` on `skills/dataiku-diagnosis-checklist-review/resources/checklist_template.xlsx`).
+1. Read the checklist rows and any matching model-decided entries in `calibrations.md` for the batch (`openpyxl` on `skills/dataiku-diagnosis-checklist-review/resources/checklist_template.xlsx`).
 2. Check what `facts.py` already exposes for each check (`python3 skills/dataiku-diagnosis-reader/scripts/facts.py <fixture bundle>`). If a fact is missing, inspect the three real
    bundles in `../Diagnosis Reader/resources/` read-only (print key names and counts, never values or secrets).
 3. Where the calibration is silent, ask the owner for the policy (one `AskUserQuestion` per open case). Don't guess a status.
@@ -22,7 +33,7 @@ Codex runs reviewed (2026-10-07: 0.35.0 added): 0.32.0 (found two gaps, fixed in
    reference) into `skills/dataiku-diagnosis-reader/` and `diff -r` the two.
 5. Rules go in `skills/dataiku-diagnosis-checklist-review/scripts/rules_*.py` (`@rule(id, anchor_title)`; anchor = the template title). Unit-test every branch in
    `tests/test_rules_*.py` and check each rule against the fixtures' `expected/*.yaml`.
-6. `calibrations.md`: mark the entry `[code-decided]`, record every case, add a row to the "Check anchors" table.
+6. Spec: add a row per rule to `references/verdict-rules.md` under the module's section (`tests/test_verdict_rules_doc.py` fails without it). In `calibrations.md` add only the `evidence_found`/`notes`/`Action:` guidance for the check, and a row in its "Check anchors" table if you cite the id there.
 7. Release: bump the version in the 4 manifests, add a `CHANGELOG.md` entry, tick the batch here, `scripts/test.sh fast`, commit, tag `vX.Y.Z`. **Push only when the owner says so.**
 8. The owner runs Codex **once** per release; review the delivered folder with `run_step.py verify <bundle at the path Codex used> --manifest ... --checklist ... --deck ...`
    and compare the ruled rows to `<stem>_verdicts.json`. Don't ask for more runs unless told. Don't run `scripts/test.sh eval` unless asked (it costs model usage).
@@ -32,19 +43,21 @@ Codex runs reviewed (2026-10-07: 0.35.0 added): 0.32.0 (found two gaps, fixed in
 - A missing fact is **Needs Review**, never an assumed Fail, unless the calibration says otherwise (SCALE-006, ADVSEC-007/008 with no properties file).
 - A rule may return `None` ("undecided") when the facts can't settle a case; the row then gets no verdict and the model decides it.
 - `tests/test_skill_boundaries.py` rejects reader-owned layout terms (file names, JSON keys, `lsblk`, `dip.properties`...) in SKILL.md, `references/*.md` and `scripts/*.py`.
-  Rule modules may only name the keys the reader publishes in `SECURITY_KEYS`. Describe a setting in words in `calibrations.md`.
+  Rule modules may only name the keys the reader publishes in `SECURITY_KEYS`. Describe a setting in words in `verdict-rules.md` and `calibrations.md`.
 - Keep the verdict `reason` one line; quote deciding values, never secrets or paths.
+- Chain `scripts/test.sh fast && git commit` (not `;`): twice a commit went in with a failing test and had to be amended.
+- Synthetic fixtures must mimic the real file formats (the fixture `backend.log` once lacked the bracketed level), or a reader fact that parses the real format reads zero on them.
 - Fixtures are synthetic; never derive them from a real bundle. The three real bundles are for inspection only and must never be committed or copied.
 
 ## Deterministic verdicts (`verdicts.py`)
 
-Goal: the status of every check that facts can decide comes from code, not from the model reading `calibrations.md`.
+Goal: the status of every check that facts can decide comes from code, not from the model reading calibrations.
 The model keeps the evidence/notes wording, web lookups (ARCH-002/003), log reading and live-check `Action:` notes.
 
 Design: `skills/dataiku-diagnosis-checklist-review/scripts/verdicts.py` reads `<stem>_facts.json` and returns
 `{id, status, deciding_values, reason}` per check; `run_step.py verify` compares the workbook statuses to it and fails naming
 the item. Rules live in the checklist skill (judgment); any fact a rule needs is added to the reader upstream first (then re-sync
-and run Codex). Each rule's `calibrations.md` entry stays as its human-readable spec, marked `[code-decided]`.
+and run Codex). Each rule's row in `verdict-rules.md` is its human-readable spec; `calibrations.md` carries only the model's notes guidance.
 
 Per batch: see the playbook above. The Codex check is a single run per release (usage limits), compared to the verdicts.
 
@@ -87,29 +100,28 @@ Per batch: see the playbook above. The Codex check is a single run per release (
 - [x] Codex run on 0.35.0 (once), covering 3a and 3b: the 14 Batch 3 rules match their verdicts, `RUN VERIFY: PASS`.
 
 ### Batch 4a - Kubernetes, Spark and containers (10; conditional on a cluster; needs reader facts first)
-- Prerequisite: a reader fact for Kubernetes cluster attachment (see Other open items); the Kubernetes calibrations are in `calibrations.md`, section "Kubernetes, containers and Spark" (None attached = Not Applicable; attached with no valid container config = Fail). Inspect the rows and the real bundles' container, Spark and cluster settings before deciding what else is needed.
+- Reader 0.19.0 added the `kubernetes` fact (cluster attachment, container and Spark execution configs, container defaults). A cluster is attached when a cluster definition file exists or a default cluster id is set.
 - [x] ARCH-005, 006, 007, 010, 011, 013, 016, 017 (0.38.0; reader 0.19.0 `kubernetes`). No cluster attached = Not Applicable for the Kubernetes-only ones; ARCH-005/006 Spark off = Not Applicable; ARCH-006 one or identical configs and ARCH-007 fixed namespace = Needs Review; ARCH-011 one or identical configs = Needs Review; ARCH-016 cluster attached: default cluster set = Pass, none = Fail, no cluster = Not Applicable; ARCH-017 unset = Needs Review.
 - [ ] ARCH-014 and ARCH-015 stay with the model (topology, autoscaling and cluster capacity are never in a bundle): Needs Review plus an `Action:` with a cluster, Not Applicable without.
-- [ ] Codex run on 0.38.0 (once; also covers 0.36.0 and 0.37.0).
+- [ ] Codex run on 0.38.x (once; covers 4a, 4b and 4c).
 
 ### Batch 4b - GenAI (8; 6 ruled in 0.36.0 plus GENAI-009)
 - Existing facts: `byo_llm`, `trace_explorer`, `plugins`, `default_preferences`. GENAI-005/006 field names are unverified against a populated bundle (see Other open items). Version gate: a check's minimum DSS version above the bundle's = Needs Review, never Fail or Not Applicable. Check each row's calibration in the "GenAI" section before writing rules.
 - [x] GENAI-001, 003, 004, 005, 006, 007 (and GENAI-009, listed under the model-only checks but ruled: installed = Needs Review, else Not Applicable) in 0.36.0 (reader 0.17.0 `genai_settings`). GENAI-001: internal = Pass, non-internal = Needs Review, none set = Fail. GENAI-003: block present but unset = Fail.
 - [ ] GENAI-002 (Hugging Face env, unverified fact) and GENAI-011 (group impersonation scope; needs to know which group runs the Agent Hub webapp) stay with the model unless a fact is found.
-- [ ] Codex run on 0.36.0 (once).
 
 ### Batch 4c - scale, connections, logs (10; SCALE-007 and SCALE-008 need a log-count fact)
-- Prerequisite for SCALE-007/008: a reader fact with `ERROR`/`WARN` and `OutOfMemoryError` counts from the backend log (reader work only: counts, never log text; mind the large-file hazards in the reader's `limitations.md`), plus the config-folder size, which is often absent. SCALE-002/003/004/010 have facts (`default_preferences`, `admin_cleanup_scenarios`, ...); SCALE-012 to 015 have not been inspected.
+- Reader 0.18.0 added `backend_log` (per-file ERROR/FATAL/WARN and OutOfMemoryError counts with time windows, counts only) and `metastore_and_exports`. SCALE-012 to 015 are not inspected yet: the next step is a reader `connections` fact (no params or secrets).
 - [x] SCALE-002, 003, 004, 007, 008, 010 (0.37.0; reader 0.18.0 `metastore_and_exports`, `backend_log`). SCALE-008: any confirmed miss = Fail, missing input = Needs Review; SCALE-010 treats DSS's default storage-format list as blank.
 - [ ] SCALE-012, SCALE-013, SCALE-014, SCALE-015 (need a reader connections fact: details readable by, HDFS interface, fast-write flags per type; field names unverified, no params or secrets)
-- [ ] Codex run on 0.37.0 (once; also covers 0.36.0).
 
-### Stays with the model (14; never moved to code)
+### Stays with the model (21; no rule yet)
 - Web lookups: ARCH-002, ARCH-003
-- Live or external checks (Needs Review plus an `Action:`): ARCH-001, ARCH-008, ARCH-009, ARCH-012, SEC-003, SEC-008, SEC-011,
-  SCALE-005, SCALE-016, GENAI-008, GENAI-009, GENAI-010
+- Live or external checks (Needs Review plus an `Action:`): ARCH-001, ARCH-008, ARCH-009, ARCH-012, SEC-003, SEC-008, SEC-011, SCALE-005, SCALE-016, GENAI-008, GENAI-010
+- Cluster data a bundle never holds: ARCH-014, ARCH-015 (Needs Review plus an `Action:` with a cluster attached)
+- Waiting for a reader fact: SCALE-012 to 015 (connections), GENAI-002 (Hugging Face env), GENAI-011 (Agent Hub group impersonation)
 
-(Count check: 5 + 6 + 9 + 5 + 10 + 8 + 10 + 14 = 67.)
+(Count check: 46 ruled + 21 with the model = 67.)
 
 ## Multi-LLM portability (cross-cutting; applies to every batch)
 
@@ -131,8 +143,10 @@ only the `notes`/`evidence_found` wording may differ between clients.
 - [x] Hygiene check of code, skills, tests and docs: safe fixes applied (run_step.py error handling, test caching and cleanup, README and
   skill duplicates); the rest moved into Batch 0, portability and the items below.
 - [x] Codex stages outputs in sandbox work dirs, so the run manifest isn't copied beside the deliverables: step 7 now says to copy the run files (0.32.1); confirmed on the 0.33.1 run.
-- [ ] Re-save the eval baseline (`scripts/test.sh eval ... --save-baseline`, costs model usage) when the owner asks; it is stale (2 scenarios x 11 items vs 3 x 34).
+- [ ] Re-save the eval baseline (`scripts/test.sh eval ... --save-baseline`, costs model usage) when the owner asks; it is stale (2 scenarios x 11 items vs 3 x 41).
 - [ ] Minor: notes should not name files (SEC-003 on the 0.32.0 run mentioned a security config file); consider a line in SKILL.md or leave it.
-- [ ] Review the remaining Needs Review items (GENAI-004/007/008) for fixed verdicts, if no batch above covers them.
+- [x] GENAI-004/007 now have rules (0.36.0); GENAI-008 stays with the model.
 - [ ] GENAI-005/006 field names (`mainLLMId`, `referenceProjectKey`) are unverified against a populated bundle: confirm when one appears.
-- [ ] Reader upstream: no `facts.py` key for Kubernetes cluster attachment (needed by Batch 4a, ARCH-010/013).
+- [x] Reader `kubernetes` fact for cluster attachment (0.19.0).
+- [ ] The rules do not apply the version gate (a check's minimum DSS version above the bundle's = Needs Review). It works only because settings are missing on older DSS; GENAI-003 present-but-unset on an old DSS would still Fail. Decide whether to read the bundle's DSS version in the GenAI rules.
+- [ ] `calibrations.md` now omits the long-form specs: if a model-decided check gains a rule, move its entry into `verdict-rules.md` and keep only the notes guidance.
