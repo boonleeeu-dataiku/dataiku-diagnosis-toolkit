@@ -36,7 +36,8 @@ Per batch: rule + unit tests on the synthetic fixtures, update `EVAL_ITEM_IDS` a
   SKILL.md (including the `reviewer` rule), update `tests/test_contracts.py` and `check_review_output`, and drop the Codex override.
 
 ### Batch 1 - pilot: flags and counts already in `facts.py` (5)
-- [ ] SEC-001, SEC-002, SEC-005, SEC-009, SEC-010
+- [x] SEC-001, SEC-002, SEC-005, SEC-009, SEC-010 (0.32.0). SEC-005 needed the new reader fact `cgroups.target_counts` (reader 0.13.0). SEC-002 enabled with no rules = Partial.
+- [ ] 3-run Codex round on 0.32.0: confirm zero differing items (and `RUN VERIFY: PASS`), then re-save the eval baseline.
 
 ### Batch 2 - numeric and tiered rules, facts exist (7)
 - [ ] SEC-004 (RAM tiers, +/-10% band, >=80%), SCALE-001, SCALE-006 (0.30.0: sanity-check present = Pass, missing or empty = Fail), SCALE-008, SCALE-009, SCALE-011, ARCH-004

@@ -13,6 +13,10 @@ title each id had when its entry was written. If a row's id and title disagree w
 trust the topic, not the id, and say so in `notes`. Never apply an entry to a row just because the id
 matches. Add each new one as its own entry under the right heading; don't overwrite prior ones.
 
+**Entries marked `[code-decided]`** have their status computed by `scripts/run_step.py verdicts` (rules in
+`scripts/rules_security.py`; SKILL.md, Verdicts). Use the verdict's status exactly; the entry then explains the rule and
+holds the `Action:` guidance for `notes`. The rule and its entry must agree: a change to one is a change to the other.
+
 ## General principles (apply to every check)
 
 - **Judge only what the bundle shows.** An aspect that needs a live check (backups, restore tests, who
@@ -117,26 +121,27 @@ matches. Add each new one as its own entry under the right heading; don't overwr
   security concern. None configured: **Not Applicable** (say the default page is in use). Valid
   http/https redirect: **Pass**. **Fail** only when one is configured but invalid.
 
-- **Instance identification (SEC-001):** **Pass** when the node's instance (install) id is present in the
+- **Instance identification (SEC-001) [code-decided]:** **Pass** when the node's instance (install) id is present in the
   bundle (the reader's `facts.py` reports it under `node`); **Fail** when it is missing. Whether it
   matches a customer inventory or tracking tool is a live check: an `Action:` in `notes`, never the status.
 
-- **LDAP authorized groups (SEC-009):** conditional on LDAP being enabled (`facts.py`, `sso_and_ldap`).
+- **LDAP authorized groups (SEC-009) [code-decided]:** conditional on LDAP being enabled (`facts.py`, `sso_and_ldap`).
   Enabled with one or more authorized groups: **Pass** (give the count, never the names). Enabled with
   none: **Fail**. LDAP not enabled: **Not Applicable**.
 
-- **SSO enablement (SEC-010):** judge from `facts.py` `sso_and_ldap` (SSO and LDAP enabled flags; give the
+- **SSO enablement (SEC-010) [code-decided]:** judge from `facts.py` `sso_and_ldap` (SSO and LDAP enabled flags; give the
   protocol, never any secret). Check in this order: SSO disabled: **Fail** (whatever LDAP is), with an
   `Action:` in `notes` to discuss the benefits of SSO with the customer. SSO and LDAP both enabled: **Pass**.
   SSO enabled but LDAP disabled, or either setting missing from the bundle: **Needs Review**.
 
-- **UIF (SEC-002):** impersonation enabled with at least one user or group rule (the reader's lookup
+- **UIF (SEC-002) [code-decided]:** impersonation enabled with at least one user or group rule (the reader's lookup
   table says where): **Pass**. Whether the OS identities exist is a live check (`notes` only).
-  Disabled: **Fail**.
+  Disabled: **Fail**. Enabled but with no user or group rule: **Partial**. The enabled flag missing from the bundle:
+  **Needs Review**.
 
-- **JEK-specific cgroup limits (SEC-005):** the check wants none configured. From `facts.py`'s `cgroups`,
-  `workload_categories_with_no_placement` lists the workload categories with no cgroup target. The Job Execution
-  Kernel (JEK) category in that list, or no JEK category at all: **Pass**. A JEK target configured: **Fail**. The cgroup settings missing
+- **JEK-specific cgroup limits (SEC-005) [code-decided]:** the check wants none configured. From `facts.py`'s `cgroups`,
+  `target_counts` gives the cgroup targets configured per workload category. The Job Execution Kernel (JEK) category
+  with 0 targets, or no JEK category at all: **Pass**. One or more JEK targets configured: **Fail**, even when cgroups are disabled overall. The cgroup settings missing
   from the bundle: **Needs Review**. Whether the live OS hierarchy matches is an `Action:` in `notes`, never the status.
 
 - **cgroups memory limit (SEC-004):** the recommended cap depends on host RAM, so judge the limit against

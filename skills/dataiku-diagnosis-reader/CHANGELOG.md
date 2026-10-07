@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.13.0] - 2026-10-07
+
+### Added
+
+- `scripts/facts.py` `cgroups` gains `target_counts`: the number of cgroup targets configured for each workload category that has a `targets` list (e.g. `jobExecutionKernels: 0`). A category missing from the map is not in the settings at all, which `workload_categories_with_no_placement` cannot tell apart from a category with targets configured. Counts only; no target paths. Verified against the three sample bundles (`jobExecutionKernels` is present with 0 targets in all three).
+
 ## [0.12.0] - 2026-10-07
 
 ### Added

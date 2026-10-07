@@ -316,6 +316,9 @@ def cgroups():
         return absent(f"{src}: cgroupSettings")
     kb = mem_total_kb()
     placements_empty = [k for k, v in cg.items() if isinstance(v, dict) and not v.get("targets")]
+    # target count per workload category that has a `targets` list; a category absent here is not configured at all
+    target_counts = {k: len(v["targets"]) for k, v in cg.items()
+                     if isinstance(v, dict) and isinstance(v.get("targets"), list)}
     limits = []
     for entry in cg.get("cgroups") or []:
         for lim in entry.get("limits") or []:
@@ -325,7 +328,8 @@ def cgroups():
                 "pct_of_MemTotal": round(100 * gib / (kb / 1024 / 1024), 1) if gib and kb and "memory" in str(lim.get("key")) else None,
             })
     return found({"enabled": cg.get("enabled", ABSENT), "version": cg.get("cgroupsVersion", ABSENT),
-                  "limits": limits or ABSENT, "workload_categories_with_no_placement": placements_empty},
+                  "limits": limits or ABSENT, "workload_categories_with_no_placement": placements_empty,
+                  "target_counts": target_counts},
                  f"{src}: cgroupSettings (pct uses G=GiB against diag.txt MemTotal in GiB)")
 
 

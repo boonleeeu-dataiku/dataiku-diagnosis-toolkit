@@ -33,6 +33,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import verdicts  # noqa: E402
+import rules_security  # noqa: E402,F401  (registers the security rules with verdicts.RULES)
 
 READER = Path(__file__).resolve().parents[2] / "dataiku-diagnosis-reader"
 READER_STEPS = {"orient": ["bash", str(READER / "scripts" / "orient.sh")],

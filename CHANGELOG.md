@@ -10,6 +10,13 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-10-07
+
+### Added
+
+- Deterministic verdicts, Batch 1 (pilot): `scripts/rules_security.py` decides **SEC-001** (instance id: present = Pass, missing = Fail), **SEC-002** (UIF: disabled = Fail, enabled with a rule = Pass, enabled with no rules = Partial), **SEC-005** (no JEK-specific cgroup target = Pass, one or more = Fail), **SEC-009** (LDAP authorized groups) and **SEC-010** (SSO) from the saved facts; a missing fact is Needs Review. `verify` fails if the workbook disagrees. Their `calibrations.md` entries are marked `[code-decided]` and stay as the spec; tests check each rule against the fixtures' expected answers and the bundled checklist's titles.
+- Re-sync reader 0.13.0: `facts.py` `cgroups` gains `target_counts` (targets per workload category). SEC-005 could not be decided before: a JEK target configured and no JEK category at all both read as an empty `workload_categories_with_no_placement`.
+
 ## [0.31.0] - 2026-10-07
 
 ### Added
