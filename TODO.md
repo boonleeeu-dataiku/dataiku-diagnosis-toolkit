@@ -7,8 +7,8 @@ Versions: toolkit **0.35.0** (tag `v0.35.0`), reader **0.16.0** (`skill-v0.16.0`
 
 Done: the verdict framework (Batch 0) and rules for **25 of 67 checks**: SEC-001/002/004/005/006/007/009/010, SCALE-001/006/009/011,
 ARCH-004 and ADVSEC-001 to 012. `run_step.py verdicts` computes them, `verify` fails on any workbook status that differs.
-Codex runs reviewed: 0.32.0 (found two gaps, fixed in 0.32.1), 0.33.1 (all six Batch 2 rules matched, `RUN VERIFY: PASS`).
-Not yet run in Codex: 0.35.0 (Batch 3, 14 rules).
+Codex runs reviewed (2026-10-07: 0.35.0 added): 0.32.0 (found two gaps, fixed in 0.32.1), 0.33.1 (all six Batch 2 rules matched, `RUN VERIFY: PASS`).
+0.35.0 (Batch 3, 14 rules matched, `RUN VERIFY: PASS`).
 
 **Next: Batch 4** (28 checks left to rule, in 4a, 4b and 4c below). Start with 4c or 4b: 4a needs a new reader fact first.
 
@@ -84,7 +84,7 @@ Per batch: see the playbook above. The Codex check is a single run per release (
 
 ### Batch 3b - settings in `dip.properties` and `install.ini` (5; reader 0.16.0 `server_config`)
 - [x] ADVSEC-007, 008, 009, 011, SEC-006 (0.35.0). ADVSEC-009: Pass needs the six core headers set restrictively, Partial for some, Fail for none. A missing `dip.properties` means nothing is set (Fail for 007/008).
-- [ ] Codex run on 0.35.0 (once), covering 3a and 3b: the 14 Batch 3 rules match their verdicts, `RUN VERIFY: PASS`.
+- [x] Codex run on 0.35.0 (once), covering 3a and 3b: the 14 Batch 3 rules match their verdicts, `RUN VERIFY: PASS`.
 
 ### Batch 4a - Kubernetes, Spark and containers (10; conditional on a cluster; needs reader facts first)
 - Prerequisite: a reader fact for Kubernetes cluster attachment (see Other open items); the Kubernetes calibrations are in `calibrations.md`, section "Kubernetes, containers and Spark" (None attached = Not Applicable; attached with no valid container config = Fail). Inspect the rows and the real bundles' container, Spark and cluster settings before deciding what else is needed.
