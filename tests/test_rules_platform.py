@@ -129,19 +129,30 @@ def test_scale011_filesystem_root(conns, expected):
 
 
 SSD, HDD = {"all_non_rotational": True}, {"all_non_rotational": False}
-WARN, QUIET = {"empty": False, "messages": 2}, {"empty": True, "messages": 0}
+QUIET = {"empty": True, "messages": 0, "codes": []}
+WARN_OTHER = {"empty": False, "messages": 4, "codes": ["WARN_PROJECT_LARGE_JOB_HISTORY", "WARN_MISC_CODE_ENV_USES_PYSPARK"]}
+WARN_DISK = {"empty": False, "messages": 2, "codes": ["WARN_MISC_DATADIR_ON_ROTATIONAL_DISK", "WARN_SECURITY_NO_CGROUPS"]}
+WARN_OLD = {"empty": False, "messages": 2}   # a facts.py without message codes
 
 
 @pytest.mark.parametrize("vol,sanity,expected", [
     (SSD, QUIET, "Pass"), (SSD, "ABSENT", "Pass"),
-    (HDD, QUIET, "Fail"), (HDD, WARN, "Fail"),
-    (SSD, WARN, "undecided"),             # the sanity-check text may flag a rotational disk: the model reads it
-    ("ABSENT", WARN, "undecided"),
-    ("ABSENT", QUIET, "Needs Review"), ("ABSENT", "ABSENT", "Needs Review"),
+    (SSD, WARN_OTHER, "Pass"),                 # sanity messages about other things do not block a Pass
+    (SSD, WARN_DISK, "Fail"),                  # DSS's own sanity check is authoritative
+    (HDD, QUIET, "Fail"), (HDD, WARN_OTHER, "Fail"),
+    ("ABSENT", WARN_DISK, "Fail"),             # flagged even when lsblk could not be read
+    ("ABSENT", WARN_OTHER, "Needs Review"), ("ABSENT", QUIET, "Needs Review"), ("ABSENT", "ABSENT", "Needs Review"),
     ({"backing_disks": []}, QUIET, "Needs Review"),
+    (SSD, WARN_OLD, "undecided"), ("ABSENT", WARN_OLD, "undecided"),   # older facts: the model reads the sanity-check text
 ])
 def test_arch004_disks_and_sanity_check(vol, sanity, expected):
     assert run("ARCH-004", facts(data_volume_device=vol, sanity_check=sanity)) == expected
+
+
+def test_arch004_reason_names_the_flagging_code_and_matches_case_insensitively():
+    doc = facts(data_volume_device=SSD, sanity_check={"empty": False, "messages": 1, "codes": ["warn_datadir_on_Rotational_disk"]})
+    out = verdicts.compute(doc, [{"id": "ARCH-004", "title": "SSD Storage for DSS"}])["verdicts"][0]
+    assert out["status"] == "Fail" and "warn_datadir_on_Rotational_disk" in out["reason"]
 
 
 def test_scale001_loopback_reason_says_it_is_installed_locally():
@@ -151,7 +162,7 @@ def test_scale001_loopback_reason_says_it_is_installed_locally():
 
 
 def test_an_undecided_row_is_listed_and_gets_no_verdict():
-    doc = verdicts.compute(facts(data_volume_device="ABSENT", sanity_check=WARN), [{"id": "ARCH-004", "title": "SSD Storage for DSS"}])
+    doc = verdicts.compute(facts(data_volume_device="ABSENT", sanity_check=WARN_OLD), [{"id": "ARCH-004", "title": "SSD Storage for DSS"}])
     assert doc["verdicts"] == [] and doc["undecided"] == [{"id": "ARCH-004", "title": "SSD Storage for DSS"}]
 
 

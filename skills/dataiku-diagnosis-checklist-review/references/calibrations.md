@@ -245,14 +245,15 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
 
 ## Architecture and version
 
-- **SSD storage (ARCH-004) [code-decided where the facts settle it]:** decide from the host's disks, because DSS's own sanity check may be missing
+- **SSD storage (ARCH-004) [code-decided]:** decide from the host's disks, because DSS's own sanity check may be missing
   from the bundle. Use the reader's `data_volume_device` fact: every disk behind the data directory
   non-rotational: **Pass**; any rotational: **Fail**; the fact is `ABSENT` (data directory, disk listing or
   matching mount not found): **Needs Review**. DSS's own sanity check flagging a rotational disk is also
   **Fail**; its absence is not evidence either way. Name the data directory and disk(s) in `evidence_found`.
-  The verdict covers the disk facts: any rotational disk is **Fail**; every disk non-rotational with no sanity-check
-  messages is **Pass**; disks unknown and no sanity-check output is **Needs Review**. When the sanity check has messages, the
-  verdict is `undecided` (its text may flag a rotational disk): read it and decide as above.
+  The verdict combines both: a sanity-check message whose code mentions rotational, HDD or SSD is **Fail** (even when the
+  disks could not be read); otherwise any rotational disk is **Fail**, every disk non-rotational is **Pass**, and disks
+  unknown is **Needs Review**. Only a `facts.py` without message codes leaves the row `undecided`: read the sanity-check
+  text and decide as above.
 
 
 - **Automation-node existence / Design-Automation separation (ARCH-001), on a design-node bundle:** the

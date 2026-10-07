@@ -10,6 +10,13 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.33.2] - 2026-10-07
+
+### Changed
+
+- **ARCH-004** now decides from both evidence sources and no longer hands the row back to the model whenever the sanity check has messages. A sanity-check message whose code mentions rotational, HDD or SSD is Fail (even when the disks could not be read); otherwise any rotational disk is Fail, all disks non-rotational is Pass, and disks unknown is Needs Review. Found on the GE review: lsblk showed an SSD, the sanity check had 19 unrelated messages, and the rule needlessly returned `undecided`. `undecided` remains only for a facts output without message codes.
+- Re-sync reader 0.14.0: `facts.py` `sanity_check` gains `codes` (distinct message codes, never the free-text details).
+
 ## [0.33.1] - 2026-10-07
 
 ### Changed

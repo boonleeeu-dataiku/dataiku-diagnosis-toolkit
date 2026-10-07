@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.14.0] - 2026-10-07
+
+### Added
+
+- `scripts/facts.py` `sanity_check` gains `codes`: the distinct message codes in `run/sanity-check.json` (the code, or the title when a message has no code), sorted. These are fixed identifiers such as `WARN_PROJECT_LARGE_JOB_HISTORY`, so a check can tell whether DSS flagged a specific condition (for example a rotational data-directory disk) without the free-text `details`, which is never printed. Verified against the three sample bundles (2, 4 and 4 distinct codes).
+
 ## [0.13.0] - 2026-10-07
 
 ### Added

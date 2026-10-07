@@ -41,7 +41,7 @@ Per batch: rule + unit tests on the synthetic fixtures, update `EVAL_ITEM_IDS` a
 - [ ] Re-save the eval baseline (`scripts/test.sh eval ... --save-baseline`, costs model usage) when the owner asks; it is stale (2 scenarios x 11 items vs 3 x 34).
 
 ### Batch 2 - numeric and tiered rules, facts exist (6)
-- [x] SEC-004 (RAM tiers, +/-10% band, >=80%), SCALE-001, SCALE-006 (sanity-check present = Pass, missing or empty = Fail), SCALE-009 (any 0 = Fail, out of range = Needs Review), SCALE-011, ARCH-004 (0.33.0). ARCH-004 returns `undecided` when the sanity-check text may flag a rotational disk, and the model reads it.
+- [x] SEC-004 (RAM tiers, +/-10% band, >=80%), SCALE-001, SCALE-006 (sanity-check present = Pass, missing or empty = Fail), SCALE-009 (any 0 = Fail, out of range = Needs Review), SCALE-011, ARCH-004 (0.33.0; 0.33.2 reads the sanity-check message codes, so `undecided` is now only the older-facts fallback).
 - Moved out: SCALE-008 needs `OutOfMemoryError` counts from the backend logs (and the config-folder size is often absent); now in Batch 4c with SCALE-007.
 - [ ] Codex run on 0.33.0 (once): the six rules match their verdicts, `RUN VERIFY: PASS`, run files beside the workbook.
 

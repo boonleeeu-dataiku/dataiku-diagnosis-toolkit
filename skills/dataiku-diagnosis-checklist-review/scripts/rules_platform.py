@@ -115,16 +115,25 @@ def filesystem_root_removed(facts):
     return _missing("the connections list")
 
 
+_DISK_FLAG_WORDS = ("rotational", "ssd", "hdd")
+
+
 @rule("ARCH-004", "SSD Storage for DSS")
 def ssd_storage(facts):
+    """The disk facts and DSS's own sanity check, either of which can settle it. A sanity-check message about rotational
+    disks is authoritative (Fail), even when the disks could not be read."""
     vol, sanity = fact(facts, "data_volume_device"), fact(facts, "sanity_check")
-    sanity_has_messages = isinstance(sanity, dict) and sanity.get("empty") is False
-    if isinstance(vol, dict) and isinstance(vol.get("all_non_rotational"), bool):
-        if vol["all_non_rotational"] is False:
-            return verdict("Fail", "a disk behind the data directory is rotational", all_non_rotational=False)
-        if sanity_has_messages:
-            return None  # DSS's own sanity check may flag a rotational disk; its text isn't in the facts
-        return verdict("Pass", "all disks behind the data directory are non-rotational", all_non_rotational=True)
-    if sanity_has_messages:
-        return None  # disks unknown, but the sanity-check text may settle it
-    return verdict("Needs Review", "the data directory's disks cannot be determined from the bundle")
+    messages = isinstance(sanity, dict) and sanity.get("empty") is False
+    codes = sanity.get("codes") if messages else []
+    if messages and not isinstance(codes, list):
+        return None  # an older facts.py without message codes: the model reads the sanity-check text
+    flagged = [c for c in codes if any(w in c.lower() for w in _DISK_FLAG_WORDS)]
+    disks = vol.get("all_non_rotational") if isinstance(vol, dict) else None
+    values = {"all_non_rotational": disks if isinstance(disks, bool) else ABSENT, "sanity_check_disk_codes": flagged}
+    if flagged:
+        return verdict("Fail", f"DSS's sanity check flags the disk type ({flagged[0]})", **values)
+    if disks is False:
+        return verdict("Fail", "a disk behind the data directory is rotational", **values)
+    if disks is True:
+        return verdict("Pass", "all disks behind the data directory are non-rotational", **values)
+    return verdict("Needs Review", "the data directory's disks cannot be determined from the bundle", **values)
