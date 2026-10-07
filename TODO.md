@@ -2,15 +2,15 @@
 
 ## Status and start here (updated 2026-10-07)
 
-Versions: toolkit **0.35.0** (tag `v0.35.0`), reader **0.16.0** (`skill-v0.16.0`, upstream repo `../Diagnosis Reader/`), Checklist Generator
-**0.4.0** (`v0.4.0`, `../Dataiku Checklist Generator/`; ids and titles frozen in its `config/id_registry.yaml`). Everything is pushed.
+Versions: toolkit **0.36.0** (tag `v0.36.0`, not pushed), reader **0.17.0** (`skill-v0.17.0`, upstream repo `../Diagnosis Reader/`), Checklist Generator
+**0.4.0** (`v0.4.0`, `../Dataiku Checklist Generator/`; ids and titles frozen in its `config/id_registry.yaml`). Toolkit 0.36.0 is committed and tagged locally, not pushed; reader 0.17.0 is pushed.
 
-Done: the verdict framework (Batch 0) and rules for **25 of 67 checks**: SEC-001/002/004/005/006/007/009/010, SCALE-001/006/009/011,
-ARCH-004 and ADVSEC-001 to 012. `run_step.py verdicts` computes them, `verify` fails on any workbook status that differs.
+Done: the verdict framework (Batch 0) and rules for **32 of 67 checks**: SEC-001/002/004/005/006/007/009/010, SCALE-001/006/009/011,
+ARCH-004, ADVSEC-001 to 012 and (0.36.0) GENAI-001/003/004/005/006/007/009. `run_step.py verdicts` computes them, `verify` fails on any workbook status that differs.
 Codex runs reviewed (2026-10-07: 0.35.0 added): 0.32.0 (found two gaps, fixed in 0.32.1), 0.33.1 (all six Batch 2 rules matched, `RUN VERIFY: PASS`).
 0.35.0 (Batch 3, 14 rules matched, `RUN VERIFY: PASS`).
 
-**Next: Batch 4** (28 checks left to rule, in 4a, 4b and 4c below). Start with 4c or 4b: 4a needs a new reader fact first.
+**Next: Batch 4a or 4c** (21 checks left to rule). 4b is done apart from GENAI-002/011 (4a needs a new reader fact first). Codex run on 0.36.0 still to do.
 
 ### Playbook for a batch (what worked)
 1. Read the checklist rows and the matching `calibrations.md` entries for the batch (`openpyxl` on `skills/dataiku-diagnosis-checklist-review/resources/checklist_template.xlsx`).
@@ -90,9 +90,11 @@ Per batch: see the playbook above. The Codex check is a single run per release (
 - Prerequisite: a reader fact for Kubernetes cluster attachment (see Other open items); the Kubernetes calibrations are in `calibrations.md`, section "Kubernetes, containers and Spark" (None attached = Not Applicable; attached with no valid container config = Fail). Inspect the rows and the real bundles' container, Spark and cluster settings before deciding what else is needed.
 - [ ] ARCH-005, ARCH-006, ARCH-007, ARCH-010, ARCH-011, ARCH-013, ARCH-014, ARCH-015, ARCH-016, ARCH-017
 
-### Batch 4b - GenAI (8)
+### Batch 4b - GenAI (8; 6 ruled in 0.36.0 plus GENAI-009)
 - Existing facts: `byo_llm`, `trace_explorer`, `plugins`, `default_preferences`. GENAI-005/006 field names are unverified against a populated bundle (see Other open items). Version gate: a check's minimum DSS version above the bundle's = Needs Review, never Fail or Not Applicable. Check each row's calibration in the "GenAI" section before writing rules.
-- [ ] GENAI-001, GENAI-002, GENAI-003, GENAI-004, GENAI-005, GENAI-006, GENAI-007, GENAI-011
+- [x] GENAI-001, 003, 004, 005, 006, 007 (and GENAI-009, listed under the model-only checks but ruled: installed = Needs Review, else Not Applicable) in 0.36.0 (reader 0.17.0 `genai_settings`). GENAI-001: internal = Pass, non-internal = Needs Review, none set = Fail. GENAI-003: block present but unset = Fail.
+- [ ] GENAI-002 (Hugging Face env, unverified fact) and GENAI-011 (group impersonation scope; needs to know which group runs the Agent Hub webapp) stay with the model unless a fact is found.
+- [ ] Codex run on 0.36.0 (once).
 
 ### Batch 4c - scale, connections, logs (10; SCALE-007 and SCALE-008 need a log-count fact)
 - Prerequisite for SCALE-007/008: a reader fact with `ERROR`/`WARN` and `OutOfMemoryError` counts from the backend log (reader work only: counts, never log text; mind the large-file hazards in the reader's `limitations.md`), plus the config-folder size, which is often absent. SCALE-002/003/004/010 have facts (`default_preferences`, `admin_cleanup_scenarios`, ...); SCALE-012 to 015 have not been inspected.

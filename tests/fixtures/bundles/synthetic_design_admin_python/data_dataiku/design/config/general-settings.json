@@ -30,6 +30,9 @@
     "defaultRetrievableKnowledgeCodeEnv": "custom_rag_env",
     "defaultRetrievableKnowledgeContainerExecSelection": {
       "containerMode": "NONE"
+    },
+    "llmTraceSettings": {
+      "traceExplorerDefaultWebApp": {}
     }
   },
   "impersonation": {
@@ -87,5 +90,9 @@
   },
   "localAIServerSettings": {
     "mainLLMId": "openai:OpenAI:gpt-5.1"
+  },
+  "aiDrivenAnalyticsSettings": {
+    "dataikuAIServicesTermsOfUseAccepted": false,
+    "enabled": false
   }
 }

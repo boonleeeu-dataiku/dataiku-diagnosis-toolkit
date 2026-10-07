@@ -10,6 +10,18 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.36.0] - 2026-10-07
+
+### Added
+
+- Deterministic verdicts, Batch 4b (partial): `scripts/rules_genai.py` decides seven GenAI checks. From existing facts: **GENAI-003** (Trace Explorer default web app set = Pass, block present but unset = Fail, block missing = Needs Review), **GENAI-005** (Bring Your Own LLM inactive = Not Applicable, active with reference project and main LLM = Pass, either missing = Fail), **GENAI-006** (every LLM id ChatGPT 5.2 or later = Pass, any older = Fail, undeterminable = Needs Review), **GENAI-009** (Agent Hub installed = Needs Review, not installed or no plugin configuration = Not Applicable, never Pass or Fail). From the new reader fact `genai_settings` (reader 0.17.0): **GENAI-001** (default code envs internal = Pass, a non-internal one = Needs Review, none set = Fail), **GENAI-004** (terms accepted and AI Services enabled = Pass, otherwise Needs Review), **GENAI-007** (all three Cobuild default LLMs set = Pass, otherwise Needs Review). GENAI-002 and GENAI-011 stay with the model (no verified fact); GENAI-008 and GENAI-010 were never planned for code.
+- Eval fixtures cover GENAI-003 and GENAI-004 (eval checklist now 36 items).
+
+### Changed
+
+- Reader re-synced to 0.17.0.
+- `calibrations.md`: `[code-decided]` marks and entries for the seven rules, anchors for GENAI-003 and GENAI-004.
+
 ## [0.35.0] - 2026-10-07
 
 ### Added

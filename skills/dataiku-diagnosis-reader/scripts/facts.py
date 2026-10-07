@@ -433,6 +433,36 @@ def trace_explorer():
                  f"{src}: generativeAISettings.llmTraceSettings.traceExplorerDefaultWebApp")
 
 
+AI_SERVICES_FLAGS = ("enabled", "prepareAICompletionEnabled", "aiGenerateSQLEnabled", "aiExplanationsEnabled", "storiesAIEnabled")
+COBUILD_KEYS = ("defaultEmbeddingLLMId", "defaultLLMId", "defaultImageGenerationLLMId")
+
+
+@fact("genai_settings")
+def genai_settings():
+    """GenAI settings from `general-settings.json`: the default code envs for retrieval (RAG) and PII detection (env names,
+    not secrets; an unset or empty value reads ABSENT), whether the AI Services terms are accepted and which AI features are
+    enabled, and which Cobuild default LLM ids are set (set or not only; the ids are not printed). Field names for the
+    Cobuild block come from Dataiku's checklist; no sample bundle carries it yet, so it reads ABSENT there."""
+    src = "config/general-settings.json"
+    gs = load_json(src)
+    if gs is None:
+        return absent(src)
+    gen, ai = dig(gs, "generativeAISettings"), dig(gs, "aiDrivenAnalyticsSettings")
+    if gen == ABSENT and ai == ABSENT:
+        return absent(f"{src}: generativeAISettings, aiDrivenAnalyticsSettings")
+    env = lambda k: (gen.get(k) if isinstance(gen, dict) and isinstance(gen.get(k), str) and gen.get(k).strip() else ABSENT)  # noqa: E731
+    flag = lambda k: (ai.get(k) if isinstance(ai, dict) and isinstance(ai.get(k), bool) else ABSENT)  # noqa: E731
+    build = dig(ai, "agentBuildingSettings") if isinstance(ai, dict) else ABSENT
+    cobuild = (ABSENT if not isinstance(build, dict)
+               else {k: bool(isinstance(build.get(k), str) and build.get(k).strip()) for k in COBUILD_KEYS})
+    return found({"generativeAISettings_present": gen != ABSENT, "retrieval_code_env": env("defaultRetrievableKnowledgeCodeEnv"),
+                  "pii_detection_code_env": env("presidioBasedPIIDetectionCodeEnv"),
+                  "ai_services_terms_accepted": flag("dataikuAIServicesTermsOfUseAccepted"),
+                  "ai_services_enabled": {k: flag(k) for k in AI_SERVICES_FLAGS},
+                  "cobuild_default_llms_set": cobuild},
+                 f"{src}: generativeAISettings, aiDrivenAnalyticsSettings (code env names; Cobuild LLM ids reduced to set/unset)")
+
+
 @fact("default_preferences")
 def default_preferences():
     src = "config/general-settings.json"

@@ -92,3 +92,7 @@ items:
     mentions_any: [sso]
   SCALE-010:  # all default connection/format/engine preferences blank -> Pass
     status: [Pass]
+  GENAI-003:  # default project and web app set -> Pass
+    status: [Pass]
+  GENAI-004:  # terms accepted and AI Services enabled -> Pass
+    status: [Pass]

@@ -8,7 +8,7 @@ relative to it unless a root-level bundle file is named directly.
 | Question | Where | Notes |
 |---|---|---|
 | Is the data directory on a rotational disk (SSD check) | `scripts/facts.py` → `data_volume_device`; source blocks in `diag.txt`: `printenv` (`DIP_HOME`), `lsblk`, `lsblk -t` | Data dir → longest matching mount point in the `lsblk` tree → backing disk → `ROTA` (0 = SSD, 1 = rotational). An LVM volume's disk is the root of its tree. `ABSENT` when no matching mount or no listing. DSS's own `run/sanity-check.json` may also flag it but can be missing |
-| Several key settings at once (heap sizes, host memory, `config/` size, DB host, concurrency limits, SSO, UIF, cgroups, `filesystem_root`, Agent Hub) | `scripts/facts.py <bundle_root>` | JSON `{fact: {value, source}}`; `ABSENT` = not in the bundle (not `false`/`0`); never prints secrets. Config size is summed from `config_listing.txt`, not `du` of the partial mirror |
+| Several key settings at once (heap sizes, host memory, `config/` size, DB host, concurrency limits, SSO, UIF, cgroups, `filesystem_root`, Agent Hub, GenAI defaults) | `scripts/facts.py <bundle_root>` | JSON `{fact: {value, source}}`; `ABSENT` = not in the bundle (not `false`/`0`); never prints secrets. Config size is summed from `config_listing.txt`, not `du` of the partial mirror |
 | DSS version | `dss-version.json` | `product_version`, `conf_version` |
 | Node type (design/automation/...) | `install.ini` → `[general] nodetype` | See `references/node-types.md` |
 | Is DSS running? Which components, PIDs, uptime? | `diag.txt` → `dss status` section | |

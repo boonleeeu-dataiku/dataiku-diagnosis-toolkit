@@ -96,3 +96,7 @@ items:
     mentions_any: [sso]
   SCALE-010:  # inherits the baseline's non-blank upload connection -> Needs Review
     status: [Needs Review]
+  GENAI-003:  # Trace Explorer block present but no default web app -> Fail
+    status: [Fail]
+  GENAI-004:  # terms not accepted -> Needs Review (optional feature, ask whether intentional)
+    status: [Needs Review]

@@ -164,7 +164,12 @@ usually visible only in `datadir_listing.txt`.
   `referenceProjectKey` is set (field names from Dataiku's checklist; not yet seen populated in a sample bundle, so
   verify when one appears); a `CustomLLM` connection alone does not make it active (`facts.py` `byo_llm`). **Agent Hub**: an `agent-hub` directory under `config/plugins/`, an `AGENT_HUB`
   project under `config/projects/` with a `web_apps/` entry (and `agent-tools/`), seen in one design sample.
-  Still unverified: `agentBuildingSettings` and an `INTERNAL_huggingface` code env.
+  Still unverified: `aiDrivenAnalyticsSettings.agentBuildingSettings` (Cobuild default LLM ids) and an `INTERNAL_huggingface` code env.
+  **GenAI defaults** (`facts.py` `genai_settings`): `generativeAISettings.defaultRetrievableKnowledgeCodeEnv` and
+  `presidioBasedPIIDetectionCodeEnv` name the default code envs for RAG and PII detection (an unset key means none is set in
+  the file; an `INTERNAL_` prefix marks an internal env). `aiDrivenAnalyticsSettings.dataikuAIServicesTermsOfUseAccepted` is the
+  AI Services terms flag; the enable flags are `enabled` (older DSS) or per feature (`prepareAICompletionEnabled`,
+  `aiGenerateSQLEnabled`, `aiExplanationsEnabled`, `storiesAIEnabled`). Checked on the three sample bundles.
 
 ## Connections (`connections.json`) of interest
 

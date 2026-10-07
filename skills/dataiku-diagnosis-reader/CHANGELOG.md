@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.17.0] - 2026-10-07
+
+### Added
+
+- `scripts/facts.py` gains `genai_settings`: the default code envs for retrieval (RAG) and PII detection (`retrieval_code_env`, `pii_detection_code_env`; names, `ABSENT` when unset), the AI Services terms flag (`ai_services_terms_accepted`), the enable flags (`ai_services_enabled`: `enabled` on older DSS, per-feature flags on newer), and which Cobuild default LLM ids are set (`cobuild_default_llms_set`: set/unset per id, the ids are not printed; `ABSENT` when `agentBuildingSettings` is missing). Verified against the three sample bundles (internal envs on two, none set on the automation node; terms not accepted on all three; no Cobuild block on any). `references/data-dir-config.md` documents the keys.
+
 ## [0.16.0] - 2026-10-07
 
 ### Added

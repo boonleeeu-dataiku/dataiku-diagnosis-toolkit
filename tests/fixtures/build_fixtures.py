@@ -59,6 +59,8 @@ EVAL_ITEM_IDS = [
     "GENAI-006",  # BYO LLM model version: inactive -> Not Applicable; recommended -> Pass; <= 5.1 -> Fail
     "SCALE-006",  # sanity-check output with messages -> Pass; missing or empty -> Fail (never Partial)
     "SEC-010",    # SSO + LDAP enabled -> Pass; SSO disabled -> Fail; SSO enabled/LDAP off or settings missing -> Needs Review
+    "GENAI-003",  # Trace Explorer default web app: set -> Pass; empty -> Fail; block missing -> Needs Review
+    "GENAI-004",  # AI Services: terms accepted and enabled -> Pass; not accepted or settings missing -> Needs Review
     "SCALE-010",  # any non-blank default connection/format/engine preference -> Needs Review; all blank -> Pass
 ]
 
@@ -252,7 +254,9 @@ backend.xmx = 8g
         "generativeAISettings": {
             "defaultRetrievableKnowledgeCodeEnv": "INTERNAL_retrieval_augmented_generation_v1",
             "defaultRetrievableKnowledgeContainerExecSelection": {"containerMode": "INHERIT"},
+            "llmTraceSettings": {"traceExplorerDefaultWebApp": {"projectKey": "ADMINPROJECT", "webAppId": "synthWebApp"}},
         },
+        "aiDrivenAnalyticsSettings": {"dataikuAIServicesTermsOfUseAccepted": True, "enabled": True},
         "deployerClientSettings": {"mode": "REMOTE", "nodeUrl": "https://deployer.synthetic.example:11200"},
         "ssoSettings": {"enabled": True, "protocol": "SAML"},
         "localAIServerSettings": {"referenceProjectKey": "LLM_REF", "mainLLMId": "openai:OpenAI:gpt-5.2"},
@@ -294,7 +298,7 @@ def admin_python_bundle(root: Path) -> None:
     scenario is an active, scheduled `custom_python` one: housekeeping can't be confirmed without
     reading its script, so SCALE-004 is Needs Review. It also has no instance id in install.ini
     (SEC-001 Fail), LDAP switched off (SEC-009 Not Applicable) SSO explicitly disabled (SEC-010 Fail), a JEK-specific cgroup target (SEC-005 Fail)
-    no sanity-check output (SCALE-006 Fail; ARCH-004 can no longer be decided, so Needs Review) and BYO LLM active with an old model and no reference project (GENAI-005 and GENAI-006 Fail)."""
+    no sanity-check output (SCALE-006 Fail; ARCH-004 can no longer be decided, so Needs Review) BYO LLM active with an old model and no reference project (GENAI-005 and GENAI-006 Fail), an empty Trace Explorer default (GENAI-003 Fail) and AI Services terms not accepted (GENAI-004 Needs Review)."""
     baseline_bundle(root)
     design = root / "data_dataiku" / "design"
     ini = design / "install.ini"
@@ -306,6 +310,8 @@ def admin_python_bundle(root: Path) -> None:
     settings["cgroupSettings"]["jobExecutionKernels"] = {"targets": [{"cgroupPathTemplate": "DSS/${user}/jek",
                                                                       "limits": [{"key": "memory.max", "value": "8G"}]}]}
     settings["localAIServerSettings"] = {"mainLLMId": "openai:OpenAI:gpt-5.1"}
+    settings["generativeAISettings"]["llmTraceSettings"] = {"traceExplorerDefaultWebApp": {}}
+    settings["aiDrivenAnalyticsSettings"] = {"dataikuAIServicesTermsOfUseAccepted": False, "enabled": False}
     write(design / "config" / "general-settings.json", settings)
     p = root / "data_dataiku" / "design" / "config" / "projects" / "ADMINISTRATIONPROJECT"
     write(p / "params.json", {"projectKey": "ADMINISTRATIONPROJECT", "owner": "admin"})

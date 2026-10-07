@@ -75,26 +75,39 @@ holds the `Action:` guidance for `notes`. The rule and its entry must agree: a c
   terms not accepted while all AI features are disabled): **Needs Review**. For "AI assistant debug data
   in the bundle" checks, a bundle that lacks the section is **Needs Review**, not Fail.
 
-- **Internal code environments for LLM Mesh (GENAI-001; RAG, document extraction, PII detection):** judge
+- **Internal code environments for LLM Mesh (GENAI-001; RAG, document extraction, PII detection) [code-decided]:** judge
   only whether the internal code envs are in use. Say in `notes` which envs you saw.
   - **Pass:** the defaults are the internal code envs (the reader's `data-dir-config` and
     `data-dir-runtime-and-codeenvs` references say how to tell). Don't downgrade for a container
     execution mode of `INHERIT` when no container config exists, and don't require separate evidence for
     each of the three categories.
   - **Needs Review:** a non-internal code env is used for any of them.
-  - **Fail:** nothing is set up.
+  - **Fail:** nothing is set up (no default env for retrieval or PII detection). The GenAI settings missing from the bundle altogether: Needs Review.
+  - Decided from `facts.py`'s `genai_settings` (retrieval and PII detection envs; document extraction has no env of its own).
 
-- **Bring Your Own LLM (GENAI-005, GENAI-006):** BYO mode counts as active only when `facts.py`'s `byo_llm`
+- **Trace Explorer (GENAI-003) [code-decided]:** the default project and web app both set (`trace_explorer`
+  configured): **Pass**. The block present but no default set: **Fail**. The block missing from the bundle: **Needs Review**.
+
+- **AI Services (GENAI-004) [code-decided]:** terms accepted and at least one AI Services flag on (`genai_settings`): **Pass**.
+  Terms not accepted, or accepted with nothing enabled, or the flag missing: **Needs Review** (an optional feature; ask whether
+  it is intentional), never Fail. Outbound connectivity to the AI gateway can't be verified from a bundle.
+
+- **Cobuild default LLMs (GENAI-007) [code-decided]:** all three default ids set (`genai_settings.cobuild_default_llms_set`):
+  **Pass**. Any unset, or the block missing (DSS before the Cobuild settings, or Cobuild never used): **Needs Review**, naming
+  the unset ids. Whether Cobuild is in use isn't verified, so this is never Fail or Not Applicable.
+
+- **Bring Your Own LLM (GENAI-005, GENAI-006) [code-decided]:** BYO mode counts as active only when `facts.py`'s `byo_llm`
   reports `active: true` (a main LLM id or a reference project key is set). A custom LLM connection alone does
   not make it active. Inactive (or the block missing): **Not Applicable** for both.
   - **GENAI-005:** active with both the reference project key and a main LLM set: **Pass**; either missing: **Fail**.
   - **GENAI-006:** judge the model ids `byo_llm` reports. A recommended version (OpenAI ChatGPT 5.2 or later):
     **Pass**; a known unsupported one (ChatGPT 5.1 or earlier): **Fail**; non-OpenAI, ambiguous or
-    undeterminable: **Needs Review** (name the id in `notes`).
+    undeterminable: **Needs Review** (name the id in `notes`). Applied to every LLM id reported (main, response-format-aware,
+    fast/light): any unsupported one is Fail, else any undeterminable one is Needs Review. A `gpt-5` without a minor number counts as 5.0.
 
-- **Agent Hub deployer permissions (GENAI-009):** the bundle can't verify who may deploy, so don't infer
+- **Agent Hub deployer permissions (GENAI-009) [code-decided]:** the bundle can't verify who may deploy, so don't infer
   it from the project owner or group grants. Agent Hub installed (the reader's `data-dir-config`
-  reference lists the signal): **Needs Review**. Not installed: **Not Applicable**. Never Pass or Fail.
+  reference lists the signal): **Needs Review**. Not installed (or no plugin configuration in the bundle at all): **Not Applicable**. Never Pass or Fail.
 
 ## Security
 
@@ -352,6 +365,8 @@ and the row together.
 | ARCH-011 | Baseline Container Execution Configs (Standard, Webapp) and Namespace Settings |
 | ARCH-013 | Valid Cluster Configuration for Elastic Compute |
 | GENAI-001 | Internal Code Environments for RAG, Document Extraction, PII Detection |
+| GENAI-003 | Trace Explorer Default Configuration |
+| GENAI-004 | AI Services Terms of Use Acceptance & Enablement |
 | GENAI-005 | Bring Your Own LLM Mode - Reference Project & Main Model |
 | GENAI-006 | Bring Your Own LLM - Recommended Model Versions |
 | GENAI-007 | Cobuild Default LLM Configuration |
