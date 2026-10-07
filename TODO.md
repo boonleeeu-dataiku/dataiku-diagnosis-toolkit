@@ -32,12 +32,13 @@ Per batch: rule + unit tests on the synthetic fixtures, update `EVAL_ITEM_IDS` a
   drives `verify`, argparse choices and the "recorded" check, and runs reader scripts); generalise `facts_path` into a `sibling(manifest, suffix)` helper.
 - [x] `verify` hashes the saved `<stem>_facts.json` against the manifest's recorded facts hash, so a hand-edited file can't feed
   verdicts. Cheap, and it may replace the second `facts.py` run.
-- [ ] Neutral `validated_by`: change `Claude (AI-assisted review of <bundle>)` to `<agent name> (AI-assisted review of <bundle>)` in
+- [x] Neutral `validated_by` (0.32.1): change `Claude (AI-assisted review of <bundle>)` to `<agent name> (AI-assisted review of <bundle>)` in
   SKILL.md (including the `reviewer` rule), update `tests/test_contracts.py` and `check_review_output`, and drop the Codex override.
 
 ### Batch 1 - pilot: flags and counts already in `facts.py` (5)
 - [x] SEC-001, SEC-002, SEC-005, SEC-009, SEC-010 (0.32.0). SEC-005 needed the new reader fact `cgroups.target_counts` (reader 0.13.0). SEC-002 enabled with no rules = Partial.
-- [ ] 3-run Codex round on 0.32.0: confirm zero differing items (and `RUN VERIFY: PASS`), then re-save the eval baseline.
+- [x] Codex run on 0.32.0 reviewed (one run, by the owner's choice to save usage; further rounds only on request): the five ruled items matched their verdicts; the run left no manifest beside the workbook and wrote `Claude` as reviewer, both fixed in 0.32.1.
+- [ ] Re-save the eval baseline (`scripts/test.sh eval ... --save-baseline`, costs model usage) when the owner asks; it is stale (2 scenarios x 11 items vs 3 x 34).
 
 ### Batch 2 - numeric and tiered rules, facts exist (7)
 - [ ] SEC-004 (RAM tiers, +/-10% band, >=80%), SCALE-001, SCALE-006 (0.30.0: sanity-check present = Pass, missing or empty = Fail), SCALE-008, SCALE-009, SCALE-011, ARCH-004
@@ -80,10 +81,7 @@ only the `notes`/`evidence_found` wording may differ between clients.
 ## Other open items
 - [x] Hygiene check of code, skills, tests and docs: safe fixes applied (run_step.py error handling, test caching and cleanup, README and
   skill duplicates); the rest moved into Batch 0, portability and the items below.
-- [ ] Codex stages outputs in sandbox work dirs, so the run manifest isn't copied beside the deliverables: add a skill rule to copy it.
+- [x] Codex stages outputs in sandbox work dirs, so the run manifest isn't copied beside the deliverables: step 7 now says to copy the run files (0.32.1). Confirm on the next Codex run.
 - [ ] Review the remaining Needs Review items (GENAI-004/007/008) for fixed verdicts, if no batch above covers them.
 - [ ] GENAI-005/006 field names (`mainLLMId`, `referenceProjectKey`) are unverified against a populated bundle: confirm when one appears.
-- [ ] Re-save the eval baseline (`run_review_eval.py --save-baseline`, costs model usage) after Batch 1: it holds 2 scenarios x 11 items, the
-  fixtures now have 3 x 34, so 23 items and `synthetic_design_admin_python` aren't regression-checked.
 - [ ] Reader upstream: no `facts.py` key for Kubernetes cluster attachment (needed by Batch 4a, ARCH-010/013).
-- [ ] Run Codex on 0.30.0 and compare 3 runs (last round on 0.29.1: only SCALE-006 differed; fixed in 0.30.0).

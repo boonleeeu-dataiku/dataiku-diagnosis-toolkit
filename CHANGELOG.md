@@ -10,6 +10,14 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.32.1] - 2026-10-07
+
+### Changed
+
+- Found by reviewing the first Codex run on 0.32.0 (the five ruled items matched their verdicts, but the run left no manifest beside the workbook and wrote `Claude` as the reviewer):
+- `validated_by` and the `write_summary` reviewer are now `<agent name> (AI-assisted review of <bundle name>)` in the shared checklist skill (`Claude`, `Codex`, ...), so no client needs an override. The Codex-only duplicate rule in `codex-skills/dataiku-codex-workflow/SKILL.md` is removed.
+- Step 7 now says to copy `<stem>_run_manifest.json`, `<stem>_facts.json` and `<stem>_verdicts.json` into the same folder as the delivered workbook, so `verify` can be re-run on delivered output (agents that stage outputs in a work dir, such as Codex, previously left them behind).
+
 ## [0.32.0] - 2026-10-07
 
 ### Added

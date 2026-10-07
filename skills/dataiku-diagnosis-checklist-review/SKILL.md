@@ -150,7 +150,8 @@ For each item, write:
   findings by id when they're causally linked (e.g., an OOM crash pattern
   linked to a concurrency-limit setting).
 - `validated_at` / `validated_by`: today's date (`YYYY-MM-DD`) and, verbatim,
-  `Claude (AI-assisted review of <bundle name>)`.
+  `<agent name> (AI-assisted review of <bundle name>)`, where `<agent name>` is the AI agent doing the review (e.g. `Claude`,
+  `Codex`), unless the user supplied a reviewer name.
 
 ### Format of `notes`
 
@@ -213,7 +214,7 @@ only the judgment text:
 
 - `checklist_path`, `reviewer`, `bundle`, and optionally `node_version` and `diagnosis_generated`.
   Fix their format so repeat runs produce the same Summary header:
-  - `reviewer`: exactly the `validated_by` string, `Claude (AI-assisted review of <bundle name>)`.
+  - `reviewer`: exactly the `validated_by` string, `<agent name> (AI-assisted review of <bundle name>)`.
   - `node_version`: `<nodetype> / DSS <product_version>` from `facts.py`'s `node`, e.g. `design / DSS 14.2.1`.
   - `diagnosis_generated`: an ISO date `YYYY-MM-DD`, from the timestamp in the bundle folder name
     (`dku_diagnosis_<node>_<YYYY-MM-DD-HH-MM-SS>`).
@@ -247,6 +248,10 @@ final summary. It also fails when a row with a verdict has a different status in
 (usually a skipped step, a stale Summary or a status that differs from its verdict) and run it again. If the
 bundle sits on a separate computer the scripts can't reach, say the run could not be verified. Then check: every id has one of the five statuses; each `notes` is within budget with
 no file paths or secrets; the Summary was written after the last edit.
+
+Keep the run files with the deliverable: copy `<stem>_run_manifest.json`, `<stem>_facts.json` and `<stem>_verdicts.json` into the
+same folder as the delivered workbook (an agent that works in a staging folder must copy them out), so `verify` can be re-run on
+the delivered output later.
 
 Send the updated file to the conversation. If the source came from the user's linked computer, also
 write it back to the same path via `device_commit_files` and say so in one line. With the bundled

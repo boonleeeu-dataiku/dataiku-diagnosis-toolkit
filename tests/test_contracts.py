@@ -81,7 +81,7 @@ def test_review_skill_summary_headers_are_recognised_by_the_deck_generator(heade
 
 
 def test_review_skill_pins_summary_header_formats():
-    assert "Claude (AI-assisted review of <bundle name>)" in REVIEW_SKILL
+    assert "<agent name> (AI-assisted review of <bundle name>)" in REVIEW_SKILL
     assert "<nodetype> / DSS <product_version>" in REVIEW_SKILL
     assert "`YYYY-MM-DD`" in REVIEW_SKILL
 
@@ -156,7 +156,7 @@ def test_deck_skill_orders_write_summary_before_the_narrative():
 
 def test_review_skill_defines_must_have_and_uses_insufficient_evidence_column():
     """Step 6 keys off must-have items and step 4 defers to the checklist's own fallback column."""
-    for phrase in ("priority == must_have", "insufficient_evidence_handling", "Claude (AI-assisted review of"):
+    for phrase in ("priority == must_have", "insufficient_evidence_handling", "(AI-assisted review of"):
         assert phrase in REVIEW_SKILL, f"review skill no longer says {phrase!r}"
 
 
@@ -164,3 +164,10 @@ def test_review_skill_fixes_the_plaintext_credential_summary_line():
     flat = " ".join(REVIEW_SKILL.split())
     assert "Plaintext credential: the internal database password is stored in plaintext in" in flat
     assert "Rotate it and use a secrets store." in flat
+
+
+def test_review_skill_asks_to_keep_the_run_files_with_the_deliverable():
+    flat = " ".join(REVIEW_SKILL.split())
+    for name in ("_run_manifest.json", "_facts.json", "_verdicts.json"):
+        assert name in flat, name
+    assert "same folder as the delivered workbook" in flat
