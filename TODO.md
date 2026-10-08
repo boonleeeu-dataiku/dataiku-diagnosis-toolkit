@@ -3,7 +3,7 @@
 ## Status and start here (updated 2026-10-08)
 
 Versions: toolkit **0.38.3** (tag `v0.38.3`), reader **0.20.0** (`skill-v0.20.0`, upstream repo `../Diagnosis Reader/`), Checklist Generator
-**0.4.0** (`v0.4.0`, `../Dataiku Checklist Generator/`; ids and titles frozen in its `config/id_registry.yaml`). Everything is pushed.
+**0.4.0** (`v0.4.0`, `../Dataiku Checklist Generator/`; ids and titles frozen in its `config/id_registry.yaml`). Everything is pushed (last commit: the maintainer doc, `docs/validation-process.md`).
 
 Done: the verdict framework (Batch 0) and rules for **65 of 67 checks**, one module per area: `rules_security.py` (SEC-001/002/005/006/007/009/010,
 ADVSEC-001 to 012), `rules_platform.py` (ARCH-001, SEC-004, ARCH-004, SCALE-001/002/003/004/006/007/008/009/010/011/012/013/014/015), `rules_genai.py`
@@ -113,8 +113,8 @@ Per batch: see the playbook above. The Codex check is a single run per release (
 ### Batch 4b - GenAI (8; 6 ruled in 0.36.0 plus GENAI-009)
 - Existing facts: `byo_llm`, `trace_explorer`, `plugins`, `default_preferences`. GENAI-005/006 field names are unverified against a populated bundle (see Other open items). Version gate: a check's minimum DSS version above the bundle's = Needs Review, never Fail or Not Applicable. Check each row's calibration in the "GenAI" section before writing rules.
 - [x] GENAI-001, 003, 004, 005, 006, 007 (and GENAI-009, listed under the model-only checks but ruled: installed = Needs Review, else Not Applicable) in 0.36.0 (reader 0.17.0 `genai_settings`). GENAI-001: internal = Pass, non-internal = Needs Review, none set = Fail. GENAI-003: block present but unset = Fail.
-- [x] GENAI-002 (unreleased): no cluster = Not Applicable, cluster attached = Needs Review (the model reports observations and an `Action:`).
-- [x] GENAI-011 (unreleased): always Needs Review (`rules_review.py`); the model reports observations and an `Action:`.
+- [x] GENAI-002 (0.38.3): no cluster = Not Applicable, cluster attached = Needs Review (the model reports observations and an `Action:`).
+- [x] GENAI-011 (0.38.3): always Needs Review (`rules_review.py`); the model reports observations and an `Action:`.
 
 ### Batch 4c - scale, connections, logs (10; SCALE-007 and SCALE-008 need a log-count fact)
 - Reader 0.18.0 added `backend_log` (per-file ERROR/FATAL/WARN and OutOfMemoryError counts with time windows, counts only) and `metastore_and_exports`. SCALE-012 to 015 are not inspected yet: the next step is a reader `connections` fact (no params or secrets).
@@ -146,8 +146,8 @@ only the `notes`/`evidence_found` wording may differ between clients.
 - [x] Hygiene check of code, skills, tests and docs: safe fixes applied (run_step.py error handling, test caching and cleanup, README and
   skill duplicates); the rest moved into Batch 0, portability and the items below.
 - [x] Codex stages outputs in sandbox work dirs, so the run manifest isn't copied beside the deliverables: step 7 now says to copy the run files (0.32.1); confirmed on the 0.33.1 run.
-- [ ] Re-save the eval baseline (`scripts/test.sh eval ... --save-baseline`, costs model usage) when the owner asks; it is stale (2 scenarios x 11 items vs 3 x 41).
-- [ ] Minor: notes should not name files (SEC-003 on the 0.32.0 run mentioned a security config file); consider a line in SKILL.md or leave it.
+- [ ] Re-save the eval baseline (`scripts/test.sh eval ... --save-baseline`, costs model usage) when the owner asks; it is stale (2 scenarios x 11 items vs 3 scenarios x 49).
+- [ ] Minor: notes should not name files (SEC-003 on the 0.32.0 run mentioned a security config file). The SEC-003 guidance in `calibrations.md` now says so; consider a general line in SKILL.md or leave it.
 - [x] GENAI-004/007 now have rules (0.36.0); GENAI-008 stays with the model.
 - [ ] GENAI-005/006 field names (`mainLLMId`, `referenceProjectKey`) are unverified against a populated bundle: confirm when one appears.
 - [x] Reader `kubernetes` fact for cluster attachment (0.19.0).
