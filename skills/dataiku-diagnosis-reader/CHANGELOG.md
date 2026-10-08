@@ -9,6 +9,16 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.20.1] - 2026-10-08
+
+### Changed
+
+- `SKILL.md` slimmed (164 to 113 lines) with no change to what it covers: orient is now workflow step 1 (was step 7); the list of every fact `facts.py` prints is replaced by its contract (`{fact: {value, source}}`, `ABSENT`, `ERROR`, no secrets), since the output is self-describing; node and mirror identification point to the references; the duplicated "Known limitations" section and the deployer-key secrets bullet are folded into their single homes; shorter reference index and description.
+
+### Added
+
+- `references/orient-fallback.md`: how to orient when `orient.sh` can't run where the bundle is (pipe it over stdin, or the manual commands), moved out of `SKILL.md`.
+
 ## [0.20.0] - 2026-10-08
 
 ### Added

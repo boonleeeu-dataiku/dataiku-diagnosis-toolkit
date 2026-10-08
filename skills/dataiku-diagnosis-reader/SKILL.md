@@ -1,7 +1,7 @@
 ---
 name: "dataiku-diagnosis-reader"
-description: "Navigate and interpret an extracted Dataiku DSS diagnosis.zip support bundle (also: DSS diagnostic export, instance diagnostic archive, a folder named dku_diagnosis_*) to answer troubleshooting questions on instance configuration, crashes/OOMs, performance, users, connections, projects, code environments, plugins and logs, without re-deriving the bundle layout. Use whenever the user provides or asks about a Dataiku diagnosis bundle or wants to diagnose a DSS instance from one."
-version: 0.20.0
+description: "Navigate and interpret an extracted Dataiku DSS diagnosis.zip support bundle (also: DSS diagnostic export, a folder named dku_diagnosis_*) to answer troubleshooting questions on instance configuration, crashes/OOMs, performance, users, connections, projects, code environments, plugins and logs, without re-deriving the bundle layout. Use whenever the user provides or asks about a Dataiku diagnosis bundle."
+version: 0.20.1
 ---
 
 # Dataiku DSS diagnosis.zip reader
@@ -36,57 +36,24 @@ you're looking at real content or just a path/size record:
 How completely each tier is populated varies by DSS version, site, and size limits — treat this
 as a structural model, not a byte-identical layout guaranteed across every bundle.
 
-## Step-by-step investigation workflow
+## Investigation workflow
 
-1. **Confirm you're at the bundle root**: look for `diag.txt` + `timings.txt` + `*_listing.txt`
-   siblings.
-2. **Locate the data-dir mirror**: `find <bundle_root> -maxdepth 5 -name install.ini`. Its parent
-   directory is the mirror root. The path varies by site — observed examples include
-   `apps/dss/data_design/`, `data_dataiku/design/`, and `data_dataiku/automation/` — but it
-   commonly (not always) follows a `<something>/<nodetype>/` shape.
-3. **Identify the node**: read `install.ini` → `[general] nodetype` and the sibling
-   `dss-version.json` → `product_version`. `design` and `automation` node internals are verified
-   by this skill (see `references/node-types.md` for what differs between them). Any other
-   `nodetype` (e.g. `deployer`) is an **unverified gap** — apply the general 3-tier model, but
-   inspect its subtrees directly rather than assuming parity with the design/automation docs here.
-4. **Route the actual question** through `references/lookup-table.md` (or the condensed table
-   below for common cases).
-5. **Never load large manifest/log files whole.** `datadir_listing.txt` alone has been observed
-   from ~340MB to ~2.3GB; rotated `run/*.log.N` files can individually reach ~100MB. Always
-   `grep`/`awk`/`wc -l` first — see `references/listings-and-manifests.md` for safe patterns.
-6. **If asked about job/scenario run history, dataset build timelines, or audit content**, check
-   up front whether it's Tier-3 (listing-only) before promising an answer — see
-   `references/limitations.md`.
-7. When triaging a whole bundle, run `scripts/orient.sh <bundle_root>` first (before steps 2-3 if you
-   like): node type, version, mirror path, biggest files, and presence of key troubleshooting files.
-   If the script can't run (it lives in the skill folder, which may be on a different machine from
-   the bundle, e.g. a sandbox agent with the bundle on a linked computer), don't skip orientation.
-   First choice: pipe the script to the machine that holds the bundle. It is read-only,
-   self-contained and ~4.5KB, so run `bash -s -- <root>` there with the script body on stdin (e.g. a
-   quoted heredoc: `bash -s -- <root> <<'ORIENT'` ... `ORIENT`). Pipe the whole script verbatim, not a
-   condensed copy, so the output matches what the script prints elsewhere (it needs `bash` plus
-   standard `find`/`du`/`grep`; on Windows run it where the bundle is, in WSL or Git Bash). If stdin can't be passed, do the
-   same by hand with read-only commands run where the bundle is: `find <root> -maxdepth 6 -name
-   install.ini` (the mirror is its directory), `grep -m1 DKU_NODE_TYPE <root>/diag.txt` and
-   `<mirror>/dss-version.json` for node type and version, `find <root> -type f -size +50M -exec ls -lh {} +`
-   for the biggest files, and `ls` for `diag.txt`, `dmesg.txt`, `<mirror>/run/` and
-   `<mirror>/config/general-settings.json`. Say in your output that you oriented by hand.
-
-8. **Key settings in one command.** When you need the usual configuration values (a review against a
-   checklist, a health check), run `scripts/facts.py <bundle_root>` once and quote its output instead
-   of re-reading `general-settings.json` by hand. It prints JSON, `{fact: {value, source}}`: node and
-   version, `install.ini` heap sizes, host memory (GiB), `config/` size from `config_listing.txt`, the
-   internal database type/host/loopback, concurrency limits found by leaf-key search (including
-   `jekSettings`), SSO/LDAP (including the LDAP authorized-groups count), impersonation rule counts, cgroup memory limit as a percentage of host
-   memory, connection count and `filesystem_root`, the Trace Explorer web app, default connection and
-   engine preferences, installed plugins and whether Agent Hub is installed, the disk(s) behind the
-   data directory with their ROTA value (`data_volume_device`), the housekeeping-project scenarios
-   (`admin_cleanup_scenarios`: type, active, trigger state and step names, scripts never read), and the
-   deployer mode and target host (`deployer`, never its API key). A missing setting is
-   `"value": "ABSENT"` (with what was searched), never `false` or `0`; an unreadable one is `"ERROR"`. It
-   never prints secrets (only whether the internal database password is stored in plaintext). It is
-   read-only Python 3 stdlib; if it cannot run where the bundle is, read the same values with the
-   references and say you did.
+1. **Orient.** Run `scripts/orient.sh <bundle_root>`: node type, version, data-dir mirror path, biggest files, and which key
+   troubleshooting files are present. If it can't run where the bundle is, see `references/orient-fallback.md`; don't skip it.
+   The mirror is the parent directory of `install.ini` (see `references/data-dir-identity.md`).
+2. **Identify the node.** `design` and `automation` internals are verified (`references/node-types.md` says what differs). Any
+   other `nodetype` (e.g. `deployer`) is an **unverified gap**: apply the 3-tier model but inspect its subtrees directly rather
+   than assuming parity.
+3. **Key settings in one command.** For the usual configuration values (a checklist review, a health check), run
+   `scripts/facts.py <bundle_root>` once and quote its output instead of re-reading `general-settings.json` by hand. It prints
+   JSON, `{fact: {value, source}}`. A missing setting is `"value": "ABSENT"` (with what was searched), never `false` or `0`; an
+   unreadable one is `"ERROR"`. It never prints secrets. It is read-only Python 3 stdlib; if it cannot run where the bundle is,
+   read the same values with the references and say you did.
+4. **Route the question** through `references/lookup-table.md` (or the table below for common cases).
+5. **Never load a large manifest or log whole** (`datadir_listing.txt` alone runs from ~340MB to ~2.3GB; rotated `run/*.log.N`
+   reach ~100MB). `grep`/`awk`/`wc -l` first; see `references/listings-and-manifests.md` and `references/limitations.md`.
+6. **For job or scenario run history, dataset build timelines or audit content**, check up front whether it is Tier 3
+   (listing-only) before promising an answer (`references/limitations.md`).
 
 ## Quick lookup (most common questions)
 
@@ -114,9 +81,8 @@ output lands in the transcript.
   credentials. Use it first to learn a file's shape; then `--path` to one key. For `.ini`/`.properties`,
   grep exact key names. A file has more than 40 keys at some level (`general-settings.json` has over
   100 at the top)? Add `--keys` (names only) or `--max-items 200`; don't fall back to a raw dump.
-- **Deployer and API-key settings:** `general-settings.json` → `deployerClientSettings` holds a Deployer
-  API key. Don't open that block raw: take `mode` and the target host from `facts.py` (`deployer`), or use
-  `peek.py --path deployerClientSettings`, which masks the key.
+- **Deployer API key:** `general-settings.json` → `deployerClientSettings` holds one. Don't open that block raw: take `mode` and the
+  target host from `facts.py` (`deployer`), or use `peek.py --path deployerClientSettings`, which masks the key.
 - Never `cat`, `jq .`, or `print(json.load(...))` whole `general-settings.json`, `connections.json`,
   `users.json`, `install.ini` or `dip.properties`; never run `printenv`/`env` or read user scripts in
   full. Never dump a whole settings block or connection.
@@ -134,31 +100,14 @@ output lands in the transcript.
 
 ## Reference index
 
-- `references/root-files.md` — the full command sequence (via `timings.txt`), which parts of it
-  `diag.txt` actually inlines vs. stubs out, a detailed OS/system/environment table (CPU, memory,
-  disk, network, ulimits, the `printenv` treasure trove, etc.), and a per-file deep dive on every
-  standalone root `.txt` file (`sockets.txt`, `sysctl.txt`, `stacks.txt`, `cgroups_usage.txt`,
-  `dmesg.txt`, `syspackages.txt`, `ps.txt`, `r.txt`, `pip.txt`, `bin_listing.txt`,
-  `docker_images_listing.txt`) with ready-to-run grep patterns and real examples.
-- `references/listings-and-manifests.md` — how to safely query the `find -ls` manifest files
-  without loading them whole.
-- `references/data-dir-identity.md` — how to find the data-dir mirror, `install.ini` and
-  `dss-version.json` field reference.
-- `references/node-types.md` — what's identical vs. different between `design` and `automation`
-  node bundles (verified), and what's unverified (`deployer`, others).
-- `references/data-dir-config.md` — the `config/` metastore, including the full
-  `config/projects/<KEY>/` subtree, a dedicated resource-governance subsection tying together
-  `cgroupSettings`/`containerSettings`/`sparkSettings`/`clusters/*.json` for cgroups/container/K8s/
-  Spark resource questions, and a subsection on identifying the internal database (H2 vs.
-  PostgreSQL) via `internalDatabase`.
-- `references/data-dir-runtime-and-codeenvs.md` — `run/` logs, `code-envs/`/`acode-envs/`,
-  `install-support/`, `plugins/dev/`.
+- `references/root-files.md` — the command sequence (via `timings.txt`), what `diag.txt` inlines vs. stubs, an OS/system/environment
+  table, and a per-file deep dive on every standalone root `.txt` file with ready-to-run grep patterns.
+- `references/listings-and-manifests.md` — safely querying the `find -ls` manifests.
+- `references/orient-fallback.md` — orienting when `orient.sh` can't run where the bundle is.
+- `references/data-dir-identity.md` — finding the data-dir mirror; `install.ini` and `dss-version.json` fields.
+- `references/node-types.md` — `design` vs. `automation` (verified); `deployer` and others (unverified).
+- `references/data-dir-config.md` — the `config/` metastore, `projects/<KEY>/`, resource governance (cgroups, containers, K8s,
+  Spark) and identifying the internal database.
+- `references/data-dir-runtime-and-codeenvs.md` — `run/` logs, `code-envs/`/`acode-envs/`, `install-support/`, `plugins/dev/`.
 - `references/lookup-table.md` — the full "where do I find X" index.
 - `references/limitations.md` — verified scope, known content gaps, large-file hazards.
-
-## Known limitations
-
-`deployer`-node (and any other) internals are unverified: don't fabricate specifics. Job run history,
-scenario run logs, dataset build timelines and audit content are commonly listing-only (Tier 3): check
-that before promising an answer. Capture completeness varies bundle to bundle. Full list, including
-verified scope: `references/limitations.md`.

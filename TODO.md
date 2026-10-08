@@ -4,7 +4,7 @@ Open work only. Release history is in `CHANGELOG.md`; the general process is in 
 
 ## Status (updated 2026-10-08)
 
-Toolkit **0.38.5**, reader **0.20.0** (upstream `../Diagnosis Reader/`), Checklist Generator **0.4.0** (`../Dataiku Checklist Generator/`; ids and
+Toolkit **0.38.5**, reader **0.20.1** (upstream `../Diagnosis Reader/`), Checklist Generator **0.4.0** (`../Dataiku Checklist Generator/`; ids and
 titles frozen in its `config/id_registry.yaml`). **65 of 67 checks are ruled** (`skills/dataiku-diagnosis-checklist-review/scripts/rules_*.py`, specs in
 `docs/verdict-rules.md`). ARCH-002/003 stay with the model for good (they need a live web lookup). Code status is final: `run_step.py verify` fails on
 any workbook status that differs from its verdict.
@@ -63,5 +63,5 @@ Goal: the same facts give the same statuses whichever client runs the review. St
 - [ ] If a model-decided check gains a rule, move its `calibrations.md` entry into `verdict-rules.md` and keep only the notes guidance.
 
 ## Upstream follow-ups (vendored; fix there, then re-sync and run Codex)
-- Reader: memoise `load_json` in `facts.py` (general-settings.json parsed ~14 times), read `diag.txt` and `install.ini` once; sets instead of identity dicts for `CLOUD_STORAGE_TYPES`/`WAREHOUSE_TYPES`; drop redundant `SENSITIVE_KEY_EXTRA` in `peek.py`; in `SKILL.md` move the orient.sh piping fallback (step 7) and the fact enumeration (step 8) into a reference; shorten the description.
+- Reader: memoise `load_json` in `facts.py` (general-settings.json parsed ~14 times), read `diag.txt` and `install.ini` once; sets instead of identity dicts for `CLOUD_STORAGE_TYPES`/`WAREHOUSE_TYPES`; drop redundant `SENSITIVE_KEY_EXTRA` in `peek.py`.
 - Review generator: `read_checklist.py` Summary parsing is O(rows^2) (read the sheet once with `iter_rows`); v1 loads the checklist twice (`data_checks.py:150` via `styles.py:68`); slide-package XML is rewritten per clone and ~57 `delete_slide` calls; `make_table_slides` re-parses identical table XML per page; delete dead code (`narrative.check_rows`, `office/text.placeholder_text_box`, `PIC_RE`, `SP_RE`, `remove_relationship_by_rid`, `slides.duplicate_slide`, `tables.extract_cells`, yaml `cell_char_limits.description`); fix stale comments (`mcp_server.py` "two CLI entry points", `read_checklist.py` 26 vs 27 columns, `build_deck_v2.py` cites missing `INTENT.md`, `validate_deck.py` colour names), the `requirements.txt` header, undeclared `lxml`, and the `include_pass_items` default mismatch.
