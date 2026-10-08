@@ -13,6 +13,7 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 ### Changed
 
 - `verdict-rules.md` moved from `skills/dataiku-diagnosis-checklist-review/references/` to `docs/verdict-rules.md`: it is a maintainer spec the model never reads. `tests/test_skill_boundaries.py` still scans it for reader-owned layout terms.
+- Checklist `SKILL.md` (230 to 202 lines): Verdicts is now its own step 2 (later steps renumbered; steps 4, 6 and 7 keep their numbers); removed repeated `notes` format, column lists, fact enumeration, reviewer format and status guidance; the evidence-planning step is one sentence; Deliver is a numbered list.
 
 ## [0.38.5] - 2026-10-08
 

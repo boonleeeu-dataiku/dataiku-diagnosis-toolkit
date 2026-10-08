@@ -5,13 +5,9 @@ description: "Evaluate a Dataiku DSS diagnosis bundle against a checklist spread
 
 # Dataiku diagnosis checklist review
 
-Given (1) a Dataiku DSS diagnosis bundle directory and (2) a checklist spreadsheet
-listing check items (typically columns like `id`, `priority`, `check_type`,
-`statement`, `parameter_hint`, `expected_value`, `supporting_evidence`,
-`contradicting_evidence`, and empty result columns such as `validation_status`,
-`evidence_found`, `notes`, `validated_at`, `validated_by`), evaluate every row
-against the bundle's actual contents and write the results back into the
-spreadsheet, plus add/update a Summary tab.
+Given (1) a Dataiku DSS diagnosis bundle directory and (2) a checklist spreadsheet of check items with empty result
+columns (`validation_status`, `evidence_found`, `notes`, `validated_at`, `validated_by`), evaluate every row against the
+bundle's actual contents and write the results back into the spreadsheet, plus add/update a Summary tab.
 
 ## Reference files (in this skill's `references/` directory)
 
@@ -73,15 +69,14 @@ If it shows a node type the reader hasn't verified (e.g. `deployer`) or no data-
 the bundle cannot support and mark the rows that depend on it **Needs Review**, not Fail.
 
 Then run `scripts/run_step.py run facts <bundle_root> --manifest <stem>_run_manifest.json` once (it runs the
-reader's `facts.py` and saves the JSON beside the manifest as `<stem>_facts.json`). It prints the values many checks
-depend on (heap sizes, host memory, config folder size, database host, concurrency limits, SSO, user isolation,
-cgroups, connections, GenAI and plugin presence), each with its `source`, and an explicit `ABSENT` for a setting
-that isn't in the bundle. How to use it is in step 4. If it can't run or errors, say so in your final summary and
+reader's `facts.py` and saves the JSON beside the manifest as `<stem>_facts.json`). It prints the key
+settings many checks depend on, each with its `source`, and an explicit `ABSENT` for a setting that isn't in the
+bundle. How to use it is in step 4. If it can't run or errors, say so in your final summary and
 use the reader's normal procedure.
 
-### Verdicts
+## 2. Verdicts
 
-Then run `scripts/run_step.py verdicts <bundle_root> --manifest <stem>_run_manifest.json --checklist <checklist.xlsx>`
+Run `scripts/run_step.py verdicts <bundle_root> --manifest <stem>_run_manifest.json --checklist <checklist.xlsx>`
 (it only reads the checklist; use the file you were given). It prints JSON and saves it as `<stem>_verdicts.json`.
 `verdicts` lists, for each row whose status the facts decide by rule, its `id`, `status`, `reason` and `deciding_values`.
 
@@ -94,7 +89,7 @@ Then run `scripts/run_step.py verdicts <bundle_root> --manifest <stem>_run_manif
 - `title_mismatch` and `probable_renumber` name rows whose id and title don't both match a rule (usually a changed
   checklist). They get no verdict: decide them as in step 4 and name them in your final summary.
 
-## 2. Read the checklist fully
+## 3. Read the checklist fully
 
 Dump every sheet's rows into a working file — don't try to hold 50+ rows of context in your head.
 Keep at least `id`, `priority`, `check_type`, `statement`, `parameter_hint`, `operator`,
@@ -106,11 +101,8 @@ headers and their column positions per sheet (they may differ sheet to sheet).
 it from the `priority` column; never infer it from the wording of the statement (a row that sounds
 mandatory can be `nice_to_have`, and `write_summary` rejects a `key_points` entry for one).
 
-## 3. Plan evidence gathering by theme, not by row
-
-Group checklist rows by the source they need (settings, host/OS, logs, crash dumps, deployers,
-clusters) and read each source once for all of its rows, rather than re-reading it per row. Find
-each source via the reader's `lookup-table` and the other reader references.
+For the rows no rule decides, group them by the source they need and read each source once, finding it via the reader's
+`lookup-table` and other references.
 
 ## 4. Evaluate every row
 
@@ -128,14 +120,8 @@ matching calibration overrides it.
 
 A row with a verdict takes that status; `calibrations.md` then only tells you what to add to `evidence_found` and `notes`.
 
-For each checklist item, decide one of a small fixed set of statuses (keep
-this consistent across the whole workbook): **Pass**, **Fail**, **Partial**,
-**Needs Review**, **Not Applicable**. Use "Not Applicable" when the check is
-conditional (e.g., "if using Snowflake") and the precondition isn't met.
-Use "Needs Review" honestly for anything requiring a live functional test,
-an external system (Fleet Manager, K8s cluster metrics, CMDB), or a
-customer conversation that a static diagnostic snapshot cannot answer —
-don't guess Pass/Fail on those.
+For each checklist item, decide one of five statuses, used consistently across the workbook: **Pass**, **Fail**,
+**Partial**, **Needs Review**, **Not Applicable**. When to use the last two is in `calibrations.md` (General principles).
 
 For each item, write:
 - `evidence_found`: the audit trail — concrete citations with exact file
@@ -143,18 +129,12 @@ For each item, write:
   This stays detailed; it is not shown on slides. Don't put recommendations
   here.
 - `notes`: the slide-ready summary. The deck builder shows this text to the
-  customer in a table cell, so it must be crisp, scannable and self-contained
-  (see `references/notes-format.md`). It carries the verdict, the decisive
-  values, and the recommendation or caveat, and cross-references related
-  findings by id when they're causally linked (e.g., an OOM crash pattern
-  linked to a concurrency-limit setting).
+  customer in a table cell, so it must be crisp, scannable and self-contained, in the
+  format of `references/notes-format.md` (read it before the first row). It carries the verdict, the decisive values, and the
+  recommendation or caveat, and cross-references causally linked findings by id.
 - `validated_at` / `validated_by`: today's date (`YYYY-MM-DD`) and, verbatim,
   `<agent name> (AI-assisted review of <bundle name>)`, where `<agent name>` is the AI agent doing the review (e.g. `Claude`,
   `Codex`), unless the user supplied a reviewer name.
-
-Write `notes` in the format of `references/notes-format.md` (read it before the first row): plain text, a headline of
-≤ 80 chars plus up to 3 `• ` bullets, 320 characters in total (Pass / Not Applicable: headline plus one bullet, 140), no file paths,
-and a named team in the `Action:` of every Needs Review.
 
 Look actively for causal chains across items (e.g., a resource limit set to
 a disabling value, paired with crash dumps and recurring error-log entries,
@@ -177,7 +157,7 @@ only the judgment text:
 
 - `checklist_path`, `reviewer`, `bundle`, and optionally `node_version` and `diagnosis_generated`.
   Fix their format so repeat runs produce the same Summary header:
-  - `reviewer`: exactly the `validated_by` string, `<agent name> (AI-assisted review of <bundle name>)`.
+  - `reviewer`: exactly the `validated_by` string.
   - `node_version`: `<nodetype> / DSS <product_version>` from `facts.py`'s `node`, e.g. `design / DSS 14.2.1`.
   - `diagnosis_generated`: an ISO date `YYYY-MM-DD`, from the timestamp in the bundle folder name
     (`dku_diagnosis_<node>_<YYYY-MM-DD-HH-MM-SS>`).
@@ -193,9 +173,6 @@ The tool fails without touching the file if a key point is missing, extra, too l
 or if any item has a blank or unknown status. Fix the input and call it again. It also re-reads
 the saved sheet as the deck generator will and compares it to what it meant to write.
 
-Call it **before** drafting the deck narrative: the narrative pins a hash of the final file, so
-changing the Summary afterwards makes the narrative look stale.
-
 If the tool is not available, read `references/summary-layout.md` and write the sheet by hand to
 that layout. The deck generator reads this sheet, so its layout must not drift. Use the header
 texts `Overall Status Counts`, `Per-Section Breakdown`,
@@ -205,25 +182,21 @@ texts `Overall Status Counts`, `Per-Section Breakdown`,
 
 ## 7. Deliver
 
-Before delivering, run `scripts/run_step.py verify <bundle_root> --manifest <stem>_run_manifest.json
---checklist <review.xlsx>` (add `--deck <deck.pptx>` when a deck was built) and put its one `RUN VERIFY` line in your
-final summary. It also fails when a row with a verdict has a different status in the workbook. On FAIL, fix the named problem
-(usually a skipped step, a stale Summary or a status that differs from its verdict) and run it again. If the
-bundle sits on a separate computer the scripts can't reach, say the run could not be verified. Then check: every id has one of the five statuses; each `notes` is within budget with
-no file paths or secrets; the Summary was written after the last edit.
+1. Run `scripts/run_step.py verify <bundle_root> --manifest <stem>_run_manifest.json --checklist <review.xlsx>` (add
+   `--deck <deck.pptx>` when a deck was built) and put its one `RUN VERIFY` line in your final summary. It also fails when a
+   row with a verdict has a different status in the workbook. On FAIL, fix the named problem (usually a skipped step, a stale
+   Summary or a status that differs from its verdict) and run it again. If the bundle sits on a separate computer the scripts
+   can't reach, say the run could not be verified.
+2. Check: every id has one of the five statuses; each `notes` is within budget with no file paths or secrets; the Summary was
+   written after the last edit.
+3. Keep the run files with the deliverable: copy `<stem>_run_manifest.json`, `<stem>_facts.json` and `<stem>_verdicts.json`
+   into the same folder as the delivered workbook (an agent working in a staging folder must copy them out), so `verify` can be
+   re-run later.
+4. Send the updated file to the conversation. If the source came from the user's linked computer, also write it back to the same
+   path (`references/linked-computer.md`) and say so in one line. With the bundled default template there is no original path:
+   name the output `<bundle-name>_checklist_review.xlsx` (or the user's name for it).
+5. Summarise headline results (counts plus the 1-3 most important findings) rather than repeating the checklist.
 
-Keep the run files with the deliverable: copy `<stem>_run_manifest.json`, `<stem>_facts.json` and `<stem>_verdicts.json` into the
-same folder as the delivered workbook (an agent that works in a staging folder must copy them out), so `verify` can be re-run on
-the delivered output later.
-
-Send the updated file to the conversation. If the source came from the user's linked computer, also
-write it back to the same path via `device_commit_files` and say so in one line. With the bundled
-default template there is no original path: name the output `<bundle-name>_checklist_review.xlsx` (or
-the user's name for it; the deck's narrative then follows as `<checklist_stem>_narrative.json`).
-Summarise headline results (counts plus the 1-3 most important findings) rather than repeating the
-checklist.
-
-If the user also asked for a deck (or a "report and powerpoint"), continue with the
-`dataiku-review-deck-builder` skill and follow its order of work in full, including the narrative
-(`<checklist_stem>_narrative.json`). Do not build the deck without one; if you cannot, say so in your
+If the user also asked for a deck (or a "report and powerpoint"), continue with the `dataiku-review-deck-builder` skill and
+follow its order of work in full, including the narrative (`<checklist_stem>_narrative.json`). Do not build the deck without one; if you cannot, say so in your
 final summary.
