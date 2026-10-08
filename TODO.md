@@ -15,7 +15,7 @@ The rule specs are in `skills/dataiku-diagnosis-checklist-review/references/verd
 holds only the model's `notes`/`Action:` guidance for rule-decided checks and the status logic of the model-decided ones.
 
 Codex runs reviewed: 0.32.0 (found two gaps, fixed in 0.32.1), 0.33.1 (all six Batch 2 rules matched, `RUN VERIFY: PASS`), 0.35.0 (Batch 3, 14 rules
-matched, `RUN VERIFY: PASS`). 0.38.1 was run in Codex on 2026-10-08: all 46 ruled statuses matched `<stem>_verdicts.json`, `RUN VERIFY: PASS`. **Not yet run in Codex: 0.38.2 and 0.38.3** (20 new rules plus the ADVSEC-005/006/011 policy changes; one run on 0.38.3 covers both); owner runs it once.
+matched, `RUN VERIFY: PASS`). 0.38.1 was run in Codex on 2026-10-08: all 46 ruled statuses matched `<stem>_verdicts.json`, `RUN VERIFY: PASS`. 0.38.3 (which covers 0.38.2) was run in Codex twice on 2026-10-08 (`codex-backup/run1`, `run2`): `RUN VERIFY: PASS` on both, all 65 ruled statuses matched `<stem>_verdicts.json`, and the statuses of all 67 rows were identical across the two runs. The new rules behaved as intended on the GE design bundle (ADVSEC-006 Pass, ADVSEC-005 Fail, ADVSEC-011/GENAI-008/GENAI-011/SEC-003/ARCH-001 Needs Review, the cluster-conditional checks and SCALE-012 to 015 Not Applicable); ARCH-002 (one major behind GA) and ARCH-003 (RHEL 8.10 listed) were sensible. Two follow-ups: evidence text quoted raw `deciding_values={}` (fixed in `SKILL.md`, not yet re-run); SEC-008 and SEC-011 observations are thin (left as is).
 Policy changes made after the 0.38.0 review of the rule table (all in 0.38.1 or earlier): ARCH-006/011 one or identical configs = Needs Review; ARCH-007 fixed namespace =
 Needs Review; ARCH-016 default cluster set = Pass, none = Fail, no cluster = Not Applicable; the Kubernetes-only checks are Not Applicable with no
 cluster attached; SEC-009 LDAP on with no groups = Needs Review; SEC-010 SSO on = Pass whatever LDAP is.
@@ -24,7 +24,7 @@ cluster attached; SEC-009 LDAP on with no groups = Needs Review; SEC-010 SSO on 
 
 **0.38.3 (2026-10-08, pushed):** 65 of 67 checks ruled. Added GENAI-002 (no cluster = Not Applicable, cluster attached = Needs Review), GENAI-011 and SEC-003 (always Needs Review).
 
-**Next:** (1) the Codex run on 0.38.3, compare the 65 ruled rows to `<stem>_verdicts.json` (expect ADVSEC-006 Pass and ARCH-008/014/015 per the cluster fact on the GE design bundle); (2) the last 2 stay with the model: ARCH-002/003 (web lookups, a permanent decision); (3) when a bundle with Snowflake, Databricks, Redshift or Synapse connections appears, confirm the warehouse setting names in the reader; (4) optional: apply the DSS version gate in code (see Other open items).
+**Next:** (1) the 0.38.3 Codex run is done and reviewed (above); the next one is only needed after the next release or the `SKILL.md` wording fix, if you want it checked; (2) the last 2 stay with the model: ARCH-002/003 (web lookups, a permanent decision); (3) when a bundle with Snowflake, Databricks, Redshift or Synapse connections appears, confirm the warehouse setting names in the reader; (4) optional: apply the DSS version gate in code (see Other open items).
 
 ### Playbook for a batch (what worked)
 The general process (flow, ownership, how to change a rule) is in [`docs/validation-process.md`](docs/validation-process.md); this list is the working version.
@@ -147,6 +147,7 @@ only the `notes`/`evidence_found` wording may differ between clients.
   skill duplicates); the rest moved into Batch 0, portability and the items below.
 - [x] Codex stages outputs in sandbox work dirs, so the run manifest isn't copied beside the deliverables: step 7 now says to copy the run files (0.32.1); confirmed on the 0.33.1 run.
 - [ ] Re-save the eval baseline (`scripts/test.sh eval ... --save-baseline`, costs model usage) when the owner asks; it is stale (2 scenarios x 11 items vs 3 scenarios x 49).
+- [x] ARCH-009/012 stay always Needs Review even with no cluster attached (owner decision 2026-10-08: they need in-depth analysis with customer feedback).
 - [ ] Minor: notes should not name files (SEC-003 on the 0.32.0 run mentioned a security config file). The SEC-003 guidance in `calibrations.md` now says so; consider a general line in SKILL.md or leave it.
 - [x] GENAI-004/007 now have rules (0.36.0); GENAI-008 stays with the model.
 - [ ] GENAI-005/006 field names (`mainLLMId`, `referenceProjectKey`) are unverified against a populated bundle: confirm when one appears.

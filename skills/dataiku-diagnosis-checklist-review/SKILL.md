@@ -91,7 +91,7 @@ Then run `scripts/run_step.py verdicts <bundle_root> --manifest <stem>_run_manif
 
 - Write each listed `status` as that row's `validation_status`, exactly. Code is final: do not change it even if you would
   judge differently, because `verify` fails naming any row whose workbook status differs. Make `evidence_found` and
-  `notes` agree with it and quote the `deciding_values`. If you think a rule is wrong, say so in your final summary (never
+  `notes` agree with it. Quote the `deciding_values` in plain words ("cluster_attached is false"), never as a raw `deciding_values={...}` dump, and skip them when empty. State the reason in your own words instead of pasting it. If you think a rule is wrong, say so in your final summary (never
   in the workbook) so the rule gets fixed.
 - A row that is not listed has no rule: decide it as in step 4. The list may be empty. `undecided` names rows that have a rule
   but whose case the facts cannot settle; decide those as in step 4 too.
