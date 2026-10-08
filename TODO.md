@@ -27,6 +27,8 @@ cluster attached; SEC-009 LDAP on with no groups = Needs Review; SEC-010 SSO on 
 **Next:** (1) the Codex run on 0.38.3, compare the 65 ruled rows to `<stem>_verdicts.json` (expect ADVSEC-006 Pass and ARCH-008/014/015 per the cluster fact on the GE design bundle); (2) the last 2 stay with the model: ARCH-002/003 (web lookups, a permanent decision); (3) when a bundle with Snowflake, Databricks, Redshift or Synapse connections appears, confirm the warehouse setting names in the reader; (4) optional: apply the DSS version gate in code (see Other open items).
 
 ### Playbook for a batch (what worked)
+The general process (flow, ownership, how to change a rule) is in [`docs/validation-process.md`](docs/validation-process.md); this list is the working version.
+
 1. Read the checklist rows and any matching model-decided entries in `calibrations.md` for the batch (`openpyxl` on `skills/dataiku-diagnosis-checklist-review/resources/checklist_template.xlsx`).
 2. Check what `facts.py` already exposes for each check (`python3 skills/dataiku-diagnosis-reader/scripts/facts.py <fixture bundle>`). If a fact is missing, inspect the three real
    bundles in `../Diagnosis Reader/resources/` read-only (print key names and counts, never values or secrets).

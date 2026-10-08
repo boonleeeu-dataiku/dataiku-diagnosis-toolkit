@@ -113,6 +113,12 @@ an internal Dataiku brand asset, not customer/bundle data, so it isn't covered b
 above — it's simply not committed here because of its size (134MB, over GitHub's 100MB limit),
 the same reason its own upstream repo doesn't commit it either.
 
+## How a status is decided
+
+Code decides every check status the bundle's facts can settle; the model decides only the checks that need a web lookup and writes the
+evidence and notes for all of them. `verify` fails a review whose workbook differs from the computed verdicts. The flow, the file
+ownership and how to add or change a rule are in [`docs/validation-process.md`](docs/validation-process.md).
+
 ## Testing
 
 Testing has three tiers, cheapest first. Run the first on every change. Run the third when
