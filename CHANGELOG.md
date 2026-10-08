@@ -10,6 +10,19 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.38.4] - 2026-10-08
+
+65 of 67 checks are decided by code; only ARCH-002 and ARCH-003 stay with the model. The 0.38.3 Codex runs (two, 2026-10-08) passed `verify` and matched all 65 ruled statuses.
+
+### Changed
+
+- **ARCH-009, ARCH-012**: Not Applicable when no Kubernetes cluster is attached, Needs Review when one is (was always Needs Review). They moved from `rules_review.py` to `rules_k8s.py`, with the notes guidance in the Kubernetes block of `calibrations.md`.
+- `SKILL.md` (Verdicts): the model now quotes `deciding_values` in plain words, skips empty ones, and paraphrases the rule's reason, instead of pasting raw `deciding_values={}` text into `evidence_found`.
+
+### Added
+
+- `docs/validation-process.md`: maintainer guide to how a status is decided (the flow, who owns what, matching, conventions, how to change a rule, how it is tested), linked from `README.md` and `TODO.md`.
+
 ## [0.38.3] - 2026-10-08
 
 65 of 67 checks are now decided by code (was 62). Only ARCH-002 and ARCH-003 stay with the model: they need a live web lookup (the current GA release, the supported-OS page).
