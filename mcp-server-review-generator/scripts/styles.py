@@ -52,12 +52,13 @@ def _build_v1(req: BuildRequest) -> dict:
     if req.standard_deck:
         raise ValueError("style 'v1' has no standard (unbranded) deck: it edits the branding template's own slides. "
                          "Use style 'v2', or supply the branding template via base_deck_path.")
+    warnings: list = []
     output = build_deck.build_deck(
         checklist_path=req.checklist_path, customer=req.customer, output_path=req.output_path,
         base_deck=req.base_deck, logo_path=req.logo_path, rows_per_slide=req.rows_per_slide,
-        include_pass_items=req.include_pass_items,
+        include_pass_items=req.include_pass_items, warnings_out=warnings,
     )
-    return {"output_path": output, "warnings": data_checks.collect_data_warnings(req.checklist_path)}
+    return {"output_path": output, "warnings": warnings}
 
 
 def _build_v2(req: BuildRequest) -> dict:

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """v2 deck: verdict first, 3 risks, quick wins, asks, roadmap, then an appendix.
 
-Pipeline: build the v1 deck into a temp file (it supplies the branded cover and
-end card), then use python-pptx to add the v2 slides built from that deck's own
-layouts, and drop every other v1 slide. python-pptx is used ONLY here -- the v1
-path stays raw OOXML (see INTENT.md / CLAUDE.md).
+Pipeline: deck_shared.build_cover_and_end_deck() makes a two-slide deck (the branded
+cover and end card), then python-pptx adds the v2 slides built from that deck's own
+layouts. python-pptx is used ONLY here -- the v1
+path stays raw OOXML (see INTENT.md in this repo).
 
 Content comes from deck_analysis (rules) and an optional narrative.json
 (human judgment, validated in narrative.py). Without a narrative, every slide

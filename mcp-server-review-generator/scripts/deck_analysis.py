@@ -98,10 +98,10 @@ def build_rows(data, ordered_sections):
     for sec in ordered_sections:
         for it in data.items_by_sheet.get(sec["sheet_tab_name"], []):
             # An unrecognised or blank status is counted as Needs Review (what v1 shows) rather than
-            # dropped; build_deck.check_data_consistency warns about it, naming the item.
+            # dropped; data_checks.check_data_consistency warns about it, naming the item.
             status = canonical_status(it.validation_status) or "Needs Review"
             if it.id in rows:
-                continue  # duplicate ID: keep the first occurrence (check_data_consistency warns)
+                continue  # duplicate ID: keep the first occurrence (data_checks.check_data_consistency warns)
             headline, evidence, action = parse_notes(it.notes, it.evidence_found)
             rows[it.id] = Row(
                 id=it.id, title=it.title, priority="Must" if it.is_must_have else "Nice", status=status,

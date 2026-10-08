@@ -94,7 +94,7 @@ TABLE_DATA_FONT_SIZE = 900     # 9pt
 # template, each summing to its native total width (8,334,075 EMU) so no
 # table overflows the slide's right edge. ID/Priority (Findings) and ID
 # (Other Must-Have) are widened beyond their original share -- see
-# STATUS_COL's no-wrap columns below -- so a wrap="none" ID/Priority value
+# the no-wrap columns defined below -- so a wrap="none" ID/Priority value
 # (up to "GENAI-001", 9 chars, and "Nice to have", 12 chars, in the sample
 # checklist) has room to render on one line instead of overflowing into the
 # next column; Statement/Evidence & Notes (which have the most slack -- see
@@ -326,7 +326,7 @@ def _finding_cell_text(item) -> str:
     (the checklist-review skill writes these as a crisp headline plus bullets
     for exactly this purpose). `evidence_found` is the long-form audit trail
     and stays out of the table; it is still in the slide's speaker notes (see
-    _finding_note_lines). Falls back to `evidence_found` when `notes` is
+    deck_shared.finding_note_lines). Falls back to `evidence_found` when `notes` is
     empty, e.g. an older or hand-filled checklist, so a finding never
     silently loses all its text."""
     return (item.notes or item.evidence_found or "").strip()
@@ -855,7 +855,10 @@ def build_methodology_slide(work_dir: Path, template_xml: str, template_rels: st
 
 
 def build_deck(checklist_path: Path, customer: str, output_path: Path, base_deck: Path,
-                logo_path: Path | None, rows_per_slide: int, include_pass_items: bool) -> Path:
+                logo_path: Path | None, rows_per_slide: int, include_pass_items: bool,
+                warnings_out: list | None = None) -> Path:
+    """Build the v1 deck. If `warnings_out` is given, the checklist data-consistency warnings are appended to it,
+    so the caller need not read the checklist a second time."""
     section_config = common.load_config("section_names.yaml")
     layout_config = common.load_config("deck_layout.yaml")
     cell_limits = layout_config.get("cell_char_limits", {})
@@ -866,6 +869,8 @@ def build_deck(checklist_path: Path, customer: str, output_path: Path, base_deck
     logger.info("Reading checklist: %s", checklist_path)
     data = read_checklist.read_checklist(checklist_path, section_config)
     ordered_sections = section_names.order_sections(data.sheet_tab_names, section_config)
+    if warnings_out is not None:
+        warnings_out.extend(data_checks.check_data_consistency(data, ordered_sections, section_config))
 
     with tempfile.TemporaryDirectory(prefix="deckgen_") as tmp:
         work_dir = Path(tmp) / "unpacked"
@@ -1027,7 +1032,7 @@ def main(argv=None):
     layout_config = common.load_config("deck_layout.yaml")
     base_deck = args.base_deck or (common.REPO_ROOT / layout_config.get("base_deck", common.DEFAULT_BASE_DECK))
     rows_per_slide = args.rows_per_slide or layout_config.get("table_rows_per_slide", common.DEFAULT_ROWS_PER_SLIDE)
-    include_pass_items = args.include_pass_items or layout_config.get("include_pass_items", False)
+    include_pass_items = args.include_pass_items or layout_config.get("include_pass_items", True)
     output_path = args.output or common.default_output_path(args.checklist, args.customer)
 
     if not args.checklist.exists():

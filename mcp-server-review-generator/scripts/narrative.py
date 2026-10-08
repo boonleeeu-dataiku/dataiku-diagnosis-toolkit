@@ -7,6 +7,7 @@ figure on a risk tile must appear in the cited row's own notes/evidence.
 Any missing key falls back to rule-derived content in build_deck_v2.py.
 """
 
+import copy
 import hashlib
 import json
 import re
@@ -60,7 +61,7 @@ def documented_shape() -> dict:
     def note(values):
         return f"{STR}: one of {', '.join(sorted(values))}"
 
-    doc = json.loads(json.dumps(SHAPE))
+    doc = copy.deepcopy(SHAPE)
     for tone_parent, field in (("takeaways", "tone"), ("snapshot", "state")):
         doc[tone_parent][0][field] = note(_ENUM_FIELDS[(tone_parent, field)])
     for col in ("now", "next", "plan"):
@@ -176,14 +177,6 @@ def validate(narr: dict, a: Analysis):
             f"{where}: {cid} has status {row.status!r}, which doesn't support citing it as a problem "
             f"(allowed: {', '.join(allowed)}; list a Pass item under 'caveats' if it is a Pass with a known issue)."
         )
-
-    def check_rows(key, fields, allowed=("Fail", "Partial", "Needs Review")):
-        out = narr.get(key)
-        for i, entry in enumerate(out or [], start=1):
-            for f in fields:
-                for cid in _ids(entry.get(f, []), f"{key}[{i}].{f}"):
-                    check_cited(cid, f"{key}[{i}]", allowed)
-        return out
 
     r1 = narr.get("risk1") or {}
     for i, t in enumerate(r1.get("tiles", []), start=1):

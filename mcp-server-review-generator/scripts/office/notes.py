@@ -42,8 +42,8 @@ def add_notes(unpacked_dir: Path, slide_filename: str, lines: list[str]) -> None
     """Attach a new notes slide (one paragraph per item in `lines`) to an
     already-registered content slide (i.e. slide_filename must already exist
     under ppt/slides/ and be registered in presentation.xml -- any slide
-    filename returned by office.slides.duplicate_slide_from_xml()/
-    duplicate_slide() qualifies). No-ops if `lines` is empty."""
+    filename returned by office.slides.duplicate_slide_from_xml()
+    qualifies). No-ops if `lines` is empty."""
     if not lines:
         return
     notes_dir = unpacked_dir / "ppt" / "notesSlides"

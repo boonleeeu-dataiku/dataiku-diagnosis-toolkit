@@ -40,7 +40,6 @@ include_pass_items: true
 # (fixed-height cards have no per-cell font-metrics-based fit), but each
 # truncated slide's speaker notes carry the full untruncated text.
 cell_char_limits:
-  description: 260
   critical_finding_card: 150
   recommendation_card: 120
 

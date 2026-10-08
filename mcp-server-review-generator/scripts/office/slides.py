@@ -69,18 +69,6 @@ def _rid_for_slide_filename(pres_rels_xml: str, slide_filename: str) -> str | No
     return m.group(1) if m else None
 
 
-def duplicate_slide(unpacked_dir: Path, source_slide: str, after: str | None = None) -> str:
-    """Clone ppt/slides/{source_slide} (read from disk, as it is right now)
-    to a new slideN.xml and register it. See _register_new_slide() for the
-    registration bookkeeping and the notesSlide-stripping behavior.
-    """
-    src_path = _slides_dir(unpacked_dir) / source_slide
-    slide_xml = src_path.read_text(encoding="utf-8")
-    src_rels_path = _rels_path_for(unpacked_dir, source_slide)
-    rels_xml = src_rels_path.read_text(encoding="utf-8") if src_rels_path.exists() else None
-    return duplicate_slide_from_xml(unpacked_dir, slide_xml, rels_xml, after=after)
-
-
 def duplicate_slide_from_xml(
     unpacked_dir: Path,
     slide_xml: str,
@@ -91,7 +79,7 @@ def duplicate_slide_from_xml(
     slide file). Use this when the same 'template' slide needs to be cloned
     several times but has already been (or will be) edited/deleted in place
     -- snapshot its original XML/.rels text once, then call this once per
-    clone, instead of relying on duplicate_slide() to re-read a source file
+    clone, instead of re-reading a source file
     that may no longer hold the original template content.
 
     Returns the new slide's filename (e.g. 'slide23.xml'). The clone's
@@ -195,7 +183,7 @@ def clean_orphans(unpacked_dir: Path) -> dict:
     """Remove slide XML/.rels/Content_Types entries no longer reachable from
     sldIdLst, plus any media/notesSlide parts no longer referenced by any
     remaining part's relationships. Returns a summary dict for logging.
-    Run this once, after all duplicate_slide()/delete_slide() calls.
+    Run this once, after all duplicate_slide_from_xml()/delete_slide() calls.
     """
     reachable = set(list_slide_order(unpacked_dir))
     slides_dir = _slides_dir(unpacked_dir)

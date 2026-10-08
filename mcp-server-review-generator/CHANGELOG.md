@@ -7,6 +7,26 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-10-08
+
+Clean-up and efficiency pass; deck output is unchanged (golden decks identical).
+
+### Changed
+
+- `read_checklist`: the Summary sheet is read once into memory instead of re-streaming a read-only worksheet on every cell access (the parse was O(rows^2)).
+- v1 builds no longer read the checklist a second time for data warnings: `build_deck.build_deck()` takes an optional `warnings_out` list and `styles._build_v1` uses it.
+- The `include_pass_items` fallback is now `true`, matching `config/deck_layout.yaml` and the tool docs (it only applies if the config key is missing).
+- `narrative.py` copies its shape with `copy.deepcopy`.
+- `requirements.txt` declares `lxml` (imported directly) and its comments are corrected.
+
+### Removed
+
+- Unused code: `narrative.check_rows`, `office.text.placeholder_text_box`, `PIC_RE`, `SP_RE`, `remove_relationship_by_rid`, `office.slides.duplicate_slide`, `office.tables.extract_cells`, and the unread `cell_char_limits.description` config key.
+
+### Fixed
+
+- Stale docstrings and comments: the `mcp_server.py` header (four tools, not two entry points), the `read_checklist.py` column count (27), the `build_deck_v2.py` pipeline description, moved-function references in `build_deck.py` and `deck_analysis.py`, and the status colours in the v1 manual QA text.
+
 ## [0.10.0] - 2026-10-05
 
 ### Added

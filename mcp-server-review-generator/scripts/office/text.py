@@ -7,8 +7,6 @@ import re
 from xml.sax.saxutils import escape
 
 SHAPE_ID_RE = re.compile(r'<p:cNvPr id="(\d+)"')
-PIC_RE = re.compile(r"<p:pic>.*?</p:pic>", re.DOTALL)
-SP_RE = re.compile(r"<p:sp>.*?</p:sp>", re.DOTALL)
 GRAPHIC_FRAME_RE = re.compile(r"<p:graphicFrame>.*?</p:graphicFrame>", re.DOTALL)
 SHAPE_BLOCK_RE = re.compile(r"<p:(sp|cxnSp|pic|graphicFrame)>.*?</p:\1>", re.DOTALL)
 OFF_RE = re.compile(r'<a:off x="(\d+)" y="(\d+)"/>')
@@ -42,10 +40,6 @@ def remove_graphic_frame(slide_xml: str, required: bool = True) -> str:
     return new_xml
 
 
-def remove_relationship_by_rid(rels_xml: str, rid: str) -> str:
-    return re.sub(rf'<Relationship Id="{re.escape(rid)}"[^>]*/>', "", rels_xml)
-
-
 def strip_to_title_only(slide_xml: str) -> str:
     """Remove every top-level shape (<p:sp>/<p:cxnSp>/<p:pic>/<p:graphicFrame>)
     except the one containing <p:ph type="title"/>. Used when a template
@@ -69,35 +63,6 @@ def insert_shape(slide_xml: str, shape_xml: str) -> str:
     if marker not in slide_xml:
         raise ValueError("No </p:spTree> found in slide XML")
     return slide_xml.replace(marker, shape_xml + marker, 1)
-
-
-def placeholder_text_box(
-    slide_xml: str,
-    text: str,
-    x: int,
-    y: int,
-    cx: int,
-    cy: int,
-    name: str = "Placeholder",
-) -> str:
-    """Build a minimal dashed-border text-box shape (EMU coordinates) used
-    for manual-completion placeholders (e.g. the Architecture Diagram slide).
-    Not styled from the branding template -- a plain, clearly-a-placeholder
-    box is the point.
-    """
-    shape_id = next_shape_id(slide_xml)
-    return (
-        f'<p:sp><p:nvSpPr><p:cNvPr id="{shape_id}" name="{escape(name)}"/>'
-        f'<p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>'
-        f'<p:spPr><a:xfrm><a:off x="{x}" y="{y}"/><a:ext cx="{cx}" cy="{cy}"/></a:xfrm>'
-        f'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/>'
-        f'<a:ln w="19050"><a:solidFill><a:srgbClr val="999999"/></a:solidFill>'
-        f'<a:prstDash val="dash"/></a:ln></p:spPr>'
-        f'<p:txBody><a:bodyPr wrap="square" anchor="ctr"><a:spAutoFit/></a:bodyPr>'
-        f"<a:lstStyle/><a:p><a:pPr algn=\"ctr\"/><a:r>"
-        f'<a:rPr lang="en-US" sz="1400" i="1"><a:solidFill><a:srgbClr val="999999"/>'
-        f"</a:solidFill></a:rPr><a:t>{escape(text)}</a:t></a:r></a:p></p:txBody></p:sp>"
-    )
 
 
 def set_shape_bounds(

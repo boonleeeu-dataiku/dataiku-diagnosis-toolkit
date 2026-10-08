@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""MCP (Model Context Protocol) stdio server exposing this repo's two CLI
-entry points -- build_deck.py and validate_deck.py -- as tools for MCP
+"""MCP (Model Context Protocol) stdio server exposing this repo's deck tools
+(build, validate, analyze_checklist, write_summary) to MCP
 clients (Claude Desktop, Claude Code, other MCP-capable LLM tools).
 
 Built against the mcp>=2.0 SDK's MCPServer (the renamed successor to 1.x's
@@ -171,7 +171,7 @@ def build_platform_review_deck(
     effective_rows_per_slide = rows_per_slide if rows_per_slide is not None else layout_config.get("table_rows_per_slide", common.DEFAULT_ROWS_PER_SLIDE)
     effective_include_pass_items = (
         include_pass_items if include_pass_items is not None
-        else layout_config.get("include_pass_items", False)
+        else layout_config.get("include_pass_items", True)
     )
     resolved_output = _resolve(output_path) if output_path else common.default_output_path(checklist, customer)
 

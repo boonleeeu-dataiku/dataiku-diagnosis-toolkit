@@ -1,8 +1,7 @@
 """Hand-drawn card/tile/pill shapes for the redesigned deck's KPI rows,
 card-list findings/recommendations, and the "top risk" callout -- raw <p:sp>
 XML built from explicit EMU coordinates and hex colors, following the same
-pattern already used by build_legend_shapes()/add_logo() in build_deck.py
-and office.text.placeholder_text_box(). Spliced onto a slide via
+pattern already used by add_logo() in build_deck.py. Spliced onto a slide via
 office.text.insert_shape(); never a parsed-and-reserialized tree (see
 package.py's docstring for why).
 

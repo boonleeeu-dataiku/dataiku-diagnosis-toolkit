@@ -58,3 +58,17 @@ def test_cli_style_choices_come_from_the_registry():
     assert args.style == styles.DEFAULT_STYLE
     with pytest.raises(SystemExit):
         build_deck.parse_args(["--checklist", "c.xlsx", "--customer", "A", "--style", "v9"])
+
+
+def test_v1_build_reports_data_warnings_without_rereading_the_checklist(monkeypatch, checklist_factory, tmp_path):
+    import build_deck
+    import data_checks
+
+    def fake_build(**kw):
+        kw["warnings_out"].append("w")
+        return kw["output_path"]
+
+    monkeypatch.setattr(build_deck, "build_deck", fake_build)
+    monkeypatch.setattr(data_checks, "collect_data_warnings", lambda p: pytest.fail("checklist was read a second time"))
+    req = styles.BuildRequest(checklist_factory(), "Acme", tmp_path / "o.pptx", tmp_path / "base.pptx")
+    assert styles.build("v1", req) == {"output_path": tmp_path / "o.pptx", "warnings": ["w"]}

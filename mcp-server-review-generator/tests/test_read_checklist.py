@@ -111,3 +111,20 @@ def test_id_led_table_keys_follow_header_names(checklist_factory, section_config
     path = checklist_factory(critical_cols=("ID", "Check Title"), critical=[{"id": "ARCH-002", "check title": "X"}])
     data = read_checklist.read_checklist(path, section_config)
     assert data.critical_findings == [{"id": "ARCH-002", "check_title": "X"}]
+
+
+def test_summary_sheet_is_streamed_once_not_once_per_cell(checklist_factory, section_config):
+    """A read-only worksheet re-streams from the top on every ws.cell() call, which made the Summary parse O(rows^2)."""
+    wb = openpyxl.load_workbook(checklist_factory(), read_only=True)
+    ws = wb["Summary"]
+    streams = {"n": 0}
+    real = ws.iter_rows
+
+    def counting(*args, **kwargs):
+        streams["n"] += 1
+        return real(*args, **kwargs)
+
+    ws.iter_rows = counting
+    read_checklist.parse_summary_sheet(ws, section_config)
+    wb.close()
+    assert streams["n"] == 1

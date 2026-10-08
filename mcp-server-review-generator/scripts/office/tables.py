@@ -44,11 +44,6 @@ def extract_rows(tbl_xml: str) -> list[str]:
     return TR_RE.findall(tbl_xml)
 
 
-def extract_cells(row_xml: str) -> list[str]:
-    """Return every <a:tc>...</a:tc> block in a row, in document order."""
-    return TC_RE.findall(row_xml)
-
-
 def row_template(tbl_xml: str, header_row_count: int = 1) -> str:
     """Return the first data row (just after the header row(s)) as a
     reusable template for cloning."""

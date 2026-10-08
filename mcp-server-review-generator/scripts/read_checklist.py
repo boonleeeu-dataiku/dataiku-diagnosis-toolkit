@@ -2,7 +2,7 @@
 structured data for the deck generator.
 
 The workbook has a "Summary" sheet (bundle metadata + several narrative
-blocks) and one sheet per review section (one row per checklist item, 26
+blocks) and one sheet per review section (one row per checklist item, 27
 fixed columns). Narrative blocks on the Summary sheet are located
 generically -- by matching the visual style (bold/size/fill) of two
 structurally-guaranteed anchor headers, "Overall Status Counts" and
@@ -15,6 +15,7 @@ import re
 from dataclasses import dataclass
 
 import openpyxl
+from openpyxl.cell.read_only import EMPTY_CELL
 
 import section_names
 
@@ -84,6 +85,21 @@ class ChecklistData:
     recommendations: list
     items_by_sheet: dict
     sheet_tab_names: list
+
+
+class _Grid:
+    """The Summary sheet read once into memory. A read-only worksheet re-streams from the top on every
+    ws.cell() call, so the parsers below would be O(rows^2) on the sheet itself; this gives them the
+    same .cell()/.max_row interface over a single pass."""
+
+    def __init__(self, ws):
+        self._rows = [list(r) for r in ws.iter_rows()]
+        self.max_row = ws.max_row or len(self._rows)
+
+    def cell(self, row: int, column: int):
+        if 1 <= row <= len(self._rows) and 1 <= column <= len(self._rows[row - 1]):
+            return self._rows[row - 1][column - 1]
+        return EMPTY_CELL
 
 
 def _style_signature(cell):
@@ -233,6 +249,7 @@ def parse_recommendation_list(ws, start_row: int, end_row: int, num_cols: int = 
 
 
 def parse_summary_sheet(ws, config: dict) -> dict:
+    ws = _Grid(ws)
     blocks = find_section_blocks(ws)
     bundle_metadata = parse_bundle_metadata(ws, blocks[0][0]) if blocks else {}
 

@@ -104,7 +104,7 @@ Slides and manually check:
   - The Table of Contents matches the 3 divider slides' titles (the TOC's
     2 unused slots are left blank by design, not removed).
   - The Executive Summary KPI tiles show the right count in the right
-    status color (Pass=teal, Fail=orange, Partial=periwinkle, Needs
+    status color (Pass=teal, Fail=red-orange, Partial=orange, Needs
     Review=peach, Not Applicable=gray), and the Top Risk callout (if
     present) reads sensibly.
   - The Results by Section scorecard's 5 status columns are colored
