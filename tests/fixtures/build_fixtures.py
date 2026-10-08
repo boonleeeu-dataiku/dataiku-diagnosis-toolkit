@@ -39,7 +39,7 @@ EVAL_ITEM_IDS = [
     "SCALE-011",  # filesystem_root connection
     "ARCH-008",   # Spark validation worded for Kubernetes -> Not Applicable without a cluster
     "ADVSEC-003", # session timeouts are real keys, 0 = unlimited
-    "ADVSEC-006", # no custom post-logout redirect -> Not Applicable
+    "ADVSEC-006", # no custom post-logout redirect -> Pass (default page)
     "GENAI-001",  # internal LLM Mesh code envs -> Pass internal, Needs Review non-internal
     "GENAI-009",  # Agent Hub deployer -> Needs Review when installed, Not Applicable when not
     "SEC-002",    # UIF enabled with rules -> Pass; disabled -> Fail

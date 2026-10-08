@@ -59,7 +59,7 @@ The status comes from the verdict. Quote its `deciding_values` and add only the 
   block in `evidence_found`. A proxy documented elsewhere in the bundle is not read by the rule: it stays Needs Review.
 - **SEC-009:** give the count of authorized groups, never the names.
 - **SEC-010:** give the protocol, never any secret. On Fail, `Action:` discuss the benefits of SSO with the customer.
-- **ADVSEC-006:** when not applicable, say the default logged-out page is in use.
+- **ADVSEC-006:** when no custom redirect is set, say the default logged-out page is in use.
 - **ADVSEC-008:** other export or clipboard keys that are set are `notes` only.
 - **ADVSEC-009:** say a proxy may set the headers (the bundle can't show that). The four non-core headers are `notes` only.
 

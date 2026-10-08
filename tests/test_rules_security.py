@@ -135,7 +135,7 @@ def test_the_security_block_rules_are_registered():
     ("ADVSEC-001", "hideErrorStacks", True, False, "Fail"),
     ("ADVSEC-002", "hideVersionStringsWhenNotLogged", True, False, "Fail"),
     ("ADVSEC-004", "forceSingleSessionPerUser", True, False, "Fail"),
-    ("ADVSEC-005", "restrictUsersAndGroupsVisibility", True, False, "Needs Review"),   # may be deliberately left off
+    ("ADVSEC-005", "restrictUsersAndGroupsVisibility", True, False, "Fail"),
     ("SEC-007", "secureCookies", True, False, "Needs Review"),                          # only safe once all access is HTTPS
     ("ADVSEC-012", "enableEmailAndDisplayNameModification", False, True, "Needs Review"),  # secure value is false
 ])
@@ -155,9 +155,10 @@ def test_advsec003_session_timeouts_zero_means_unlimited(total, idle, expected):
 
 
 @pytest.mark.parametrize("behavior,scheme,expected", [
-    ("LOGGED_OUT_PAGE", "ABSENT", "Not Applicable"), ("ABSENT", "ABSENT", "Not Applicable"),
+    ("LOGGED_OUT_PAGE", "ABSENT", "Pass"), ("ABSENT", "ABSENT", "Pass"),
     ("CUSTOM_URL", "https", "Pass"), ("CUSTOM_URL_POST", "http", "Pass"),
-    ("CUSTOM_URL", "other", "Fail"), ("CUSTOM_URL", "ABSENT", "Fail"),
+    ("CUSTOM_URL", "other", "Needs Review"), ("CUSTOM_URL", "ABSENT", "Needs Review"),
+    ("SOMETHING_NEW", "ABSENT", "Needs Review"),
 ])
 def test_advsec006_custom_logout_redirect(behavior, scheme, expected):
     assert status("ADVSEC-006", sec(postLogoutBehavior=behavior, postLogoutCustomURL_scheme=scheme)) == expected
@@ -259,7 +260,7 @@ def test_advsec009_extra_headers_are_notes_only():
 
 @pytest.mark.parametrize("flag,prop,expected", [
     (True, "ABSENT", "Pass"), (False, "false", "Pass"), (False, "FALSE", "Pass"),   # either place counts
-    (False, "ABSENT", "Fail"), (False, "true", "Fail"),
+    (False, "ABSENT", "Needs Review"), (False, "true", "Needs Review"),
     ("ABSENT", "false", "Pass"), ("ABSENT", "ABSENT", "Needs Review"),
 ])
 def test_advsec011_data_table_links_in_either_place(flag, prop, expected):

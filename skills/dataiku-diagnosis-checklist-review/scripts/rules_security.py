@@ -88,7 +88,7 @@ def jek_cgroup_unconfigured(facts):
 # --- the instance's `security` settings block (Batch 3a) ------------------------------------------------------------
 #
 # Policy (verdict-rules.md, Security): a secure toggle that is on is Pass; one that is off is Fail, except where the
-# checklist itself allows a deliberate choice (ADVSEC-005, 010, 012, SEC-007), which is Needs Review (ask for the
+# checklist itself allows a deliberate choice (ADVSEC-010, 012, SEC-007), which is Needs Review (ask for the
 # documented need). A setting missing from the bundle is Needs Review.
 
 def _security(facts):
@@ -144,7 +144,7 @@ def single_session(facts):
 
 @rule("ADVSEC-005", "Restricting visibility of groups and users")
 def restrict_visibility(facts):
-    return _toggle(facts, "restrictUsersAndGroupsVisibility", want=True, off_status="Needs Review",
+    return _toggle(facts, "restrictUsersAndGroupsVisibility", want=True, off_status="Fail",
                    label="users and groups are hidden from other users")
 
 
@@ -158,8 +158,10 @@ def post_logout_redirect(facts):
     if behavior in ("CUSTOM_URL", "CUSTOM_URL_POST"):
         if scheme in ("http", "https"):
             return verdict("Pass", f"a custom logout redirect is configured ({scheme} URL)", **values)
-        return verdict("Fail", "a custom logout redirect is configured but its URL is not http or https", **values)
-    return verdict("Not Applicable", "no custom logout redirect; the default logged-out page is used", **values)
+        return verdict("Needs Review", "a custom logout redirect is configured but its URL is not http or https", **values)
+    if behavior in ("LOGGED_OUT_PAGE", ABSENT):
+        return verdict("Pass", "no custom logout redirect; the default logged-out page is used", **values)
+    return verdict("Needs Review", f"unrecognised logout behaviour ({behavior})", **values)
 
 
 @rule("ADVSEC-010", "Allowing DSS to be hosted inside an iframe")
@@ -272,5 +274,5 @@ def data_table_links(facts):
     if flag is True or dip_off:
         return verdict("Pass", "links in data tables are disabled", **values)
     if flag is False:
-        return verdict("Fail", "links in data tables are not disabled", **values)
+        return verdict("Needs Review", "links in data tables are not disabled (ask whether intentional)", **values)
     return _missing("the data-table links setting")

@@ -33,13 +33,13 @@
 | ADVSEC-002 version info | hidden before login | not hidden | |
 | ADVSEC-003 sessions | either timeout above 0 | both 0 (unlimited) | |
 | ADVSEC-004 single session | forced | not forced | |
-| ADVSEC-005 user/group visibility | restricted | never | not restricted = Needs Review |
-| ADVSEC-006 logout redirect | valid http or https custom URL | custom redirect with another scheme | Not Applicable: default page |
+| ADVSEC-005 user/group visibility | restricted | not restricted | |
+| ADVSEC-006 logout redirect | valid http or https custom URL, or the default logged-out page | never | custom redirect with another scheme, or an unrecognised behaviour = Needs Review |
 | ADVSEC-007 wiki uploads | an extension list is set | none set (a missing properties file counts as none) | |
 | ADVSEC-008 exports | any export-disable key true | none (a missing properties file counts as none) | |
 | ADVSEC-009 HTTP headers | all six core headers set restrictively | none of the ten configured | Partial: some set. The other four are notes only |
 | ADVSEC-010 iframe | hosting off | on with secure cookies off | on with secure cookies on = Needs Review |
-| ADVSEC-011 table links | disabled (either setting) | not disabled | |
+| ADVSEC-011 table links | disabled (either setting) | never | not disabled, or the setting missing = Needs Review |
 | ADVSEC-012 edit profile | users can't edit | never | can edit = Needs Review |
 
 The six core headers and their restrictive values: content-security-policy (non-empty), x-frame-options (SAMEORIGIN or

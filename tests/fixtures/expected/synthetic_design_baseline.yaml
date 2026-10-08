@@ -44,8 +44,8 @@ items:
     mentions: [filesystem_root]
   ADVSEC-003: # both session timeouts are 0 (unlimited) in the baseline; finite in the healthy bundle
     status: [Fail]
-  ADVSEC-006: # no custom post-logout redirect configured
-    status: [Not Applicable]
+  ADVSEC-006: # no custom post-logout redirect configured: the default page
+    status: [Pass]
   ARCH-008:   # no Kubernetes cluster attached -> Not Applicable
     status: [Not Applicable]
   GENAI-001:  # a non-internal code env is the RAG default -> Needs Review
