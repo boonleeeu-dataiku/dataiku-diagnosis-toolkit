@@ -160,6 +160,11 @@ def cluster_sizing(facts):
     return _live_cluster_check(facts, "the cluster capacity against the workloads")
 
 
+@rule("GENAI-002", "Hugging Face Local LLM Enablement (Conditional)")
+def hugging_face_local(facts):
+    return _live_cluster_check(facts, "the GPU nodes, their compute capability and the local Hugging Face code environment")
+
+
 @rule("ARCH-013", "Valid Cluster Configuration for Elastic Compute")
 def valid_cluster(facts):
     k = _k8s(facts)

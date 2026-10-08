@@ -106,6 +106,8 @@ items:
     status: [Not Applicable]
   ARCH-011:
     status: [Not Applicable]
+  GENAI-002:  # no Kubernetes cluster attached -> Not Applicable
+    status: [Not Applicable]
   ARCH-014:   # no Kubernetes cluster attached -> Not Applicable
     status: [Not Applicable]
   ARCH-015:   # no Kubernetes cluster attached -> Not Applicable

@@ -44,6 +44,8 @@ items:
     status: [Pass]
   ARCH-008:   # cluster attached: a live Spark run can't be shown by a bundle
     status: [Needs Review]
+  GENAI-002:  # cluster attached: GPU nodes and compute capability can't be shown by a bundle
+    status: [Needs Review]
   ARCH-014:   # cluster attached: topology is never in a bundle
     status: [Needs Review]
   ARCH-015:   # cluster attached: capacity is never in a bundle

@@ -10,6 +10,20 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.38.3] - 2026-10-08
+
+65 of 67 checks are now decided by code (was 62). Only ARCH-002 and ARCH-003 stay with the model: they need a live web lookup (the current GA release, the supported-OS page).
+
+### Added
+
+- **GENAI-002** (`rules_k8s.py`): no Kubernetes cluster attached = Not Applicable; cluster attached = Needs Review (GPU nodes, compute capability and the local Hugging Face code environment can't be shown by a bundle). A missing Kubernetes fact or an unreadable attachment is Needs Review.
+- **GENAI-011, SEC-003** (`rules_review.py`): always Needs Review. The model reports what the bundle shows (Agent Hub and group counts; the cgroup targets DSS controls and whether UIF is enabled, without naming files) and an `Action:` to confirm the rest.
+- `verdict-rules.md` rows, `calibrations.md` notes guidance and anchors, unit tests, and fixtures (eval checklist now 49 items) for each.
+
+### Changed
+
+- `calibrations.md`: removed the model-decided entry for the feature-conditional GenAI checks (both are now ruled). `verdict-rules.md` "Stays with the model" now names only ARCH-002 and ARCH-003.
+
 ## [0.38.2] - 2026-10-08
 
 Reader 0.20.0. 62 of 67 checks are now decided by code (was 46). The 0.38.1 Codex run (2026-10-08) matched all 46 ruled statuses.

@@ -108,6 +108,9 @@ The status comes from the verdict. Quote its `deciding_values` and add only the 
   directions is a live test (DSS to the API server, pods back to DSS).
 - **ARCH-012:** name the configured execution configs and what is enabled (containerized recipes, notebooks, webapps, API services);
   `Action:` run a test in each.
+- **SEC-003:** the UIF security configuration is not part of a bundle, so the status is fixed. Report the cgroup hierarchies DSS controls
+  that the bundle does show (the cgroup targets and their count) and whether UIF is enabled, without naming files. `Action:` check on the
+  host that each of those hierarchies is listed among the additional allowed directories of the UIF security configuration.
 - **SEC-008:** give the number of groups and whether any grant broad admin rights, never user or group names beyond built-in ones.
   Whether the design suits the customer is an `Action:`.
 - **SEC-011:** quote any proxy setting that is present (host only, never credentials); otherwise say none was found, and that a proxy
@@ -116,6 +119,9 @@ The status comes from the verdict. Quote its `deciding_values` and add only the 
   Manager snapshots).
 - **SCALE-016:** note what supports resilience in the bundle (external database, backups seen, a remote or HA topology); `Action:`
   hold a DR/HA discussion against the customer's RPO and RTO.
+- **GENAI-011:** say whether Agent Hub is installed and which groups exist, never user names. The group running the Agent Hub web app and
+  its impersonation allowed groups are not in a bundle: `Action:` check Administration > Security > Groups, that the allowed
+  groups are limited to the users who should reach Agent Hub, with no broad group such as all users.
 - **GENAI-010:** say whether Agent Hub is installed and which kind of account the bundle shows managing it; `Action:` confirm it is a
   dedicated service account, not an administrator's own.
 
@@ -130,6 +136,10 @@ The status comes from the verdict. Quote its `deciding_values` and add only the 
 
 **GenAI**
 - **GENAI-001:** say which envs you saw.
+- **GENAI-002:** Not Applicable without a cluster attached. With one the status is Needs Review: report what the bundle shows (whether
+  the internal Hugging Face local code environment is installed, any GPU or accelerator hints in the cluster and execution configs;
+  the model must not infer GPU nodes or compute capability) and add an `Action:` to confirm the GPU node group, NVIDIA compute
+  capability and the code environment on the cluster.
 - **GENAI-004:** outbound connectivity to the AI gateway can't be verified from a bundle: an `Action:`.
 - **GENAI-006:** name the model id when it can't be determined.
 - **GENAI-007:** name the unset default ids.
@@ -139,11 +149,6 @@ The status comes from the verdict. Quote its `deciding_values` and add only the 
   deployer's permissions in the security groups.
 
 ## Model-decided checks
-
-- **Feature-conditional GenAI checks without a rule (local Hugging Face, AI assistant debug data):** first confirm the feature is in
-  use (the reader's `data-dir-config` reference lists the signals it has verified and which it has not). Not in use: **Not
-  Applicable**. Turned off but the checklist asks for acceptance or enablement: **Needs Review**. For "AI assistant debug data in
-  the bundle" checks, a bundle that lacks the section is **Needs Review**, not Fail.
 
 - **Supported operating system (ARCH-003):** take the OS name and version from the bundle (the reader's
   `root-files` reference says where) and compare them with Dataiku's supported-OS documentation for the
@@ -195,12 +200,14 @@ and the row together.
 | ARCH-014 | Recommended Cluster Topology (Single Managed Cluster, Node Groups, Autoscaling) |
 | ARCH-015 | Appropriate Cluster Sizing |
 | GENAI-001 | Internal Code Environments for RAG, Document Extraction, PII Detection |
+| GENAI-002 | Hugging Face Local LLM Enablement (Conditional) |
 | GENAI-004 | AI Services Terms of Use Acceptance & Enablement |
 | GENAI-006 | Bring Your Own LLM - Recommended Model Versions |
 | GENAI-007 | Cobuild Default LLM Configuration |
 | GENAI-008 | Include AI Assistant Debug Data in Instance Diagnostics |
 | GENAI-009 | Agent Hub Deployment Required Permissions |
 | GENAI-010 | Use Service Account for Agent Hub Management |
+| GENAI-011 | Agent Hub WebApp Impersonation - Allowed Groups Scope |
 | SCALE-001 | External PostgreSQL Runtime Database |
 | SCALE-002 | Appropriate Metastore Configured |
 | SCALE-004 | Admin Project for Garbage Collection |
@@ -218,6 +225,7 @@ and the row together.
 | SCALE-016 | Disaster Recovery Strategy Discussion |
 | SEC-001 | Verify/Capture Instance IDs |
 | SEC-002 | User Isolation Framework (UIF) Enabled with Appropriate Impersonation Rules |
+| SEC-003 | UIF-Managed CGroup Hierarchies Allowed Directories |
 | SEC-004 | CGroups Enabled with Memory Limit per Sizing Heuristic |
 | SEC-005 | JEK-Specific CGroup Limits Left Unconfigured |
 | SEC-006 | HTTPS Access Configured for DSS |

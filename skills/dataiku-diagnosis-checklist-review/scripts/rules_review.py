@@ -20,10 +20,12 @@ def _always_needs_review(why: str):
 for _id, _title, _why in (
     ("ARCH-009", "Bidirectional Network Connectivity Between DSS and Elastic AI Cluster", "network reachability is a live test"),
     ("ARCH-012", "Functional Validation of Containerized Execution Across Recipe, Notebook, Webapp, and API", "it needs a live run"),
+    ("SEC-003", "UIF-Managed CGroup Hierarchies Allowed Directories", "the UIF security configuration lives outside the data directory and is not in a bundle"),
     ("SEC-008", "DSS Groups Security Model Appropriately Defined", "group design intent is not in a bundle"),
     ("SEC-011", "Proxy Configuration Reviewed and Documented", "the proxy and its documentation live outside DSS"),
     ("SCALE-005", "Environment Backup Policy", "the backup policy lives outside DSS"),
     ("SCALE-016", "Disaster Recovery Strategy Discussion", "it is a conversation with the customer"),
+    ("GENAI-011", "Agent Hub WebApp Impersonation - Allowed Groups Scope", "the group running the Agent Hub web app and its impersonation scope are not in a bundle"),
     ("GENAI-010", "Use Service Account for Agent Hub Management", "the account type managing Agent Hub is not in a bundle"),
 ):
     rule(_id, _title)(_always_needs_review(_why))

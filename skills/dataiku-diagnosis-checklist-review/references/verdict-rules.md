@@ -83,6 +83,7 @@ Kubernetes-only check below is **Not Applicable**, even if Kubernetes execution 
 | ARCH-006 Spark baseline | two or more differently sized configs | none defined | Not Applicable: Spark off. Needs Review: one, or all identical |
 | ARCH-007 namespaces | every Kubernetes-targeting config uses a templated per-user namespace | never | fixed or missing namespace = Needs Review. Spark configs that don't target Kubernetes are ignored |
 | ARCH-008 Spark validation | never | never | Not Applicable: no cluster attached. Needs Review: cluster attached (a live run can't be shown by a bundle), or the attachment unreadable |
+| GENAI-002 Hugging Face local LLM | never | never | Not Applicable: no cluster attached (local models run on an Elastic AI cluster). Needs Review: cluster attached (GPU nodes, compute capability and the code env can't be shown by a bundle), or the attachment unreadable |
 | ARCH-010 container config | a Kubernetes config with a memory limit | cluster attached, none defined | configs but no limit = Needs Review |
 | ARCH-011 container baseline | two or more differently sized container configs | cluster attached, none defined | one, or all identical = Needs Review |
 | ARCH-013 cluster | a Kubernetes cluster definition in the bundle | never | attached with no definition = Needs Review |
@@ -116,13 +117,14 @@ Live or customer-practice checks a bundle can never settle: the status is fixed 
 |---|---|---|---|
 | ARCH-009 DSS to cluster connectivity | never | never | always Needs Review |
 | ARCH-012 containerized execution | never | never | always Needs Review |
+| SEC-003 UIF cgroup directories | never | never | always Needs Review: the UIF security configuration is not in a bundle |
 | SEC-008 groups security model | never | never | always Needs Review |
 | SEC-011 proxy configuration | never | never | always Needs Review |
 | SCALE-005 backup policy | never | never | always Needs Review |
 | SCALE-016 disaster recovery | never | never | always Needs Review |
 | GENAI-010 Agent Hub service account | never | never | always Needs Review |
+| GENAI-011 Agent Hub impersonation scope | never | never | always Needs Review |
 
 ## Stays with the model
 
-ARCH-002, 003, SEC-003, GENAI-002, 011. These need a web lookup, a live check, a customer conversation, or facts the reader does not
-yet publish. Their guidance is in `calibrations.md`.
+ARCH-002 and ARCH-003: they need a live web lookup (the current GA release, the supported-OS page), so the model decides them. Their guidance is in `calibrations.md`.
