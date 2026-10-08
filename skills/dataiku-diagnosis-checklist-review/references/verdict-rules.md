@@ -84,8 +84,10 @@ Kubernetes-only check below is **Not Applicable**, even if Kubernetes execution 
 | ARCH-007 namespaces | every Kubernetes-targeting config uses a templated per-user namespace | never | fixed or missing namespace = Needs Review. Spark configs that don't target Kubernetes are ignored |
 | ARCH-008 Spark validation | never | never | Not Applicable: no cluster attached. Needs Review: cluster attached (a live run can't be shown by a bundle), or the attachment unreadable |
 | GENAI-002 Hugging Face local LLM | never | never | Not Applicable: no cluster attached (local models run on an Elastic AI cluster). Needs Review: cluster attached (GPU nodes, compute capability and the code env can't be shown by a bundle), or the attachment unreadable |
+| ARCH-009 DSS to cluster connectivity | never | never | Not Applicable: no cluster attached. Needs Review: cluster attached (reachability is a live test), or the attachment unreadable |
 | ARCH-010 container config | a Kubernetes config with a memory limit | cluster attached, none defined | configs but no limit = Needs Review |
 | ARCH-011 container baseline | two or more differently sized container configs | cluster attached, none defined | one, or all identical = Needs Review |
+| ARCH-012 containerized execution | never | never | Not Applicable: no cluster attached. Needs Review: cluster attached (it needs a live run), or the attachment unreadable |
 | ARCH-013 cluster | a Kubernetes cluster definition in the bundle | never | attached with no definition = Needs Review |
 | ARCH-014 cluster topology | never | never | Not Applicable: no cluster attached. Needs Review: cluster attached (topology is never in a bundle) |
 | ARCH-015 cluster sizing | never | never | Not Applicable: no cluster attached. Needs Review: cluster attached (capacity is never in a bundle) |
@@ -115,8 +117,6 @@ Live or customer-practice checks a bundle can never settle: the status is fixed 
 
 | Id | Pass | Fail | Other |
 |---|---|---|---|
-| ARCH-009 DSS to cluster connectivity | never | never | always Needs Review |
-| ARCH-012 containerized execution | never | never | always Needs Review |
 | SEC-003 UIF cgroup directories | never | never | always Needs Review: the UIF security configuration is not in a bundle |
 | SEC-008 groups security model | never | never | always Needs Review |
 | SEC-011 proxy configuration | never | never | always Needs Review |

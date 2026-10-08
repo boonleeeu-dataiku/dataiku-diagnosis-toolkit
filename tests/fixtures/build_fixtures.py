@@ -69,6 +69,8 @@ EVAL_ITEM_IDS = [
     "SCALE-015",  # Redshift/BigQuery/Synapse: all set -> Pass; some -> Partial; all unset -> Fail
     "GENAI-008",  # AI assistant logs in the diagnostic: always Needs Review (version gate only)
     "GENAI-002",  # Hugging Face local LLM: no cluster -> Not Applicable; cluster attached -> Needs Review
+    "ARCH-009",   # cluster connectivity: no cluster -> Not Applicable; cluster attached -> Needs Review
+    "ARCH-012",   # containerized execution: no cluster -> Not Applicable; cluster attached -> Needs Review
     "ARCH-014",   # cluster topology: live check -> Needs Review with a cluster, Not Applicable without
     "ARCH-015",   # cluster sizing: live check -> Needs Review with a cluster, Not Applicable without
     "ARCH-017",   # containerized visual recipes: unset on an attached cluster -> Needs Review

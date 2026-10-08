@@ -7,7 +7,7 @@ Versions: toolkit **0.38.3** (tag `v0.38.3`), reader **0.20.0** (`skill-v0.20.0`
 
 Done: the verdict framework (Batch 0) and rules for **65 of 67 checks**, one module per area: `rules_security.py` (SEC-001/002/005/006/007/009/010,
 ADVSEC-001 to 012), `rules_platform.py` (ARCH-001, SEC-004, ARCH-004, SCALE-001/002/003/004/006/007/008/009/010/011/012/013/014/015), `rules_genai.py`
-(GENAI-001/003/004/005/006/007/008/009) and `rules_review.py` (always Needs Review: ARCH-009/012, SEC-003/008/011, SCALE-005/016, GENAI-010/011) and `rules_k8s.py` (ARCH-005/006/007/008/010/011/013/014/015/016/017, GENAI-002). `run_step.py verdicts` computes them, `verify` fails on any
+(GENAI-001/003/004/005/006/007/008/009) and `rules_review.py` (always Needs Review: SEC-003/008/011, SCALE-005/016, GENAI-010/011) and `rules_k8s.py` (ARCH-005/006/007/008/009/010/011/012/013/014/015/016/017, GENAI-002). `run_step.py verdicts` computes them, `verify` fails on any
 workbook status that differs.
 
 The rule specs are in `skills/dataiku-diagnosis-checklist-review/references/verdict-rules.md` (one row per rule, kept in step by
@@ -147,7 +147,7 @@ only the `notes`/`evidence_found` wording may differ between clients.
   skill duplicates); the rest moved into Batch 0, portability and the items below.
 - [x] Codex stages outputs in sandbox work dirs, so the run manifest isn't copied beside the deliverables: step 7 now says to copy the run files (0.32.1); confirmed on the 0.33.1 run.
 - [ ] Re-save the eval baseline (`scripts/test.sh eval ... --save-baseline`, costs model usage) when the owner asks; it is stale (2 scenarios x 11 items vs 3 scenarios x 49).
-- [x] ARCH-009/012 stay always Needs Review even with no cluster attached (owner decision 2026-10-08: they need in-depth analysis with customer feedback).
+- [x] ARCH-009/012 (unreleased): no cluster attached = Not Applicable, otherwise Needs Review (owner decision 2026-10-08; moved from `rules_review.py` to `rules_k8s.py`). The 0.38.3 Codex runs had them always Needs Review, so expect Not Applicable on the GE design bundle next time.
 - [ ] Minor: notes should not name files (SEC-003 on the 0.32.0 run mentioned a security config file). The SEC-003 guidance in `calibrations.md` now says so; consider a general line in SKILL.md or leave it.
 - [x] GENAI-004/007 now have rules (0.36.0); GENAI-008 stays with the model.
 - [ ] GENAI-005/006 field names (`mainLLMId`, `referenceProjectKey`) are unverified against a populated bundle: confirm when one appears.

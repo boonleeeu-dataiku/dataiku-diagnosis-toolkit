@@ -18,8 +18,6 @@ def _always_needs_review(why: str):
 
 
 for _id, _title, _why in (
-    ("ARCH-009", "Bidirectional Network Connectivity Between DSS and Elastic AI Cluster", "network reachability is a live test"),
-    ("ARCH-012", "Functional Validation of Containerized Execution Across Recipe, Notebook, Webapp, and API", "it needs a live run"),
     ("SEC-003", "UIF-Managed CGroup Hierarchies Allowed Directories", "the UIF security configuration lives outside the data directory and is not in a bundle"),
     ("SEC-008", "DSS Groups Security Model Appropriately Defined", "group design intent is not in a bundle"),
     ("SEC-011", "Proxy Configuration Reviewed and Documented", "the proxy and its documentation live outside DSS"),

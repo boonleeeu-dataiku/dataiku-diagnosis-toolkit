@@ -165,6 +165,16 @@ def hugging_face_local(facts):
     return _live_cluster_check(facts, "the GPU nodes, their compute capability and the local Hugging Face code environment")
 
 
+@rule("ARCH-009", "Bidirectional Network Connectivity Between DSS and Elastic AI Cluster")
+def cluster_connectivity(facts):
+    return _live_cluster_check(facts, "network reachability between DSS and the cluster in both directions")
+
+
+@rule("ARCH-012", "Functional Validation of Containerized Execution Across Recipe, Notebook, Webapp, and API")
+def containerized_execution(facts):
+    return _live_cluster_check(facts, "a live containerized run in a recipe, notebook, webapp and API service")
+
+
 @rule("ARCH-013", "Valid Cluster Configuration for Elastic Compute")
 def valid_cluster(facts):
     k = _k8s(facts)

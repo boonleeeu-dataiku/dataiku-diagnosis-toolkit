@@ -104,10 +104,6 @@ The status comes from the verdict. Quote its `deciding_values` and add only the 
   warehouse, can't be read from a bundle: an `Action:`. For Redshift, note that the Fast Path applies only to some cases.
 
 **Always Needs Review** (the rule fixes the status; put observations in `evidence_found` and `notes`, and an `Action:` to confirm)
-- **ARCH-009:** state whether a cluster is attached and its API endpoint host if the reader publishes it; reachability in both
-  directions is a live test (DSS to the API server, pods back to DSS).
-- **ARCH-012:** name the configured execution configs and what is enabled (containerized recipes, notebooks, webapps, API services);
-  `Action:` run a test in each.
 - **SEC-003:** the UIF security configuration is not part of a bundle, so the status is fixed. Report the cgroup hierarchies DSS controls
   that the bundle does show (the cgroup targets and their count) and whether UIF is enabled, without naming files. `Action:` check on the
   host that each of those hierarchies is listed among the additional allowed directories of the UIF security configuration.
@@ -128,6 +124,8 @@ The status comes from the verdict. Quote its `deciding_values` and add only the 
 **Kubernetes and Spark**
 - **ARCH-007:** note the namespace field and value seen in `evidence_found` (a templated variable such as `${namespace}` needs
   no tracing).
+- **ARCH-009, ARCH-012:** Not Applicable without a cluster attached; with one, Needs Review. ARCH-009: state the cluster kind and its API endpoint host if the reader
+  publishes it; reachability in both directions (DSS to the API server, pods back to DSS) is an `Action:` live test. ARCH-012: name the configured execution configs and what is enabled (containerized recipes, notebooks, webapps, API services); `Action:` run a test in each.
 - **ARCH-008, ARCH-014, ARCH-015:** with a cluster attached the status is Needs Review: add an `Action:` to run a Spark recipe and
   a notebook (ARCH-008), to review node groups and autoscaling (ARCH-014), or to compare cluster capacity with the workloads
   (ARCH-015). ARCH-008 is worded for Spark on Kubernetes: no cluster means Not Applicable even when Spark runs on YARN or Hadoop.

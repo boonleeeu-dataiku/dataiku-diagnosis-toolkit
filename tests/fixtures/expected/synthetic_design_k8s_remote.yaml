@@ -46,6 +46,10 @@ items:
     status: [Needs Review]
   GENAI-002:  # cluster attached: GPU nodes and compute capability can't be shown by a bundle
     status: [Needs Review]
+  ARCH-009:   # cluster attached: reachability is a live test
+    status: [Needs Review]
+  ARCH-012:   # cluster attached: needs a live run
+    status: [Needs Review]
   ARCH-014:   # cluster attached: topology is never in a bundle
     status: [Needs Review]
   ARCH-015:   # cluster attached: capacity is never in a bundle
