@@ -1,6 +1,6 @@
 """Verdict rules for the platform, sizing and runtime checks (judgment only; see verdicts.py for the contract).
 
-Each rule's text is the human-readable spec in `references/verdict-rules.md` (keep the two in step). A fact that is missing from the bundle is
+Each rule's text is the human-readable spec in `docs/verdict-rules.md` (keep the two in step). A fact that is missing from the bundle is
 Needs Review, never an assumed Fail, except where the calibration says otherwise (SCALE-006)."""
 from __future__ import annotations
 

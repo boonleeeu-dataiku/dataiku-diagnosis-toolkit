@@ -10,6 +10,10 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+### Changed
+
+- `verdict-rules.md` moved from `skills/dataiku-diagnosis-checklist-review/references/` to `docs/verdict-rules.md`: it is a maintainer spec the model never reads. `tests/test_skill_boundaries.py` still scans it for reader-owned layout terms.
+
 ## [0.38.5] - 2026-10-08
 
 Slimming pass on the skills and tests; no change to any verdict.

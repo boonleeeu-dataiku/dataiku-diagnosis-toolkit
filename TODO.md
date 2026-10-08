@@ -6,7 +6,7 @@ Open work only. Release history is in `CHANGELOG.md`; the general process is in 
 
 Toolkit **0.38.5**, reader **0.20.0** (upstream `../Diagnosis Reader/`), Checklist Generator **0.4.0** (`../Dataiku Checklist Generator/`; ids and
 titles frozen in its `config/id_registry.yaml`). **65 of 67 checks are ruled** (`skills/dataiku-diagnosis-checklist-review/scripts/rules_*.py`, specs in
-`references/verdict-rules.md`). ARCH-002/003 stay with the model for good (they need a live web lookup). Code status is final: `run_step.py verify` fails on
+`docs/verdict-rules.md`). ARCH-002/003 stay with the model for good (they need a live web lookup). Code status is final: `run_step.py verify` fails on
 any workbook status that differs from its verdict.
 
 Codex: the 0.38.3 runs (2026-10-08) passed `RUN VERIFY` with all 65 ruled statuses matching. **0.38.4 has not been run in Codex yet.**
@@ -28,7 +28,7 @@ The general process (flow, ownership, how to change a rule) is in [`docs/validat
    reference) into `skills/dataiku-diagnosis-reader/` and `diff -r` the two.
 5. Rules go in `skills/dataiku-diagnosis-checklist-review/scripts/rules_*.py` (`@rule(id, anchor_title)`; anchor = the template title). Unit-test every branch in
    `tests/test_rules_*.py` and check each rule against the fixtures' `expected/*.yaml`.
-6. Spec: add a row per rule to `references/verdict-rules.md` under the module's section (`tests/test_verdict_rules_doc.py` fails without it). In `calibrations.md` add only the `evidence_found`/`notes`/`Action:` guidance for the check, and a row in `tests/calibration_anchors.md` if you cite the id there.
+6. Spec: add a row per rule to `docs/verdict-rules.md` under the module's section (`tests/test_verdict_rules_doc.py` fails without it). In `calibrations.md` add only the `evidence_found`/`notes`/`Action:` guidance for the check, and a row in `tests/calibration_anchors.md` if you cite the id there.
 7. Release: bump the version in the 4 manifests, add a `CHANGELOG.md` entry, tick the batch here, `scripts/test.sh fast`, commit, tag `vX.Y.Z`. **Push only when the owner says so.**
 8. The owner runs Codex **once** per release; review the delivered folder with `run_step.py verify <bundle at the path Codex used> --manifest ... --checklist ... --deck ...`
    and compare the ruled rows to `<stem>_verdicts.json`. Don't ask for more runs unless told. Don't run `scripts/test.sh eval` unless asked (it costs model usage).

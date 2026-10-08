@@ -17,7 +17,7 @@ Regenerate the bundles and checklist after editing `build_fixtures.py`:
 mcp-server-review-generator/.venv/bin/python tests/fixtures/build_fixtures.py
 ```
 
-When you add or change a verdict rule (`references/verdict-rules.md` and `scripts/rules_*.py`) or a model-decided calibration (`references/calibrations.md`), update these
+When you add or change a verdict rule (`docs/verdict-rules.md` and `scripts/rules_*.py`) or a model-decided calibration (`references/calibrations.md`), update these
 fixtures to cover it:
 1. Add the item's ID to `EVAL_ITEM_IDS`.
 2. Shape a bundle so it triggers the calibration.

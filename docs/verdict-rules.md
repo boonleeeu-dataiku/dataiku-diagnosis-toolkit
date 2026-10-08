@@ -1,9 +1,9 @@
 # Verdict rules (the spec of the code-decided checks)
 
 > **Not read during a review.** `scripts/run_step.py verdicts` computes these statuses and the model writes them as
-> given (SKILL.md, Verdicts). This file is the human-readable spec for the owner and for whoever changes a rule: a rule
-> in `scripts/rules_*.py` and its row here change together. `tests/test_verdict_rules_doc.py` fails when a registered rule
-> has no row, or a row has no rule. What the model adds to `notes` for these checks is in `calibrations.md`.
+> given (`skills/dataiku-diagnosis-checklist-review/SKILL.md`, Verdicts). This file is the human-readable spec for the owner and for whoever changes a rule: a rule
+> in `skills/dataiku-diagnosis-checklist-review/scripts/rules_*.py` and its row here change together. `tests/test_verdict_rules_doc.py` fails when a registered rule
+> has no row, or a row has no rule. What the model adds to `notes` for these checks is in `skills/dataiku-diagnosis-checklist-review/references/calibrations.md`.
 >
 > Judgment only: which status a fact value earns. Where a value lives is the reader's business.
 

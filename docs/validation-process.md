@@ -1,7 +1,7 @@
 # How a check gets its status
 
 For maintainers. It explains how the toolkit decides each check's status in a platform review and where to change it. The per-rule
-detail is in [`verdict-rules.md`](../skills/dataiku-diagnosis-checklist-review/references/verdict-rules.md); this page is the map.
+detail is in [`verdict-rules.md`](verdict-rules.md); this page is the map.
 
 ## The idea
 

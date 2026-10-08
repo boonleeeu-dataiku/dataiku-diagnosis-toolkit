@@ -3,7 +3,7 @@
 These ask about a live system or a customer practice (groups design, proxy, backups, disaster recovery, a service account, network
 connectivity, containerized execution) that a diagnosis bundle can never settle, so the status is fixed. The model still writes
 `evidence_found` and `notes`: what the bundle does show, and the `Action:` to confirm the rest (see `references/calibrations.md`).
-Each rule's text is the human-readable spec in `references/verdict-rules.md` (keep the two in step)."""
+Each rule's text is the human-readable spec in `docs/verdict-rules.md` (keep the two in step)."""
 from __future__ import annotations
 
 from verdicts import rule, verdict

@@ -123,7 +123,7 @@ See README's "Testing" section for the three tiers.
   against `tests/calibration_anchors.md`; the rules' own title anchors are checked against the checklist in `tests/test_rules_security.py`). Fix those entries and the anchors file together, then update `EVAL_ITEM_IDS` and
   `tests/fixtures/expected/*.yaml` if an eval item moved.
 - **Where a status rule lives.** A check the facts can decide is a rule in `skills/dataiku-diagnosis-checklist-review/scripts/rules_*.py`,
-  specified in `references/verdict-rules.md` (one row per rule; `tests/test_verdict_rules_doc.py` fails when a rule and its row
+  specified in `docs/verdict-rules.md` (one row per rule; `tests/test_verdict_rules_doc.py` fails when a rule and its row
   disagree on existence). `references/calibrations.md` holds only the model's `notes` guidance for those checks and the
   status logic of the model-decided ones. Change a rule, its row, its unit test in `tests/test_rules_*.py` and the fixtures together.
 - **When you add or change a rule or a calibration**, extend the eval fixtures to cover it (see `tests/fixtures/README.md`):

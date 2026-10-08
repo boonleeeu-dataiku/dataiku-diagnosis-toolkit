@@ -1,4 +1,4 @@
-"""references/verdict-rules.md is the human-readable spec of the code-decided rules. It must list exactly the registered rules, so
+"""docs/verdict-rules.md is the human-readable spec of the code-decided rules. It must list exactly the registered rules, so
 a rule added, renamed or removed in scripts/rules_*.py cannot drift from its spec."""
 import re
 import sys
@@ -6,7 +6,7 @@ import sys
 from conftest import REPO_ROOT
 
 SCRIPTS = REPO_ROOT / "skills" / "dataiku-diagnosis-checklist-review" / "scripts"
-DOC = REPO_ROOT / "skills" / "dataiku-diagnosis-checklist-review" / "references" / "verdict-rules.md"
+DOC = REPO_ROOT / "docs" / "verdict-rules.md"
 sys.path.insert(0, str(SCRIPTS))
 import run_step  # noqa: E402,F401  (imports every rules_* module, registering the rules)
 import verdicts  # noqa: E402

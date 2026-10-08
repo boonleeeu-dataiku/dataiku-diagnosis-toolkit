@@ -19,7 +19,6 @@ spreadsheet, plus add/update a Summary tab.
 - `calibrations.md` — **read in full before evaluating any row** (step 4). It holds the user's
   check-specific interpretations, which override a literal reading of the checklist: what to write around a
   rule-decided status, and the status logic of the checks no rule decides.
-- `verdict-rules.md` — the spec of the code-decided rules. Not needed during a review.
 - `summary-layout.md` — manual Summary layout. Read only if `write_summary` is unavailable (step 6).
 - `linked-computer.md` — device staging and commit-verify loop. Read only on a linked computer (step 0).
 

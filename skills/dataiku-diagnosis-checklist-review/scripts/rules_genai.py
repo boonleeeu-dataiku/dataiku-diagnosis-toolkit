@@ -1,6 +1,6 @@
 """Verdict rules for the GenAI checks (judgment only; see verdicts.py for the contract).
 
-Each rule's text is the human-readable spec in `references/verdict-rules.md` (keep the two in step). A fact or section that is missing from the
+Each rule's text is the human-readable spec in `docs/verdict-rules.md` (keep the two in step). A fact or section that is missing from the
 bundle is Needs Review, never an assumed Fail or Not Applicable, except where the calibration says otherwise."""
 from __future__ import annotations
 

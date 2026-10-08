@@ -25,7 +25,7 @@ READER_OWNED_TERMS = ["ROTA", "lsblk", "[ERROR]", "defaultK8sClusterId", "hs_err
 
 
 def _files():
-    return [REVIEW_DIR / "SKILL.md", *sorted((REVIEW_DIR / "references").glob("*.md")),
+    return [REVIEW_DIR / "SKILL.md", REPO_ROOT / "docs" / "verdict-rules.md", *sorted((REVIEW_DIR / "references").glob("*.md")),
             *sorted((REVIEW_DIR / "scripts").glob("*.py"))]
 
 

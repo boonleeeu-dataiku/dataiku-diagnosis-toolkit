@@ -1,6 +1,6 @@
 """Verdict rules for the Spark, Kubernetes and containerized-execution checks (judgment only; see verdicts.py for the contract).
 
-Each rule's text is the human-readable spec in `references/verdict-rules.md` (keep the two in step). Kubernetes-conditional checks are Not Applicable
+Each rule's text is the human-readable spec in `docs/verdict-rules.md` (keep the two in step). Kubernetes-conditional checks are Not Applicable
 when no cluster is attached. A fact that is missing from the bundle is Needs Review, never an assumed Fail."""
 from __future__ import annotations
 
