@@ -6,11 +6,7 @@ from __future__ import annotations
 
 import re
 
-from verdicts import ABSENT, fact, rule, verdict
-
-
-def _missing(what: str):
-    return verdict("Needs Review", f"{what} missing from the bundle")
+from verdicts import ABSENT, _missing, fact, rule, verdict
 
 
 def _tier_target_gib(ram_gib: float) -> float:

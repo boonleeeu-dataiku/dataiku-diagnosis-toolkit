@@ -1,6 +1,6 @@
 """calibrations.md cites check ids from the bundled default checklist. Ids can change when the
 checklist does, and a renumbered id would silently send a calibration to the wrong check, so the
-"Check anchors" table records each id's title and this test fails when the checklist drifts."""
+anchors table (`tests/calibration_anchors.md`) records each id's title and this test fails when the checklist drifts."""
 
 import re
 
@@ -9,18 +9,12 @@ import openpyxl
 from conftest import REPO_ROOT, TEMPLATE
 
 CALIBRATIONS = REPO_ROOT / "skills" / "dataiku-diagnosis-checklist-review" / "references" / "calibrations.md"
+ANCHORS = REPO_ROOT / "tests" / "calibration_anchors.md"
 ID = re.compile(r"\b(?:ARCH|SEC|SCALE|GENAI|ADVSEC)-\d{3}\b")
 
 
-def _split():
-    text = CALIBRATIONS.read_text(encoding="utf-8")
-    body, sep, table = text.partition("## Check anchors")
-    assert sep, "calibrations.md lost its 'Check anchors' section"
-    return body, table
-
-
 def _anchors():
-    rows = re.findall(r"^\|\s*((?:ARCH|SEC|SCALE|GENAI|ADVSEC)-\d{3})\s*\|\s*(.+?)\s*\|\s*$", _split()[1], re.M)
+    rows = re.findall(r"^\|\s*((?:ARCH|SEC|SCALE|GENAI|ADVSEC)-\d{3})\s*\|\s*(.+?)\s*\|\s*$", ANCHORS.read_text(encoding="utf-8"), re.M)
     return dict(rows)
 
 
@@ -38,9 +32,9 @@ def _template_titles():
 
 
 def test_every_id_cited_in_calibrations_has_an_anchor():
-    cited = set(ID.findall(_split()[0]))
+    cited = set(ID.findall(CALIBRATIONS.read_text(encoding="utf-8")))
     missing = sorted(cited - set(_anchors()))
-    assert not missing, f"ids cited in calibrations.md but missing from 'Check anchors': {missing}"
+    assert not missing, f"ids cited in calibrations.md but missing from tests/calibration_anchors.md: {missing}"
 
 
 def test_anchors_still_match_the_bundled_checklist():

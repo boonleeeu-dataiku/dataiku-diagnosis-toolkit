@@ -7,17 +7,15 @@
 
 These interpretations come directly from the user and override a literal reading of a checklist's
 `expected_value`/evidence text. **Match an entry by what the check is about (its title and statement).**
-The item ids cited here are pointers into the bundled default checklist, and a different or newer
-checklist may renumber, split, merge or drop checks. The "Check anchors" table at the end records the
-title each id had when its entry was written. If a row's id and title disagree with an entry's anchor,
-trust the topic, not the id, and say so in `notes`. Never apply an entry to a row just because the id
-matches. Add each new one as its own entry under the right heading; don't overwrite prior ones.
+The ids cited here point into the bundled default checklist; a different or newer checklist may renumber,
+split, merge or drop checks. If a row's id and title disagree with an entry (anchor titles:
+`tests/calibration_anchors.md`), trust the topic, not the id, and say so in `notes`. Add each new entry under
+the right heading; don't overwrite prior ones.
 
-**Two kinds of check.** Most checks are **rule-decided**: `scripts/run_step.py verdicts` computes the status in code
-(`scripts/rules_*.py`) and you write it exactly as given (SKILL.md, Verdicts). The spec of those rules is
-`references/verdict-rules.md`, which you do not need to read. For them this file holds only what you add around the
-status: the `evidence_found` and `notes` guidance and the `Action:` lines (next section). The rest are **model-decided**:
-no rule exists, and the entries after that section give the status and the reasoning.
+**Two kinds of check.** Most are **rule-decided**: `scripts/run_step.py verdicts` computes the status in code and
+you write it exactly as given (SKILL.md, Verdicts). For them this file holds only what you add around the status
+(`evidence_found`, `notes`, `Action:` lines). The rest are **model-decided**: no rule exists, and the entries
+after the rule-decided section give the status and the reasoning.
 
 ## General principles (apply to every check)
 
@@ -41,6 +39,8 @@ no rule exists, and the entries after that section give the status and the reaso
 - **Optional feature off but the checklist asks for acceptance or enablement (GenAI, graphics export):**
   **Needs Review** (ask whether it is intentional), not Fail. Security controls follow their own rules.
   A setting or section absent from the bundle is **Needs Review**, never treated as off.
+- **Live-only aspects are an `Action:`, never a status change:** e.g. SEC-001 (id matches the customer's inventory), SEC-002 (OS
+  identities exist), SEC-005 (live OS hierarchy), SCALE-011 (a project uses the connection), GENAI-004 (outbound gateway access).
 - **A verdict whose reason says "ask whether intentional"** is a Needs Review: put one `Action:` bullet naming the team
   to ask (see "Format of `notes`" in SKILL.md).
 
@@ -49,11 +49,8 @@ no rule exists, and the entries after that section give the status and the reaso
 The status comes from the verdict. Quote its `deciding_values` and add only the following.
 
 **Security**
-- **SEC-001:** whether the id matches the customer's inventory or tracking tool is a live check: an `Action:`.
-- **SEC-002:** whether the OS identities the rules map to exist is a live check (`notes` only).
 - **SEC-004:** give the percentage and tier, e.g. `190G = 75.7% of 251 GiB; tier target 75%`. Host RAM is `MemTotal` in GiB and
   the cgroup "G" is GiB: never mix GB and GiB. Empty per-workload placements are an observation, not a downgrade.
-- **SEC-005:** whether the live OS hierarchy matches is an `Action:`.
 - **SEC-006:** DSS's own config shows only whether DSS itself terminates TLS. On Needs Review, one bullet says the bundle can't
   confirm or rule out a TLS-terminating proxy, plus an `Action:` to verify with the infrastructure team. Quote the raw server
   block in `evidence_found`. A proxy documented elsewhere in the bundle is not read by the rule: it stays Needs Review.
@@ -98,7 +95,6 @@ The status comes from the verdict. Quote its `deciding_values` and add only the 
 - **SCALE-009:** on Needs Review, ask whether the sizing is justified. A limit that sits in a different place than its name suggests
   still counts.
 - **SCALE-010:** name the non-blank values; call a non-blank engine preference the riskier one.
-- **SCALE-011:** whether a project uses the connection is a live check: an `Action:`.
 - **SCALE-012 to 015:** name the connections that are not set up and the missing setting (never hosts or credentials). The cloud
   storage authentication being compatible with Automatic fast-write, and Details readable by on the storage connection linked to a
   warehouse, can't be read from a bundle: an `Action:`. For Redshift, note that the Fast Path applies only to some cases.
@@ -138,7 +134,6 @@ The status comes from the verdict. Quote its `deciding_values` and add only the 
   the internal Hugging Face local code environment is installed, any GPU or accelerator hints in the cluster and execution configs;
   the model must not infer GPU nodes or compute capability) and add an `Action:` to confirm the GPU node group, NVIDIA compute
   capability and the code environment on the cluster.
-- **GENAI-004:** outbound connectivity to the AI gateway can't be verified from a bundle: an `Action:`.
 - **GENAI-006:** name the model id when it can't be determined.
 - **GENAI-007:** name the unset default ids.
 - **GENAI-008:** the status is always Needs Review. Say the DSS version, and add an `Action:` to confirm the option to include AI
@@ -173,61 +168,3 @@ The status comes from the verdict. Quote its `deciding_values` and add only the 
   the one found (e.g. "Dataiku DSS 15 release notes"). Take the highest GA version confirmed by an
   official Dataiku source (release notes, changelog, docs.dataiku.com). If results are links only,
   `WebFetch` the official release-notes page for the newest major. Never answer from training knowledge.
-
-## Check anchors
-
-The title each cited id had in the bundled default checklist when its entry was written.
-`tests/test_calibration_ids.py` fails when the checklist no longer matches this table; update the entry
-and the row together.
-
-| Id | Title when written |
-|---|---|
-| ADVSEC-006 | Redirecting to a custom URL after logout |
-| ADVSEC-008 | Restricting exports |
-| ADVSEC-009 | Setting security-related HTTP headers |
-| ARCH-001 | Separation of Design and Automation Nodes |
-| ARCH-002 | Regular DSS Version Upgrades |
-| ARCH-003 | Supported Operating System Version |
-| ARCH-004 | SSD Storage for DSS |
-| ARCH-006 | Baseline Spark Configuration Set (High/Standard/Large-memory/High I/O) |
-| ARCH-007 | Kubernetes Namespace and Auth Recommendations for Spark |
-| ARCH-008 | Functional Validation of Spark Execution (Recipe & Notebook) |
-| ARCH-009 | Bidirectional Network Connectivity Between DSS and Elastic AI Cluster |
-| ARCH-011 | Baseline Container Execution Configs (Standard, Webapp) and Namespace Settings |
-| ARCH-012 | Functional Validation of Containerized Execution Across Recipe, Notebook, Webapp, and API |
-| ARCH-014 | Recommended Cluster Topology (Single Managed Cluster, Node Groups, Autoscaling) |
-| ARCH-015 | Appropriate Cluster Sizing |
-| GENAI-001 | Internal Code Environments for RAG, Document Extraction, PII Detection |
-| GENAI-002 | Hugging Face Local LLM Enablement (Conditional) |
-| GENAI-004 | AI Services Terms of Use Acceptance & Enablement |
-| GENAI-006 | Bring Your Own LLM - Recommended Model Versions |
-| GENAI-007 | Cobuild Default LLM Configuration |
-| GENAI-008 | Include AI Assistant Debug Data in Instance Diagnostics |
-| GENAI-009 | Agent Hub Deployment Required Permissions |
-| GENAI-010 | Use Service Account for Agent Hub Management |
-| GENAI-011 | Agent Hub WebApp Impersonation - Allowed Groups Scope |
-| SCALE-001 | External PostgreSQL Runtime Database |
-| SCALE-002 | Appropriate Metastore Configured |
-| SCALE-004 | Admin Project for Garbage Collection |
-| SCALE-005 | Environment Backup Policy |
-| SCALE-006 | Usage of Instance Sanity Check |
-| SCALE-007 | Backend.log Error Review |
-| SCALE-008 | Backend Xmx Sizing |
-| SCALE-009 | Flow Limits Sizing (Max Jobs, Max Activities) |
-| SCALE-010 | Preferred Connections and Engines Settings |
-| SCALE-011 | Remove filesystem_root Connection |
-| SCALE-012 | Cloud Object Storage Configuration (Details Readable By, HDFS Interface) |
-| SCALE-013 | Snowflake Connection Configuration |
-| SCALE-014 | Databricks Connection Configuration |
-| SCALE-015 | Amazon Redshift, Google BigQuery, Azure Synapse Connection Configuration |
-| SCALE-016 | Disaster Recovery Strategy Discussion |
-| SEC-001 | Verify/Capture Instance IDs |
-| SEC-002 | User Isolation Framework (UIF) Enabled with Appropriate Impersonation Rules |
-| SEC-003 | UIF-Managed CGroup Hierarchies Allowed Directories |
-| SEC-004 | CGroups Enabled with Memory Limit per Sizing Heuristic |
-| SEC-005 | JEK-Specific CGroup Limits Left Unconfigured |
-| SEC-006 | HTTPS Access Configured for DSS |
-| SEC-008 | DSS Groups Security Model Appropriately Defined |
-| SEC-009 | LDAP Authorized Groups Configured |
-| SEC-010 | SSO Enablement Reviewed |
-| SEC-011 | Proxy Configuration Reviewed and Documented |

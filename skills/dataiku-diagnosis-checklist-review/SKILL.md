@@ -15,6 +15,7 @@ spreadsheet, plus add/update a Summary tab.
 
 ## Reference files (in this skill's `references/` directory)
 
+- `notes-format.md` — the `notes` format and length budget. Read before writing the first `notes` (step 4).
 - `calibrations.md` — **read in full before evaluating any row** (step 4). It holds the user's
   check-specific interpretations, which override a literal reading of the checklist: what to write around a
   rule-decided status, and the status logic of the checks no rule decides.
@@ -32,15 +33,11 @@ spreadsheet, plus add/update a Summary tab.
 - If the user has no checklist handy, offer the bundled default template at
   `resources/checklist_template.xlsx` (relative to this skill's own directory), and say plainly once
   you proceed that you're using the default rather than a user-supplied checklist.
-- **How to read the bundle comes from the reader, not from this skill.** Before touching the
-  bundle, load the `dataiku-diagnosis-reader` skill. If skills can't be loaded here, read the
-  reader's `SKILL.md` and its `references/limitations.md` and `references/listings-and-manifests.md`
-  files directly. Use its `lookup-table` / `data-dir-config` references to find where a setting
-  lives.
-- Read bundle files with your normal read/search tools, following the reader's `limitations.md`
-  ("Large-file hazards") and `listings-and-manifests.md`: grep/head/wc the big files, never load
-  them whole. If the reader lacks a layout fact you need, say so in your final summary rather than
-  recording it in this skill.
+- **How to read the bundle comes from the reader, not from this skill.** Before touching the bundle,
+  load the `dataiku-diagnosis-reader` skill (if skills can't be loaded, read its `SKILL.md`, `references/limitations.md` and
+  `references/listings-and-manifests.md`). Use its `lookup-table` / `data-dir-config` references to find where a setting
+  lives, and its large-file rules (grep/head/wc, never load whole). If the reader lacks a layout fact you need, say so in your
+  final summary rather than recording it in this skill.
 - Load the `xlsx` skill before reading/writing the spreadsheet.
 - If the checklist has a version-currency or supported-OS check, confirm a web search tool is available; it is
   needed to look up the latest Dataiku DSS release (procedure in `references/calibrations.md`, DSS version currency).
@@ -89,10 +86,10 @@ Then run `scripts/run_step.py verdicts <bundle_root> --manifest <stem>_run_manif
 (it only reads the checklist; use the file you were given). It prints JSON and saves it as `<stem>_verdicts.json`.
 `verdicts` lists, for each row whose status the facts decide by rule, its `id`, `status`, `reason` and `deciding_values`.
 
-- Write each listed `status` as that row's `validation_status`, exactly. Code is final: do not change it even if you would
-  judge differently, because `verify` fails naming any row whose workbook status differs. Make `evidence_found` and
-  `notes` agree with it. Quote the `deciding_values` in plain words ("cluster_attached is false"), never as a raw `deciding_values={...}` dump, and skip them when empty. State the reason in your own words instead of pasting it. If you think a rule is wrong, say so in your final summary (never
-  in the workbook) so the rule gets fixed.
+- Write each listed `status` as that row's `validation_status`, exactly. Code is final: `verify` fails naming any row whose
+  workbook status differs. Make `evidence_found` and `notes` agree with it, paraphrasing the reason and quoting `deciding_values`
+  in plain words ("cluster_attached is false"), never as a raw dump (skip them when empty). If you think a rule is wrong, say so
+  in your final summary (never in the workbook).
 - A row that is not listed has no rule: decide it as in step 4. The list may be empty. `undecided` names rows that have a rule
   but whose case the facts cannot settle; decide those as in step 4 too.
 - `title_mismatch` and `probable_renumber` name rows whose id and title don't both match a rule (usually a changed
@@ -130,7 +127,7 @@ its title is about something else, don't apply the entry. Where a row's
 `insufficient_evidence_handling` says what to do when the bundle lacks the evidence, follow it; a
 matching calibration overrides it.
 
-A row that has a verdict (see Verdicts, in step 1) takes that status; `calibrations.md` then only tells you what to add to its `evidence_found` and `notes`.
+A row with a verdict takes that status; `calibrations.md` then only tells you what to add to `evidence_found` and `notes`.
 
 For each checklist item, decide one of a small fixed set of statuses (keep
 this consistent across the whole workbook): **Pass**, **Fail**, **Partial**,
@@ -148,7 +145,7 @@ For each item, write:
   here.
 - `notes`: the slide-ready summary. The deck builder shows this text to the
   customer in a table cell, so it must be crisp, scannable and self-contained
-  (see "Format of `notes`" below). It carries the verdict, the decisive
+  (see `references/notes-format.md`). It carries the verdict, the decisive
   values, and the recommendation or caveat, and cross-references related
   findings by id when they're causally linked (e.g., an OOM crash pattern
   linked to a concurrency-limit setting).
@@ -156,45 +153,9 @@ For each item, write:
   `<agent name> (AI-assisted review of <bundle name>)`, where `<agent name>` is the AI agent doing the review (e.g. `Claude`,
   `Codex`), unless the user supplied a reviewer name.
 
-### Format of `notes`
-
-Plain text, no markdown. One headline line, then bullets, separated by
-newlines, each bullet starting with `• `:
-
-```
-<Headline: verdict + impact, ≤ 80 chars>
-• <Key fact with the actual value or count, ≤ 80 chars>
-• <Key fact or "so what", ≤ 80 chars>
-• Action: <one concrete recommendation, ≤ 80 chars>
-```
-
-- **Length:** at most 320 characters in total and at most 3 bullets under
-  the headline. For **Pass** and **Not Applicable**, use the headline plus at
-  most one bullet, ≤ 140 characters in total.
-- **Not Applicable headline:** `Not applicable: <one reason>` (e.g. `Not applicable: no local
-  Hugging Face`), never a chain of colons.
-- **Self-contained:** carry the decisive values (e.g. `backend.xmx=2g`,
-  `4 OOM crashes in 30 days`) so a reader needs nothing else. Do **not**
-  include file paths or JSON key dumps; those belong in `evidence_found`.
-- **Impact first:** lead with what it means, not how you found it. One idea
-  per bullet, fragments rather than sentences, no filler.
-- **Cross-references:** a final bullet such as `• See SEC-004 (root cause)`
-  when items are causally linked.
-- **Needs Review:** the `Action:` bullet must say what to verify and with
-  whom, naming a team so the deck can suggest an owner (e.g. `Action: confirm with infra team`,
-  `security team`, `platform team`).
-
-Good:
-
-```
-Backend heap too small for workload
-• backend.xmx=2g on 64GB host
-• 4 OOM crashes in 30 days
-• Action: raise to 8g+; see PERF-003
-```
-
-Bad: method-first prose with file paths, e.g. "In <config file> the backend.xmx key is set to 2g,
-and then in the crash dump we found OutOfMemoryError ...".
+Write `notes` in the format of `references/notes-format.md` (read it before the first row): plain text, a headline of
+≤ 80 chars plus up to 3 `• ` bullets, 320 characters in total (Pass / Not Applicable: headline plus one bullet, 140), no file paths,
+and a named team in the `Action:` of every Needs Review.
 
 Look actively for causal chains across items (e.g., a resource limit set to
 a disabling value, paired with crash dumps and recurring error-log entries,

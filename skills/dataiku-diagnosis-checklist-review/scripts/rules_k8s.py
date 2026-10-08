@@ -4,11 +4,7 @@ Each rule's text is the human-readable spec in `references/verdict-rules.md` (ke
 when no cluster is attached. A fact that is missing from the bundle is Needs Review, never an assumed Fail."""
 from __future__ import annotations
 
-from verdicts import ABSENT, fact, rule, verdict
-
-
-def _missing(what: str):
-    return verdict("Needs Review", f"{what} missing from the bundle")
+from verdicts import ABSENT, _missing, fact, rule, verdict
 
 
 def _k8s(facts):

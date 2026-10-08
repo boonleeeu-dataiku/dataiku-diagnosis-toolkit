@@ -4,11 +4,7 @@ Each rule's text is the human-readable spec in `references/verdict-rules.md`, wh
 that is missing from the bundle is Needs Review, never an assumed Fail: the bundle may simply not carry the setting."""
 from __future__ import annotations
 
-from verdicts import ABSENT, fact, rule, verdict
-
-
-def _missing(what: str):
-    return verdict("Needs Review", f"{what} missing from the bundle")
+from verdicts import ABSENT, _missing, fact, rule, verdict
 
 
 @rule("SEC-001", "Verify/Capture Instance IDs")

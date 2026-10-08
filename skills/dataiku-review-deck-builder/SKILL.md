@@ -101,25 +101,21 @@ Call `build_platform_review_deck` with:
 - `allow_standard_deck` (optional, v2 only, default false) — builds a standard, unbranded deck when the template
   is missing. Pass it only as step 3 of "If the base deck isn't found"; never on a first call.
 
-This already runs structural validation internally and returns
+This runs structural validation internally (no separate `validate_deck` call needed) and returns
 `{output_path, structural_problems, data_warnings, manual_qa_checklist, base_deck_used, branded, generator_version, checklist_path, checklist_modified, narrative_modified}` (`narrative_modified` is v2-only; v2 adds
-`slide_count, narrative_used, narrative_missing, narrative_warning (only when missing), applicable_count, pass_count, quick_wins, owner_groups`) — no separate
-`validate_deck` call is needed for a normal run (declining one is fine).
+`slide_count, narrative_used, narrative_missing, narrative_warning (only when missing), applicable_count, pass_count, quick_wins, owner_groups`).
 
 ## 2. If the base deck isn't found
 
 The tool needs `Dataiku Branding Template 2026.pptx` (134MB, not bundled with this plugin — see
 this plugin's README). If the call fails with a "Base deck not found" error, work down this list and stop at
 the first step that gets a deck:
-1. **Ask for the template.** Relay the message plainly and ask the user for the template's path (one short
-   question). If they have it, retry with `base_deck_path` set to that path. If they have it but not in the
-   default location, that same retry is the fix; the one-time setup (README) is the durable one.
-2. **Don't guess a path.** Take it only from the user or a real error message. Never build on a stub or a blank
-   presentation: the generator edits the template's own slides, so a stand-in fails or is mistaken for branded.
-3. **Standard deck.** If the user has no template, says to go without it, or you cannot ask (an unattended
-   run), call again with `allow_standard_deck=true` (v2; omit `base_deck_path`). This builds an unbranded deck
-   with the same slides and a plain cover.
-   In style v1 there is no fallback: either use v2 (tell the user) or report that the template is needed.
+1. **Ask for the template** (one short question). If the user has it, retry with `base_deck_path`; the README's one-time setup is
+   the durable fix.
+2. **Don't guess a path or build on a stub or blank presentation:** the generator edits the template's own slides.
+3. **Standard deck.** If the user has no template, says to go without it, or you cannot ask (an unattended run), call again with
+   `allow_standard_deck=true` (v2; omit `base_deck_path`). Style v1 has no fallback: use v2 (tell the user) or report that the
+   template is needed.
 
 When you hand over a standard deck (`branded` is false / `base_deck_used` is `"standard"`), say so plainly: it is
 not Dataiku-branded, and a branded one needs the template plus a rebuild from the same checklist and narrative.

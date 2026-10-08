@@ -10,6 +10,19 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.38.5] - 2026-10-08
+
+Slimming pass on the skills and tests; no change to any verdict.
+
+### Changed
+
+- Checklist `SKILL.md`: the `notes` format moved to `references/notes-format.md`; verdict precedence is stated once; the reader pointers no longer restate the reader's rules.
+- `calibrations.md`: 233 to 170 lines. The "Check anchors" table moved to `tests/calibration_anchors.md` (read by `tests/test_calibration_ids.py`); five "live check, write an Action" entries became one general rule.
+- Deck builder `SKILL.md`: shorter base-deck fallback steps.
+- `rules_*.py`: the shared `_missing` helper now lives in `verdicts.py`.
+- `TODO.md`: trimmed to open items; vendored-repo follow-ups listed under "Upstream follow-ups".
+- Tests: stale comments fixed, a duplicate assertion removed, the rule-coverage check in `test_rules_security.py` made strict.
+
 ## [0.38.4] - 2026-10-08
 
 65 of 67 checks are decided by code; only ARCH-002 and ARCH-003 stay with the model. The 0.38.3 Codex runs (two, 2026-10-08) passed `verify` and matched all 65 ruled statuses.

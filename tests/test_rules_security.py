@@ -99,7 +99,7 @@ def test_rules_agree_with_the_fixtures_expected_answers(scenario):
         if check_id in expected:
             assert status_ in expected[check_id]["status"], f"{scenario} {check_id}: verdict {status_}, expected {expected[check_id]['status']}"
             checked += 1
-    assert checked >= len(RULED & set(expected))
+    assert checked == len(RULED & set(expected)) > 0
 
 
 def test_every_rule_anchor_equals_its_title_in_the_bundled_checklist():

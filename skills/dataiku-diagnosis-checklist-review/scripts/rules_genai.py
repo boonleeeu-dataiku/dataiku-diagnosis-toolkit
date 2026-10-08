@@ -6,14 +6,10 @@ from __future__ import annotations
 
 import re
 
-from verdicts import ABSENT, fact, rule, verdict
+from verdicts import ABSENT, _missing, fact, rule, verdict
 
 INTERNAL_PREFIX = "INTERNAL_"
 MIN_BYO_VERSION = (5, 2)
-
-
-def _missing(what: str):
-    return verdict("Needs Review", f"{what} missing from the bundle")
 
 
 @rule("GENAI-001", "Internal Code Environments for RAG, Document Extraction, PII Detection")

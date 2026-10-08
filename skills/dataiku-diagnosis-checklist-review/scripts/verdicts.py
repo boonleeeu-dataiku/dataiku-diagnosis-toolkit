@@ -54,6 +54,11 @@ def verdict(status: str, reason: str, **deciding_values: Any) -> dict[str, Any]:
     return {"status": status, "reason": reason, "deciding_values": deciding_values}
 
 
+def _missing(what: str) -> dict[str, Any]:
+    """Needs Review for a fact the bundle does not hold."""
+    return verdict("Needs Review", f"{what} missing from the bundle")
+
+
 def norm(title: str | None) -> str:
     return re.sub(r"\s+", " ", re.sub(r"[^\w\s]", " ", (title or "").lower())).strip()
 

@@ -120,7 +120,7 @@ See README's "Testing" section for the three tiers.
   skips if the sibling upstream checkouts aren't on disk.
 - **When the bundled checklist's checks change** (a renumbered, split, merged or removed check), run
   `scripts/test.sh fast`. `tests/test_calibration_ids.py` lists each stale entry in `calibrations.md` (checked
-  against its "Check anchors" table; the rules' own title anchors are checked against the checklist in `tests/test_rules_security.py`). Fix those entries and the table together, then update `EVAL_ITEM_IDS` and
+  against `tests/calibration_anchors.md`; the rules' own title anchors are checked against the checklist in `tests/test_rules_security.py`). Fix those entries and the anchors file together, then update `EVAL_ITEM_IDS` and
   `tests/fixtures/expected/*.yaml` if an eval item moved.
 - **Where a status rule lives.** A check the facts can decide is a rule in `skills/dataiku-diagnosis-checklist-review/scripts/rules_*.py`,
   specified in `references/verdict-rules.md` (one row per rule; `tests/test_verdict_rules_doc.py` fails when a rule and its row

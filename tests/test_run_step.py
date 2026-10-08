@@ -43,7 +43,7 @@ def test_run_records_steps_and_saves_facts(tmp_path):
     assert set(data["steps"]) == {"orient", "facts", "verdicts"} and data["reader_version"] != "unknown"
     assert all(s["exit_status"] == 0 and len(s["stdout_sha256"]) == 64 for s in data["steps"].values())
     assert "facts" in json.loads((tmp_path / "r_facts.json").read_text())
-    assert json.loads((tmp_path / "r_verdicts.json").read_text())["verdicts"] == []  # Batch 0: no rules yet
+    assert json.loads((tmp_path / "r_verdicts.json").read_text())["verdicts"] == []  # the fixture checklist matches no rule
 
 
 def test_verify_passes_on_a_complete_run(tmp_path):
@@ -59,7 +59,6 @@ def test_verify_fails_when_facts_never_ran_or_hash_is_wrong(tmp_path):
     _checklist(xlsx)
     out = _sh("verify", BUNDLE, "--manifest", manifest, "--checklist", xlsx).stdout
     assert "orient not recorded" in out and "verdicts not recorded" in out
-    assert "orient not recorded" in _sh("verify", BUNDLE, "--manifest", manifest, "--checklist", xlsx).stdout
     _record_both(manifest)
     data = json.loads(manifest.read_text())
     data["steps"]["facts"]["stdout_sha256"] = "0" * 64
