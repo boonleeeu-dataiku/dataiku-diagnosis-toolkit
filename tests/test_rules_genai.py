@@ -15,7 +15,7 @@ sys.path.insert(0, str(SCRIPTS))
 import rules_genai  # noqa: E402,F401
 import verdicts  # noqa: E402
 
-RULED = {"GENAI-001", "GENAI-003", "GENAI-004", "GENAI-005", "GENAI-006", "GENAI-007", "GENAI-009"}
+RULED = {"GENAI-001", "GENAI-003", "GENAI-004", "GENAI-005", "GENAI-006", "GENAI-007", "GENAI-008", "GENAI-009"}
 
 
 def facts(**blocks):
@@ -151,3 +151,15 @@ def test_genai_rules_agree_with_the_fixtures_expected_answers(scenario):
     for check_id, status_ in got.items():
         if check_id in expected:
             assert status_ in expected[check_id]["status"], f"{scenario} {check_id}: verdict {status_}, expected {expected[check_id]['status']}"
+
+
+@pytest.mark.parametrize("version,fragment", [("14.4.3", "older than 14.7"), ("14.7.0", "option was selected"), ("15.0.1", "option was selected"),
+                                              ("ABSENT", "can't be read")])
+def test_genai008_is_always_needs_review_with_a_version_reason(version, fragment):
+    doc = facts(node={"nodetype": "design", "product_version": version})
+    out = verdicts.compute(doc, [{"id": "GENAI-008", "title": verdicts.RULES["GENAI-008"][0]}])["verdicts"][0]
+    assert out["status"] == "Needs Review" and fragment in out["reason"]
+
+
+def test_genai008_without_the_node_fact_is_needs_review():
+    assert status("GENAI-008", facts()) == "Needs Review"

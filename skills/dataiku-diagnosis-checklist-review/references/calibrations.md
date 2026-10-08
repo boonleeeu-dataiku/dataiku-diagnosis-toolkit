@@ -64,6 +64,19 @@ The status comes from the verdict. Quote its `deciding_values` and add only the 
 - **ADVSEC-009:** say a proxy may set the headers (the bundle can't show that). The four non-core headers are `notes` only.
 
 **Platform, sizing and logs**
+- **ARCH-001:** the status is always Needs Review. Use the reader's `node-types` and `data-dir-config` (deployer) references to find
+  indicators and report what you find. On a **design** bundle, in this order:
+  1. **Local Project Deployer on the design host:** one holding projects to deploy to an automation node indicates one is in use.
+     Enumerate what it holds (infrastructures, deployments, published projects, any automation-node URLs). **Put this indication,
+     with counts, in the headline of `notes`** and list the URLs and enumeration in `evidence_found`. Distinguish a populated deployer
+     (strong indication) from one present but empty (enabled, no sign of use). A local API Deployer targets API nodes: mention it
+     separately as an API-node indication, not as evidence of an automation node.
+  2. **Remote deployer:** a design node pushing to an external Deployer URL suggests Design -> Deployer -> Automation, but any
+     automation infrastructure is defined on that node, not in this bundle. Exported project bundles are weak supporting evidence.
+  3. **Otherwise:** say in `notes` that no definitive configuration shows whether an automation node is deployed, and that it needs
+     verification with the customer.
+  On an **automation** bundle the node itself proves an automation node exists: say so, and add an `Action:` to confirm the design
+  node and that projects are built there and promoted by bundle, not edited on the automation node.
 - **ARCH-004:** name the data directory and the disk(s) in `evidence_found`. When the row is `undecided` (older facts without
   sanity-check codes), read the sanity-check text: a message about a rotational, HDD or SSD disk is Fail; otherwise judge from the disks.
 - **SCALE-001:** loopback PostgreSQL is a pass with a `notes` bullet that it is installed locally on the DSS host (a backup and
@@ -86,10 +99,32 @@ The status comes from the verdict. Quote its `deciding_values` and add only the 
   still counts.
 - **SCALE-010:** name the non-blank values; call a non-blank engine preference the riskier one.
 - **SCALE-011:** whether a project uses the connection is a live check: an `Action:`.
+- **SCALE-012 to 015:** name the connections that are not set up and the missing setting (never hosts or credentials). The cloud
+  storage authentication being compatible with Automatic fast-write, and Details readable by on the storage connection linked to a
+  warehouse, can't be read from a bundle: an `Action:`. For Redshift, note that the Fast Path applies only to some cases.
+
+**Always Needs Review** (the rule fixes the status; put observations in `evidence_found` and `notes`, and an `Action:` to confirm)
+- **ARCH-009:** state whether a cluster is attached and its API endpoint host if the reader publishes it; reachability in both
+  directions is a live test (DSS to the API server, pods back to DSS).
+- **ARCH-012:** name the configured execution configs and what is enabled (containerized recipes, notebooks, webapps, API services);
+  `Action:` run a test in each.
+- **SEC-008:** give the number of groups and whether any grant broad admin rights, never user or group names beyond built-in ones.
+  Whether the design suits the customer is an `Action:`.
+- **SEC-011:** quote any proxy setting that is present (host only, never credentials); otherwise say none was found, and that a proxy
+  may sit outside DSS. `Action:` ask for the proxy documentation.
+- **SCALE-005:** mention any backup-related setting or scenario that the bundle shows; `Action:` request the backup policy (DCS: Fleet
+  Manager snapshots).
+- **SCALE-016:** note what supports resilience in the bundle (external database, backups seen, a remote or HA topology); `Action:`
+  hold a DR/HA discussion against the customer's RPO and RTO.
+- **GENAI-010:** say whether Agent Hub is installed and which kind of account the bundle shows managing it; `Action:` confirm it is a
+  dedicated service account, not an administrator's own.
 
 **Kubernetes and Spark**
 - **ARCH-007:** note the namespace field and value seen in `evidence_found` (a templated variable such as `${namespace}` needs
   no tracing).
+- **ARCH-008, ARCH-014, ARCH-015:** with a cluster attached the status is Needs Review: add an `Action:` to run a Spark recipe and
+  a notebook (ARCH-008), to review node groups and autoscaling (ARCH-014), or to compare cluster capacity with the workloads
+  (ARCH-015). ARCH-008 is worded for Spark on Kubernetes: no cluster means Not Applicable even when Spark runs on YARN or Hadoop.
 - **ARCH-006, ARCH-011:** the baseline sizes in the checklist are illustrative, not names or sizes to match. Identical sizing under
   different names is a real gap: say so in `notes`.
 
@@ -98,42 +133,17 @@ The status comes from the verdict. Quote its `deciding_values` and add only the 
 - **GENAI-004:** outbound connectivity to the AI gateway can't be verified from a bundle: an `Action:`.
 - **GENAI-006:** name the model id when it can't be determined.
 - **GENAI-007:** name the unset default ids.
+- **GENAI-008:** the status is always Needs Review. Say the DSS version, and add an `Action:` to confirm the option to include AI
+  assistant logs was selected when the diagnostic was generated.
 - **GENAI-009:** the bundle can't verify who may deploy; never infer it from the project owner or group grants. `Action:` check the
   deployer's permissions in the security groups.
 
 ## Model-decided checks
 
-- **Kubernetes-conditional checks without a rule (ARCH-008, ARCH-014, ARCH-015):** first determine whether a Kubernetes cluster is
-  attached (the reader's `data-dir-config` reference says how). None attached: **Not Applicable**. ARCH-008 is worded for Spark on
-  Kubernetes (executor pods): no cluster and Spark on YARN or Hadoop is Not Applicable. ARCH-014 (topology, autoscaling) and ARCH-015
-  (cluster sizing) need node-group and capacity data a bundle never holds: **Needs Review** with an `Action:` when a cluster is
-  attached.
-
 - **Feature-conditional GenAI checks without a rule (local Hugging Face, AI assistant debug data):** first confirm the feature is in
   use (the reader's `data-dir-config` reference lists the signals it has verified and which it has not). Not in use: **Not
   Applicable**. Turned off but the checklist asks for acceptance or enablement: **Needs Review**. For "AI assistant debug data in
   the bundle" checks, a bundle that lacks the section is **Needs Review**, not Fail.
-
-- **Connection-detail gaps (SCALE-012):** gaps DSS itself flagged are real evidence. Report **Partial** rather than Not
-  Applicable just because the storage is HDFS and not a cloud object store.
-
-- **Automation-node existence / Design-Automation separation (ARCH-001), on a design-node bundle:** the
-  automation node is a separate host with its own bundle, so a design bundle can never confirm one
-  exists. Always **Needs Review**, never Pass or Fail. Use the reader's `node-types` and
-  `data-dir-config` (deployer) references to find indicators; work through them in this order and
-  report what you find:
-  1. **Local Project Deployer on the design host:** one holding projects to deploy to an automation node
-     indicates an automation node is in use. Enumerate what it holds (infrastructures, deployments,
-     published projects, any automation-node URLs). **Put this indication, with counts, in the headline
-     of `notes`** and list the URLs and enumeration in `evidence_found`. Distinguish a populated deployer
-     (strong indication) from one present but empty (enabled, no sign of use). A local API Deployer
-     targets API nodes: mention it separately as an API-node indication, not as evidence of an automation
-     node.
-  2. **Remote deployer:** a design node pushing to an external Deployer URL suggests Design -> Deployer ->
-     Automation, but any automation infrastructure is defined on that node, not in this bundle. Exported
-     project bundles are weak supporting evidence either way.
-  3. **Otherwise:** state in `notes` that no definitive configuration in the bundle shows whether an
-     automation node is deployed, and that it needs verification with the customer.
 
 - **Supported operating system (ARCH-003):** take the OS name and version from the bundle (the reader's
   `root-files` reference says where) and compare them with Dataiku's supported-OS documentation for the
@@ -179,17 +189,22 @@ and the row together.
 | ARCH-006 | Baseline Spark Configuration Set (High/Standard/Large-memory/High I/O) |
 | ARCH-007 | Kubernetes Namespace and Auth Recommendations for Spark |
 | ARCH-008 | Functional Validation of Spark Execution (Recipe & Notebook) |
+| ARCH-009 | Bidirectional Network Connectivity Between DSS and Elastic AI Cluster |
 | ARCH-011 | Baseline Container Execution Configs (Standard, Webapp) and Namespace Settings |
+| ARCH-012 | Functional Validation of Containerized Execution Across Recipe, Notebook, Webapp, and API |
 | ARCH-014 | Recommended Cluster Topology (Single Managed Cluster, Node Groups, Autoscaling) |
 | ARCH-015 | Appropriate Cluster Sizing |
 | GENAI-001 | Internal Code Environments for RAG, Document Extraction, PII Detection |
 | GENAI-004 | AI Services Terms of Use Acceptance & Enablement |
 | GENAI-006 | Bring Your Own LLM - Recommended Model Versions |
 | GENAI-007 | Cobuild Default LLM Configuration |
+| GENAI-008 | Include AI Assistant Debug Data in Instance Diagnostics |
 | GENAI-009 | Agent Hub Deployment Required Permissions |
+| GENAI-010 | Use Service Account for Agent Hub Management |
 | SCALE-001 | External PostgreSQL Runtime Database |
 | SCALE-002 | Appropriate Metastore Configured |
 | SCALE-004 | Admin Project for Garbage Collection |
+| SCALE-005 | Environment Backup Policy |
 | SCALE-006 | Usage of Instance Sanity Check |
 | SCALE-007 | Backend.log Error Review |
 | SCALE-008 | Backend Xmx Sizing |
@@ -197,10 +212,16 @@ and the row together.
 | SCALE-010 | Preferred Connections and Engines Settings |
 | SCALE-011 | Remove filesystem_root Connection |
 | SCALE-012 | Cloud Object Storage Configuration (Details Readable By, HDFS Interface) |
+| SCALE-013 | Snowflake Connection Configuration |
+| SCALE-014 | Databricks Connection Configuration |
+| SCALE-015 | Amazon Redshift, Google BigQuery, Azure Synapse Connection Configuration |
+| SCALE-016 | Disaster Recovery Strategy Discussion |
 | SEC-001 | Verify/Capture Instance IDs |
 | SEC-002 | User Isolation Framework (UIF) Enabled with Appropriate Impersonation Rules |
 | SEC-004 | CGroups Enabled with Memory Limit per Sizing Heuristic |
 | SEC-005 | JEK-Specific CGroup Limits Left Unconfigured |
 | SEC-006 | HTTPS Access Configured for DSS |
+| SEC-008 | DSS Groups Security Model Appropriately Defined |
 | SEC-009 | LDAP Authorized Groups Configured |
 | SEC-010 | SSO Enablement Reviewed |
+| SEC-011 | Proxy Configuration Reviewed and Documented |

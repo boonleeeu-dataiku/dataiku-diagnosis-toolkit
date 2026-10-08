@@ -49,10 +49,15 @@ DENY), x-content-type-options (nosniff), x-xss-protection (set and not 0), hsts-
 
 | Id | Pass | Fail | Other |
 |---|---|---|---|
+| ARCH-001 design/automation separation | never | never | Needs Review for every node type (design, automation, other) and when the node type is missing: one bundle never shows the other node |
 | ARCH-004 SSD | every data-directory disk non-rotational | a rotational disk, or a sanity-check code naming the disk type (even when disks can't be read) | Needs Review: undeterminable. Undecided (model reads the text) only with facts that carry no message codes |
 | SEC-004 cgroups memory | limit within 10% of the RAM tier's target (either side) | cgroups disabled | Needs Review: limit 80% of RAM or more (checked first); more than 10% from target; enabled with no limit; settings or host memory missing |
 | SCALE-001 PostgreSQL | PostgreSQL, local or remote | any other database | |
 | SCALE-002 metastore | Hive on a Hadoop estate; DSS-internal with none | never | Glue, estate mismatch, unknown flavor = Needs Review |
+| SCALE-012 cloud object storage | every S3, Azure or GCS connection readable by someone and (where the reader found it) an HDFS interface set | none of them set | Partial: some. Not Applicable: no such connection. Needs Review: readable-by unknown |
+| SCALE-013 Snowflake | every Snowflake connection has fast-write set (and Spark native integration and UDF where found) | none set | Partial: some. Not Applicable: no Snowflake connection. Needs Review: fast-write setting not found |
+| SCALE-014 Databricks | every Databricks connection has fast-write set | none set | Partial: some. Not Applicable: none. Needs Review: fast-write setting not found |
+| SCALE-015 Redshift, BigQuery, Synapse | every such connection has fast-write set | none set | Partial: some. Not Applicable: none. Needs Review: fast-write setting not found. SQL Server flagged as Azure Synapse counts as Synapse |
 | SCALE-003 graphics export | on | never | off = Needs Review |
 | SCALE-004 cleanup project | an active scheduled step-based scenario with cleanup steps | no candidate project, or no active scenario | Needs Review: scheduled but purpose unclear (or scripted), or active but unscheduled; project list missing |
 | SCALE-006 sanity check | output present with messages | missing or empty | |
@@ -77,9 +82,12 @@ Kubernetes-only check below is **Not Applicable**, even if Kubernetes execution 
 | ARCH-005 Spark config | enabled with a config that sets resources | enabled, none | Not Applicable: Spark off. Needs Review: flag missing |
 | ARCH-006 Spark baseline | two or more differently sized configs | none defined | Not Applicable: Spark off. Needs Review: one, or all identical |
 | ARCH-007 namespaces | every Kubernetes-targeting config uses a templated per-user namespace | never | fixed or missing namespace = Needs Review. Spark configs that don't target Kubernetes are ignored |
+| ARCH-008 Spark validation | never | never | Not Applicable: no cluster attached. Needs Review: cluster attached (a live run can't be shown by a bundle), or the attachment unreadable |
 | ARCH-010 container config | a Kubernetes config with a memory limit | cluster attached, none defined | configs but no limit = Needs Review |
 | ARCH-011 container baseline | two or more differently sized container configs | cluster attached, none defined | one, or all identical = Needs Review |
 | ARCH-013 cluster | a Kubernetes cluster definition in the bundle | never | attached with no definition = Needs Review |
+| ARCH-014 cluster topology | never | never | Not Applicable: no cluster attached. Needs Review: cluster attached (topology is never in a bundle) |
+| ARCH-015 cluster sizing | never | never | Not Applicable: no cluster attached. Needs Review: cluster attached (capacity is never in a bundle) |
 | ARCH-016 global defaults | cluster attached and a default cluster set | cluster attached, no default cluster | unreadable setting = Needs Review. The default execution config is a note only |
 | ARCH-017 containerized visual recipes | feature on and a default visual-recipe config set | never | anything else = Needs Review |
 
@@ -93,11 +101,28 @@ Kubernetes-only check below is **Not Applicable**, even if Kubernetes execution 
 | GENAI-005 BYO reference and model | both set | active, one missing | Not Applicable: BYO inactive or block missing |
 | GENAI-006 BYO model version | every LLM id ChatGPT 5.2 or later | any id older (`gpt-5` counts as 5.0) | undeterminable id = Needs Review. Not Applicable: BYO inactive |
 | GENAI-007 Cobuild defaults | all three default ids set | never | any unset, or block missing = Needs Review |
+| GENAI-008 AI assistant logs | never | never | always Needs Review: the option's state can't be read from a bundle (the reason says whether DSS is older than 14.7) |
 | GENAI-009 Agent Hub | never | never | installed = Needs Review. Not installed, or no plugin configuration = Not Applicable |
+
+A connection setting counts as set when it holds a value (the reader finds the warehouse fast-write, Spark native and UDF settings by name pattern). The bundle can't link a warehouse to its cloud storage connection, so storage authentication compatibility and details-readable on the linked storage are an `Action:`.
 
 BYO mode is active when a main LLM id or a reference project key is set; a custom LLM connection alone does not make it active.
 
+## Always Needs Review (`rules_review.py`)
+
+Live or customer-practice checks a bundle can never settle: the status is fixed and the model reports what the bundle does show and an `Action:` to confirm the rest.
+
+| Id | Pass | Fail | Other |
+|---|---|---|---|
+| ARCH-009 DSS to cluster connectivity | never | never | always Needs Review |
+| ARCH-012 containerized execution | never | never | always Needs Review |
+| SEC-008 groups security model | never | never | always Needs Review |
+| SEC-011 proxy configuration | never | never | always Needs Review |
+| SCALE-005 backup policy | never | never | always Needs Review |
+| SCALE-016 disaster recovery | never | never | always Needs Review |
+| GENAI-010 Agent Hub service account | never | never | always Needs Review |
+
 ## Stays with the model
 
-ARCH-001, 002, 003, 008, 009, 012, 014, 015, SEC-003, 008, 011, SCALE-005, 012 to 016, GENAI-002, 008, 010, 011. These need a web lookup, a live check, a customer conversation, or facts the reader does not
+ARCH-002, 003, SEC-003, GENAI-002, 011. These need a web lookup, a live check, a customer conversation, or facts the reader does not
 yet publish. Their guidance is in `calibrations.md`.

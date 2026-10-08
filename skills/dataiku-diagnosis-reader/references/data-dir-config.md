@@ -177,7 +177,7 @@ usually visible only in `datadir_listing.txt`.
 
 Besides `type`/`params`/`allowedGroups`: `detailsReadability` (`{readableBy, allowedGroups}`)
 says who may read the connection's details (credentials); `params.root` is the filesystem root
-for filesystem/HDFS connections; `params.hdfsInterface` appears on HDFS connections. DSS also
+for filesystem/HDFS connections; `params.hdfsInterface` appears on the cloud object storage connections (GCS and Azure in the samples, value `NONE` when off). BigQuery and SQL Server carry a boolean `params.useAutoFastPath`; SQL Server with `params.azureDWH` is Synapse. No S3, Snowflake, Databricks, Redshift or Synapse connection exists in the three samples, so their fast-write setting names are unverified: `facts.py` finds fast-write, Spark native integration and UDF settings by name pattern and treats a non-blank value as set (`connections.warehouses`). DSS also
 flags gaps itself in `run/sanity-check.json` (e.g. `WARN_CONNECTION_SPARK_NO_GROUP_WITH_DETAILS_READ_ACCESS`),
 see `references/data-dir-runtime-and-codeenvs.md`. Connection `params` can hold secrets: never
 dump a whole connection.

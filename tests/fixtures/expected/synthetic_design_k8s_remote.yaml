@@ -42,8 +42,12 @@ items:
     status: [Pass]
   ADVSEC-006: # no custom post-logout redirect configured: the default page
     status: [Pass]
-  ARCH-008:   # cluster attached with a Spark config: judgement varies, never Not Applicable
-    status: [Pass, Partial, Needs Review]
+  ARCH-008:   # cluster attached: a live Spark run can't be shown by a bundle
+    status: [Needs Review]
+  ARCH-014:   # cluster attached: topology is never in a bundle
+    status: [Needs Review]
+  ARCH-015:   # cluster attached: capacity is never in a bundle
+    status: [Needs Review]
   GENAI-001:  # internal RAG env; containerMode INHERIT with no container-exec config must not downgrade
     status: [Pass]
     mentions: [INTERNAL_retrieval_augmented_generation_v1]
@@ -102,6 +106,16 @@ items:
     status: [Pass]
   ARCH-011:   # two differently sized container configs -> Pass
     status: [Pass]
+  SCALE-012:  # S3 readable with an HDFS interface -> Pass
+    status: [Pass]
+  SCALE-013:  # Snowflake with an auto fast-write connection and Spark native integration -> Pass
+    status: [Pass]
+  SCALE-014:  # no Databricks connection
+    status: [Not Applicable]
+  SCALE-015:  # Synapse set, Redshift unset -> some
+    status: [Partial]
+  GENAI-008:  # the option's state can't be read from a bundle
+    status: [Needs Review]
   ARCH-016:   # cluster attached and a default cluster set -> Pass
     status: [Pass]
   ARCH-017:   # containerized visual recipes not set up -> Needs Review (intent unknown)

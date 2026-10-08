@@ -24,6 +24,16 @@ def _tier_target_gib(ram_gib: float) -> float:
     return 0.5 * ram_gib
 
 
+@rule("ARCH-001", "Separation of Design and Automation Nodes")
+def design_automation_separation(facts):
+    """Always Needs Review: a design bundle can't show an automation node, and an automation bundle can't show a design node."""
+    node = fact(facts, "node")
+    nodetype = node.get("nodetype", ABSENT) if isinstance(node, dict) else ABSENT
+    if nodetype == ABSENT:
+        return _missing("the node type")
+    return verdict("Needs Review", f"a {nodetype} node bundle can't show whether the other node type exists or how projects are promoted", nodetype=nodetype)
+
+
 @rule("SEC-004", "CGroups Enabled with Memory Limit per Sizing Heuristic")
 def cgroups_memory_limit(facts):
     cg, host = fact(facts, "cgroups"), fact(facts, "host_memory")
@@ -115,6 +125,57 @@ def filesystem_root_removed(facts):
     if present is False:
         return verdict("Pass", "no filesystem_root connection", filesystem_root_present=False)
     return _missing("the connections list")
+
+
+def _connection_tier(check_id_what, items, required, optional=()):
+    """Status of a group of connections of one family. `required` components must be known (else Needs Review); `optional` ones count
+    only when the reader found them. Every connection fully set = Pass, none set at all = Fail, anything between = Partial."""
+    full = partial = 0
+    for item in items:
+        known = [item.get(c, ABSENT) for c in required]
+        if any(not isinstance(v, bool) for v in known):
+            return _missing(f"the {check_id_what} setting")
+        known += [v for v in (item.get(c, ABSENT) for c in optional) if isinstance(v, bool)]
+        if all(known):
+            full += 1
+        elif any(known):
+            partial += 1
+    values = {"connections": len(items), "fully_set": full, "partly_set": partial}
+    if full == len(items):
+        return verdict("Pass", f"all {len(items)} {check_id_what} connection(s) are set up", **values)
+    if full == 0 and partial == 0:
+        return verdict("Fail", f"none of the {len(items)} {check_id_what} connection(s) is set up", **values)
+    return verdict("Partial", f"{full} of {len(items)} {check_id_what} connection(s) fully set up, {partial} partly", **values)
+
+
+def _connection_family(facts, key, kinds, what, required, optional=()):
+    conns = fact(facts, "connections")
+    if not isinstance(conns, dict) or not isinstance(conns.get(key), list):
+        return _missing("the connection settings")
+    items = [c for c in conns[key] if isinstance(c, dict) and c.get("type") in kinds]
+    if not items:
+        return verdict("Not Applicable", f"no {what} connection is configured", connections=0)
+    return _connection_tier(what, items, required, optional)
+
+
+@rule("SCALE-012", "Cloud Object Storage Configuration (Details Readable By, HDFS Interface)")
+def cloud_object_storage(facts):
+    return _connection_family(facts, "cloud_storage", {"s3", "azure", "gcs"}, "cloud object storage", ("readable_by_set",), ("hdfs_interface_set",))
+
+
+@rule("SCALE-013", "Snowflake Connection Configuration")
+def snowflake_connections(facts):
+    return _connection_family(facts, "warehouses", {"snowflake"}, "Snowflake", ("fast_write",), ("spark_native", "udf"))
+
+
+@rule("SCALE-014", "Databricks Connection Configuration")
+def databricks_connections(facts):
+    return _connection_family(facts, "warehouses", {"databricks"}, "Databricks", ("fast_write",))
+
+
+@rule("SCALE-015", "Amazon Redshift, Google BigQuery, Azure Synapse Connection Configuration")
+def other_warehouse_connections(facts):
+    return _connection_family(facts, "warehouses", {"redshift", "bigquery", "synapse"}, "Redshift, BigQuery or Synapse", ("fast_write",))
 
 
 _DISK_FLAG_WORDS = ("rotational", "ssd", "hdd")

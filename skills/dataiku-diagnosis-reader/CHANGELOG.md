@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.20.0] - 2026-10-08
+
+### Added
+
+- `scripts/facts.py` `connections` gains `cloud_storage` (per GCS, Azure or S3 connection: `readable_by_set`, `hdfs_interface_set`) and `warehouses` (per Snowflake, Databricks, Redshift, BigQuery or Synapse connection, SQL Server with `azureDWH` counting as Synapse: `fast_write`, `spark_native`, `udf`, each true, false or `ABSENT`). Types and booleans only, no params, hosts or credentials. The warehouse flags are found by setting-name pattern and a non-blank value counts as set, because only BigQuery (`useAutoFastPath`) and SQL Server could be checked in the three sample bundles; `references/data-dir-config.md` says so and corrects where `hdfsInterface` lives.
+
 ## [0.19.0] - 2026-10-07
 
 ### Added

@@ -10,6 +10,29 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.38.2] - 2026-10-08
+
+Reader 0.20.0. 62 of 67 checks are now decided by code (was 46). The 0.38.1 Codex run (2026-10-08) matched all 46 ruled statuses.
+
+### Changed
+
+- **Policy**: ADVSEC-005 not restricted = Fail (was Needs Review). ADVSEC-006 a valid http or https custom URL, or the default logged-out page = Pass; a custom redirect with another scheme, or an unrecognised behaviour = Needs Review (was Fail / Not Applicable). ADVSEC-011 links not disabled = Needs Review (was Fail).
+- `calibrations.md`: the model-decided entries for ARCH-001, ARCH-008/014/015 and SCALE-012 are now notes-only guidance; a new "Always Needs Review" block tells the model what to report for the seven always-Needs-Review checks.
+
+### Added
+
+- **Rules for 16 more checks.** ARCH-008/014/015 (no cluster = Not Applicable, cluster attached = Needs Review); ARCH-001 (Needs Review for every node type); `rules_review.py` with ARCH-009, ARCH-012, SEC-008, SEC-011, SCALE-005, SCALE-016, GENAI-010 (always Needs Review, the model reports observations and an `Action:`); SCALE-012 to 015 from the reader's new connection details (all set = Pass, some = Partial, none = Fail, no such connection = Not Applicable); GENAI-008 (always Needs Review, with a DSS 14.7 reason).
+- `verdict-rules.md` rows for all of them and a new "Always Needs Review" section; unit tests and synthetic fixtures (eval checklist now 48 items) for each.
+
+### Changed (vendored)
+
+- `skills/dataiku-diagnosis-reader/` re-synced to 0.20.0: `facts.py` `connections` gains `cloud_storage` and `warehouses` (types and booleans only). The warehouse fast-write, Spark native and UDF settings are found by name pattern (a non-blank value counts as set); no Snowflake, Databricks, Redshift or Synapse sample exists to verify the names.
+
+### Known issues
+
+- SCALE-013 to 015 warehouse setting names are unverified against a real bundle.
+- SCALE-012 is Not Applicable when no S3, Azure or GCS connection exists (the earlier note asked for Partial for HDFS-only storage).
+
 ## [0.38.1] - 2026-10-07
 
 ### Changed

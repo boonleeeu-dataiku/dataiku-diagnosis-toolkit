@@ -37,7 +37,7 @@ EVAL_ITEM_IDS = [
     "SCALE-008",  # backend Xmx sizing
     "SCALE-009",  # flow limits -> causal chain with OOM evidence
     "SCALE-011",  # filesystem_root connection
-    "ARCH-008",   # Spark validation worded for Kubernetes -> Not Applicable without a cluster
+    "ARCH-008",   # Spark validation worded for Kubernetes -> Not Applicable without a cluster, Needs Review with one
     "ADVSEC-003", # session timeouts are real keys, 0 = unlimited
     "ADVSEC-006", # no custom post-logout redirect -> Pass (default page)
     "GENAI-001",  # internal LLM Mesh code envs -> Pass internal, Needs Review non-internal
@@ -63,6 +63,13 @@ EVAL_ITEM_IDS = [
     "ARCH-007",   # per-user namespaces: templated -> Pass; no cluster -> Not Applicable
     "ARCH-011",   # baseline container configs: two differing -> Pass; no cluster -> Not Applicable
     "ARCH-016",   # default cluster + default execution config with a memory limit -> Pass; no cluster -> Not Applicable
+    "SCALE-012",  # cloud object storage: readable-by and HDFS interface all set -> Pass; some -> Partial; none of the type -> Not Applicable
+    "SCALE-013",  # Snowflake: fast-write set (any setting name) -> Pass; none configured -> Not Applicable
+    "SCALE-014",  # Databricks: none configured -> Not Applicable
+    "SCALE-015",  # Redshift/BigQuery/Synapse: all set -> Pass; some -> Partial; all unset -> Fail
+    "GENAI-008",  # AI assistant logs in the diagnostic: always Needs Review (version gate only)
+    "ARCH-014",   # cluster topology: live check -> Needs Review with a cluster, Not Applicable without
+    "ARCH-015",   # cluster sizing: live check -> Needs Review with a cluster, Not Applicable without
     "ARCH-017",   # containerized visual recipes: unset on an attached cluster -> Needs Review
     "GENAI-003",  # Trace Explorer default web app: set -> Pass; empty -> Fail; block missing -> Needs Review
     "GENAI-004",  # AI Services: terms accepted and enabled -> Pass; not accepted or settings missing -> Needs Review
@@ -184,6 +191,8 @@ backend.xmx = 2g
                             "allowedGroups": ["administrators"]},
         "warehouse_pg": {"type": "PostgreSQL", "params": {"host": "pg.synthetic.example", "db": "dwh"},
                          "allowWrite": True},
+        "gcs_lake": {"type": "GCS", "params": {"hdfsInterface": "NONE"}, "detailsReadability": {"readableBy": "ALLOWED", "allowedGroups": ["administrators"]}},
+        "bq_marts": {"type": "BigQuery", "params": {"useAutoFastPath": False}, "detailsReadability": {"readableBy": "NONE", "allowedGroups": []}},
     })
     write(m / "config" / "project-deployer" / "infras" / "prod-automation.json", {
         "id": "prod-automation", "stage": "Production",
@@ -280,6 +289,10 @@ backend.xmx = 8g
     write(m / "config" / "connections.json", {
         "warehouse_pg": {"type": "PostgreSQL", "params": {"host": "pg.synthetic.example", "db": "dwh"},
                          "allowWrite": True},
+        "s3_lake": {"type": "S3", "params": {"hdfsInterface": "S3A"}, "detailsReadability": {"readableBy": "ALLOWED", "allowedGroups": ["administrators"]}},
+        "snow_dwh": {"type": "Snowflake", "params": {"autoFastWriteConnection": "s3_lake", "useSparkNativeIntegration": True}},
+        "synapse_dwh": {"type": "SQLServer", "params": {"azureDWH": True, "useAutoFastPath": True}},
+        "redshift_dwh": {"type": "Redshift", "params": {"autoFastWriteConnection": ""}},
     })
     write(m / "config" / "clusters" / "eks-main.json", {
         "id": "eks-main", "type": "managed", "architecture": "KUBERNETES",

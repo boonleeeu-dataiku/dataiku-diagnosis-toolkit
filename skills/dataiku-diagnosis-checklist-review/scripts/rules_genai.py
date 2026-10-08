@@ -115,3 +115,19 @@ def agent_hub_permissions(facts):
     if p["agent_hub_installed"]:
         return verdict("Needs Review", "Agent Hub is installed; who may deploy it can't be verified from the bundle", agent_hub_installed=True)
     return verdict("Not Applicable", "Agent Hub is not installed", agent_hub_installed=False)
+
+
+MIN_ASSISTANT_LOG_VERSION = (14, 7)
+
+
+@rule("GENAI-008", "Include AI Assistant Debug Data in Instance Diagnostics")
+def assistant_debug_data(facts):
+    """Needs Review whatever the version: the option's state can't be read from the bundle. The reason says whether the DSS version could have it."""
+    node = fact(facts, "node")
+    raw = node.get("product_version", ABSENT) if isinstance(node, dict) else ABSENT
+    match = re.match(r"(\d+)\.(\d+)", raw) if isinstance(raw, str) else None
+    if not match:
+        return verdict("Needs Review", "the DSS version can't be read, so whether the diagnostic could hold AI assistant logs is unknown", product_version=raw)
+    if (int(match[1]), int(match[2])) < MIN_ASSISTANT_LOG_VERSION:
+        return verdict("Needs Review", f"DSS {raw} is older than 14.7, which added AI assistant logs to the diagnostic", product_version=raw)
+    return verdict("Needs Review", f"DSS {raw} can include AI assistant logs but whether the option was selected can't be read from the bundle", product_version=raw)

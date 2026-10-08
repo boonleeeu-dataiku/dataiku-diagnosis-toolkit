@@ -132,6 +132,34 @@ def container_baseline(facts):
     return verdict("Needs Review", "only one container config, or all are identically sized (ask whether the workloads need differently sized configs)", **values)
 
 
+def _live_cluster_check(facts, what):
+    """Checks a bundle can never settle (a live Spark run, topology, capacity): Not Applicable without a cluster, else Needs Review."""
+    k = _k8s(facts)
+    if k is None:
+        return _missing("Kubernetes settings")
+    if k.get("cluster_attached") not in (True, False):
+        return _missing("the cluster attachment")
+    na = _no_cluster(k)
+    if na:
+        return na
+    return verdict("Needs Review", f"a cluster is attached; {what} cannot be shown by a bundle", cluster_attached=True)
+
+
+@rule("ARCH-008", "Functional Validation of Spark Execution (Recipe & Notebook)")
+def spark_functional_validation(facts):
+    return _live_cluster_check(facts, "a live Spark run in a recipe and a notebook")
+
+
+@rule("ARCH-014", "Recommended Cluster Topology (Single Managed Cluster, Node Groups, Autoscaling)")
+def cluster_topology(facts):
+    return _live_cluster_check(facts, "the cluster topology and autoscaling")
+
+
+@rule("ARCH-015", "Appropriate Cluster Sizing")
+def cluster_sizing(facts):
+    return _live_cluster_check(facts, "the cluster capacity against the workloads")
+
+
 @rule("ARCH-013", "Valid Cluster Configuration for Elastic Compute")
 def valid_cluster(facts):
     k = _k8s(facts)

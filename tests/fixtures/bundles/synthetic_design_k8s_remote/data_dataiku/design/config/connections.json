@@ -6,5 +6,37 @@
       "db": "dwh"
     },
     "allowWrite": true
+  },
+  "s3_lake": {
+    "type": "S3",
+    "params": {
+      "hdfsInterface": "S3A"
+    },
+    "detailsReadability": {
+      "readableBy": "ALLOWED",
+      "allowedGroups": [
+        "administrators"
+      ]
+    }
+  },
+  "snow_dwh": {
+    "type": "Snowflake",
+    "params": {
+      "autoFastWriteConnection": "s3_lake",
+      "useSparkNativeIntegration": true
+    }
+  },
+  "synapse_dwh": {
+    "type": "SQLServer",
+    "params": {
+      "azureDWH": true,
+      "useAutoFastPath": true
+    }
+  },
+  "redshift_dwh": {
+    "type": "Redshift",
+    "params": {
+      "autoFastWriteConnection": ""
+    }
   }
 }

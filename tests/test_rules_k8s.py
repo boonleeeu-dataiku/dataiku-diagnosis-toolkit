@@ -15,7 +15,8 @@ sys.path.insert(0, str(SCRIPTS))
 import rules_k8s  # noqa: E402,F401
 import verdicts  # noqa: E402
 
-RULED = {"ARCH-005", "ARCH-006", "ARCH-007", "ARCH-010", "ARCH-011", "ARCH-013", "ARCH-016", "ARCH-017"}
+RULED = {"ARCH-005", "ARCH-006", "ARCH-007", "ARCH-008", "ARCH-010", "ARCH-011", "ARCH-013", "ARCH-014", "ARCH-015", "ARCH-016", "ARCH-017"}
+LIVE_ONLY = {"ARCH-008", "ARCH-014", "ARCH-015"}
 K8S_ONLY = RULED - {"ARCH-005", "ARCH-006"}
 
 
@@ -60,6 +61,17 @@ def test_kubernetes_configs_without_an_attached_cluster_are_still_not_applicable
 def test_a_missing_fact_is_needs_review(check_id):
     doc = {"facts": {}}
     assert verdicts.compute(doc, [{"id": check_id, "title": verdicts.RULES[check_id][0]}])["verdicts"][0]["status"] == "Needs Review"
+
+
+@pytest.mark.parametrize("check_id", sorted(LIVE_ONLY))
+@pytest.mark.parametrize("over,expected", [
+    ({}, "Needs Review"),                                              # a bundle can't show a live run, topology or capacity
+    ({"spark_enabled": False}, "Needs Review"),                        # cluster attached: Spark use doesn't change it
+    ({"cluster_attached": False}, "Not Applicable"),
+    ({"cluster_attached": "ABSENT"}, "Needs Review"),
+])
+def test_live_only_cluster_checks(check_id, over, expected):
+    assert status(check_id, kube(**over)) == expected
 
 
 @pytest.mark.parametrize("over,expected", [

@@ -406,6 +406,35 @@ def cgroups():
                  f"{src}: cgroupSettings (pct uses G=GiB against diag.txt MemTotal in GiB)")
 
 
+CLOUD_STORAGE_TYPES = {"s3": "s3", "azure": "azure", "gcs": "gcs"}
+WAREHOUSE_TYPES = {"snowflake": "snowflake", "databricks": "databricks", "redshift": "redshift", "bigquery": "bigquery",
+                   "synapse": "synapse"}
+_NOT_A_TOGGLE = ("identity", "auth", "credential")
+
+
+def _is_set(value):
+    """A connection setting counts as set when it holds a value: true, a non-blank string other than NONE/false, a non-empty list or dict."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() not in ("", "none", "false")
+    if isinstance(value, (list, dict)):
+        return bool(value)
+    return value is not None
+
+
+def _flag(params, needles):
+    """Whether a feature is set on a connection when its setting name is not known in advance: any param whose
+    normalised key contains one of `needles` (identity and credential options excluded) and holds a value counts as set.
+    True if any such param is set, False if some exist and none is, ABSENT when no param name matches."""
+    hits = []
+    for key, value in params.items():
+        norm = re.sub(r"[^a-z0-9]", "", str(key).lower())
+        if any(n in norm for n in needles) and not any(x in norm for x in _NOT_A_TOGGLE):
+            hits.append(_is_set(value))
+    return ABSENT if not hits else any(hits)
+
+
 @fact("connections")
 def connections():
     src = "config/connections.json"
@@ -413,8 +442,28 @@ def connections():
     if doc is None:
         return absent(src)
     conns = doc.get("connections", doc) if isinstance(doc, dict) else {}
-    return found({"count": len(conns), "filesystem_root_present": "filesystem_root" in conns},
-                 f"{src}: connections (names only, no params)")
+    cloud_storage, warehouses = [], []
+    for conn in conns.values() if isinstance(conns, dict) else []:
+        if not isinstance(conn, dict):
+            continue
+        ctype, params = str(conn.get("type", "")).lower(), conn.get("params")
+        params = params if isinstance(params, dict) else {}
+        if ctype in CLOUD_STORAGE_TYPES:
+            readable = (conn.get("detailsReadability") or {}).get("readableBy", ABSENT) if isinstance(conn.get("detailsReadability"), dict) else ABSENT
+            hdfs = params.get("hdfsInterface", ABSENT)
+            cloud_storage.append({"type": CLOUD_STORAGE_TYPES[ctype],
+                                  "readable_by_set": ABSENT if readable == ABSENT else str(readable).upper() != "NONE",
+                                  "hdfs_interface_set": ABSENT if hdfs == ABSENT else _is_set(hdfs)})
+        kind = WAREHOUSE_TYPES.get(ctype)
+        if ctype == "sqlserver" and params.get("azureDWH") is True:
+            kind = "synapse"
+        if kind:
+            warehouses.append({"type": kind, "fast_write": _flag(params, ("fastwrite", "fastpath")),
+                               "spark_native": _flag(params, ("sparknative", "sparkintegration")),
+                               "udf": _flag(params, ("udf",))})
+    return found({"count": len(conns), "filesystem_root_present": "filesystem_root" in conns,
+                  "cloud_storage": cloud_storage, "warehouses": warehouses},
+                 f"{src}: connections (types and booleans only, no params)")
 
 
 @fact("trace_explorer")

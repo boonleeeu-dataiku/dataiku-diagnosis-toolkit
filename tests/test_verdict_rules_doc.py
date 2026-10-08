@@ -13,7 +13,8 @@ import verdicts  # noqa: E402
 
 ROW = re.compile(r"^\|\s*((?:ARCH|SEC|SCALE|GENAI|ADVSEC)-\d{3})\s", re.M)
 SECTION_FILE = {"Security": "rules_security", "Platform, sizing and logs": "rules_platform",
-                "Kubernetes and Spark": "rules_k8s", "GenAI": "rules_genai"}
+                "Kubernetes and Spark": "rules_k8s", "GenAI": "rules_genai",
+                "Always Needs Review": "rules_review"}
 
 
 def _rows_by_section():

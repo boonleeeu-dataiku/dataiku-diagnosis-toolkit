@@ -16,5 +16,27 @@
       "db": "dwh"
     },
     "allowWrite": true
+  },
+  "gcs_lake": {
+    "type": "GCS",
+    "params": {
+      "hdfsInterface": "NONE"
+    },
+    "detailsReadability": {
+      "readableBy": "ALLOWED",
+      "allowedGroups": [
+        "administrators"
+      ]
+    }
+  },
+  "bq_marts": {
+    "type": "BigQuery",
+    "params": {
+      "useAutoFastPath": false
+    },
+    "detailsReadability": {
+      "readableBy": "NONE",
+      "allowedGroups": []
+    }
   }
 }

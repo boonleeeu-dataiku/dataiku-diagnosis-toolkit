@@ -15,8 +15,8 @@ sys.path.insert(0, str(SCRIPTS))
 import rules_platform  # noqa: E402,F401
 import verdicts  # noqa: E402
 
-RULED = {"SEC-004", "SCALE-001", "SCALE-006", "SCALE-009", "SCALE-011", "ARCH-004",
-         "SCALE-002", "SCALE-003", "SCALE-004", "SCALE-007", "SCALE-008", "SCALE-010"}
+RULED = {"ARCH-001", "SEC-004", "SCALE-001", "SCALE-006", "SCALE-009", "SCALE-011", "ARCH-004",
+         "SCALE-002", "SCALE-003", "SCALE-012", "SCALE-013", "SCALE-014", "SCALE-015", "SCALE-004", "SCALE-007", "SCALE-008", "SCALE-010"}
 
 
 def facts(**blocks):
@@ -298,3 +298,69 @@ def prefs(**ds):
 ])
 def test_scale010_preferences(p, expected):
     assert run("SCALE-010", facts(default_preferences=p)) == expected
+
+
+@pytest.mark.parametrize("nodetype", ["design", "automation", "deployer", "api"])
+def test_arch001_is_needs_review_for_every_node_type(nodetype):
+    doc = facts(node={"nodetype": nodetype, "nodeid": "n", "installid": "i", "product_version": "14.0.0"})
+    assert run("ARCH-001", doc) == "Needs Review"
+    v = verdicts.compute(doc, [{"id": "ARCH-001", "title": verdicts.RULES["ARCH-001"][0]}])["verdicts"][0]
+    assert v["deciding_values"] == {"nodetype": nodetype}
+
+
+def test_arch001_missing_node_type_is_needs_review():
+    assert run("ARCH-001", facts(node={"nodetype": "ABSENT"})) == "Needs Review"
+    assert run("ARCH-001", facts()) == "Needs Review"
+
+
+def stor(readable=True, hdfs=True, kind="gcs"):
+    return {"type": kind, "readable_by_set": readable, "hdfs_interface_set": hdfs}
+
+
+def wh(kind, fast=True, spark="ABSENT", udf="ABSENT"):
+    return {"type": kind, "fast_write": fast, "spark_native": spark, "udf": udf}
+
+
+def conns(cloud=(), warehouses=()):
+    return facts(connections={"count": 1, "filesystem_root_present": False, "cloud_storage": list(cloud), "warehouses": list(warehouses)})
+
+
+@pytest.mark.parametrize("cloud,expected", [
+    ([], "Not Applicable"),
+    ([stor()], "Pass"),
+    ([stor(), stor(kind="s3")], "Pass"),
+    ([stor(hdfs="ABSENT")], "Pass"),                        # S3-style connection without the HDFS interface setting
+    ([stor(hdfs=False)], "Partial"),
+    ([stor(), stor(readable=False, hdfs=False)], "Partial"),
+    ([stor(readable=False, hdfs=False)], "Fail"),
+    ([stor(readable="ABSENT")], "Needs Review"),
+])
+def test_scale012_cloud_object_storage(cloud, expected):
+    assert run("SCALE-012", conns(cloud=cloud)) == expected
+
+
+@pytest.mark.parametrize("check_id,kind", [("SCALE-013", "snowflake"), ("SCALE-014", "databricks"), ("SCALE-015", "redshift"),
+                                           ("SCALE-015", "bigquery"), ("SCALE-015", "synapse")])
+def test_warehouse_fast_write(check_id, kind):
+    assert run(check_id, conns(warehouses=[])) == "Not Applicable"
+    assert run(check_id, conns(warehouses=[wh(kind)])) == "Pass"
+    assert run(check_id, conns(warehouses=[wh(kind), wh(kind, fast=False)])) == "Partial"
+    assert run(check_id, conns(warehouses=[wh(kind, fast=False)])) == "Fail"
+    assert run(check_id, conns(warehouses=[wh(kind, fast="ABSENT")])) == "Needs Review"
+
+
+def test_scale013_spark_native_and_udf_count_only_when_found():
+    assert run("SCALE-013", conns(warehouses=[wh("snowflake", spark=True, udf=True)])) == "Pass"
+    assert run("SCALE-013", conns(warehouses=[wh("snowflake", spark=False)])) == "Partial"
+    assert run("SCALE-013", conns(warehouses=[wh("snowflake", fast=False, spark=False, udf=False)])) == "Fail"
+
+
+def test_warehouse_families_do_not_mix():
+    doc = conns(warehouses=[wh("snowflake", fast=False)])
+    assert run("SCALE-014", doc) == "Not Applicable" and run("SCALE-015", doc) == "Not Applicable"
+
+
+@pytest.mark.parametrize("check_id", ["SCALE-012", "SCALE-013", "SCALE-014", "SCALE-015"])
+def test_older_facts_without_connection_details_need_review(check_id):
+    assert run(check_id, facts(connections={"count": 3, "filesystem_root_present": False})) == "Needs Review"
+    assert run(check_id, facts()) == "Needs Review"
