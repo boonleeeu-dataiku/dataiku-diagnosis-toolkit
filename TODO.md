@@ -1,13 +1,13 @@
 # TODO
 
-## Status and start here (updated 2026-10-07)
+## Status and start here (updated 2026-10-08)
 
-Versions: toolkit **0.38.1** (tag `v0.38.1`), reader **0.20.0** (`skill-v0.20.0`, unpushed, upstream repo `../Diagnosis Reader/`), Checklist Generator
+Versions: toolkit **0.38.2** (tag `v0.38.2`), reader **0.20.0** (`skill-v0.20.0`, upstream repo `../Diagnosis Reader/`), Checklist Generator
 **0.4.0** (`v0.4.0`, `../Dataiku Checklist Generator/`; ids and titles frozen in its `config/id_registry.yaml`). Everything is pushed.
 
 Done: the verdict framework (Batch 0) and rules for **62 of 67 checks**, one module per area: `rules_security.py` (SEC-001/002/005/006/007/009/010,
-ADVSEC-001 to 012), `rules_platform.py` (ARCH-001, SEC-004, ARCH-004, SCALE-001/002/003/004/006/007/008/009/010/011), `rules_genai.py`
-(GENAI-001/003/004/005/006/007/009) and `rules_review.py` (always Needs Review: ARCH-009/012, SEC-008/011, SCALE-005/016, GENAI-010) and `rules_k8s.py` (ARCH-005/006/007/008/010/011/013/014/015/016/017). `run_step.py verdicts` computes them, `verify` fails on any
+ADVSEC-001 to 012), `rules_platform.py` (ARCH-001, SEC-004, ARCH-004, SCALE-001/002/003/004/006/007/008/009/010/011/012/013/014/015), `rules_genai.py`
+(GENAI-001/003/004/005/006/007/008/009) and `rules_review.py` (always Needs Review: ARCH-009/012, SEC-008/011, SCALE-005/016, GENAI-010) and `rules_k8s.py` (ARCH-005/006/007/008/010/011/013/014/015/016/017). `run_step.py verdicts` computes them, `verify` fails on any
 workbook status that differs.
 
 The rule specs are in `skills/dataiku-diagnosis-checklist-review/references/verdict-rules.md` (one row per rule, kept in step by
@@ -15,12 +15,14 @@ The rule specs are in `skills/dataiku-diagnosis-checklist-review/references/verd
 holds only the model's `notes`/`Action:` guidance for rule-decided checks and the status logic of the model-decided ones.
 
 Codex runs reviewed: 0.32.0 (found two gaps, fixed in 0.32.1), 0.33.1 (all six Batch 2 rules matched, `RUN VERIFY: PASS`), 0.35.0 (Batch 3, 14 rules
-matched, `RUN VERIFY: PASS`). 0.38.1 was run in Codex on 2026-10-08: all 46 ruled statuses matched `<stem>_verdicts.json`, `RUN VERIFY: PASS`.
-Policy changes made after the 0.38.0 review of the rule table: ARCH-006/011 one or identical configs = Needs Review; ARCH-007 fixed namespace =
+matched, `RUN VERIFY: PASS`). 0.38.1 was run in Codex on 2026-10-08: all 46 ruled statuses matched `<stem>_verdicts.json`, `RUN VERIFY: PASS`. **Not yet run in Codex: 0.38.2** (16 new rules plus the ADVSEC-005/006/011 policy changes); owner runs it once.
+Policy changes made after the 0.38.0 review of the rule table (all in 0.38.1 or earlier): ARCH-006/011 one or identical configs = Needs Review; ARCH-007 fixed namespace =
 Needs Review; ARCH-016 default cluster set = Pass, none = Fail, no cluster = Not Applicable; the Kubernetes-only checks are Not Applicable with no
 cluster attached; SEC-009 LDAP on with no groups = Needs Review; SEC-010 SSO on = Pass whatever LDAP is.
 
-**Next:** (1) release 0.38.2 (the ADVSEC policy changes are pushed; ARCH-001/008/014/015, the seven always-Needs-Review rules, SCALE-012 to 015 and GENAI-008 are not yet) and run Codex once on it, then compare to `<stem>_verdicts.json`; (2) the last 5 stay with the model: ARCH-002/003 (web lookups), SEC-003, GENAI-002 and GENAI-011 (each waits on a reader fact or a sample); (3) optional: apply the DSS version gate in code (see Other open items).
+**0.38.2 (2026-10-08, pushed):** 62 of 67 checks are ruled. Added: ARCH-001, ARCH-008/014/015, the seven always-Needs-Review checks (`rules_review.py`), SCALE-012 to 015 (reader 0.20.0 `connections.cloud_storage` / `warehouses`) and GENAI-008. Policy changes: ADVSEC-005 not restricted = Fail; ADVSEC-006 http(s) URL or default page = Pass, else Needs Review; ADVSEC-011 not disabled = Needs Review. Known issues (also in `CHANGELOG.md`): the Snowflake, Databricks, Redshift and Synapse setting names are unverified; SCALE-012 is Not Applicable when no S3, Azure or GCS connection exists.
+
+**Next:** (1) the Codex run on 0.38.2, compare the 62 ruled rows to `<stem>_verdicts.json` (expect ADVSEC-006 Pass and ARCH-008/014/015 per the cluster fact on the GE design bundle); (2) the last 5 stay with the model: ARCH-002/003 (web lookups), SEC-003, GENAI-002 and GENAI-011 (each waits on a reader fact or a sample); (3) when a bundle with Snowflake, Databricks, Redshift or Synapse connections appears, confirm the warehouse setting names in the reader; (4) optional: apply the DSS version gate in code (see Other open items).
 
 ### Playbook for a batch (what worked)
 1. Read the checklist rows and any matching model-decided entries in `calibrations.md` for the batch (`openpyxl` on `skills/dataiku-diagnosis-checklist-review/resources/checklist_template.xlsx`).
@@ -101,8 +103,8 @@ Per batch: see the playbook above. The Codex check is a single run per release (
 ### Batch 4a - Kubernetes, Spark and containers (10; conditional on a cluster; needs reader facts first)
 - Reader 0.19.0 added the `kubernetes` fact (cluster attachment, container and Spark execution configs, container defaults). A cluster is attached when a cluster definition file exists or a default cluster id is set.
 - [x] ARCH-005, 006, 007, 010, 011, 013, 016, 017 (0.38.0; reader 0.19.0 `kubernetes`). No cluster attached = Not Applicable for the Kubernetes-only ones; ARCH-005/006 Spark off = Not Applicable; ARCH-006 one or identical configs and ARCH-007 fixed namespace = Needs Review; ARCH-011 one or identical configs = Needs Review; ARCH-016 cluster attached: default cluster set = Pass, none = Fail, no cluster = Not Applicable; ARCH-017 unset = Needs Review.
-- [x] ARCH-008, ARCH-014 and ARCH-015 (unreleased): live checks a bundle can't settle. No cluster = Not Applicable, cluster attached = Needs Review (the model adds the `Action:`).
-- [ ] Codex run on 0.38.x (once; covers 4a, 4b and 4c).
+- [x] ARCH-008, ARCH-014 and ARCH-015 (0.38.2): live checks a bundle can't settle. No cluster = Not Applicable, cluster attached = Needs Review (the model adds the `Action:`).
+- [x] Codex run on 0.38.1 reviewed: all 46 ruled statuses matched (covers 4a, 4b and 4c). The 0.38.2 run is the next one.
 
 ### Batch 4b - GenAI (8; 6 ruled in 0.36.0 plus GENAI-009)
 - Existing facts: `byo_llm`, `trace_explorer`, `plugins`, `default_preferences`. GENAI-005/006 field names are unverified against a populated bundle (see Other open items). Version gate: a check's minimum DSS version above the bundle's = Needs Review, never Fail or Not Applicable. Check each row's calibration in the "GenAI" section before writing rules.
@@ -112,7 +114,7 @@ Per batch: see the playbook above. The Codex check is a single run per release (
 ### Batch 4c - scale, connections, logs (10; SCALE-007 and SCALE-008 need a log-count fact)
 - Reader 0.18.0 added `backend_log` (per-file ERROR/FATAL/WARN and OutOfMemoryError counts with time windows, counts only) and `metastore_and_exports`. SCALE-012 to 015 are not inspected yet: the next step is a reader `connections` fact (no params or secrets).
 - [x] SCALE-002, 003, 004, 007, 008, 010 (0.37.0; reader 0.18.0 `metastore_and_exports`, `backend_log`). SCALE-008: any confirmed miss = Fail, missing input = Needs Review; SCALE-010 treats DSS's default storage-format list as blank.
-- [x] SCALE-012, SCALE-013, SCALE-014, SCALE-015 (unreleased; reader 0.20.0 `connections.cloud_storage` / `warehouses`). Warehouse fast-write, Spark native and UDF settings are found by name pattern and a non-blank value counts as set (no Snowflake, Databricks, Redshift or Synapse sample exists to verify names: confirm when one appears). All set = Pass, some = Partial, none = Fail, no such connection = Not Applicable. GENAI-008: always Needs Review, with a DSS 14.7 reason.
+- [x] SCALE-012, SCALE-013, SCALE-014, SCALE-015 (0.38.2; reader 0.20.0 `connections.cloud_storage` / `warehouses`). Warehouse fast-write, Spark native and UDF settings are found by name pattern and a non-blank value counts as set (no Snowflake, Databricks, Redshift or Synapse sample exists to verify names: confirm when one appears). All set = Pass, some = Partial, none = Fail, no such connection = Not Applicable. GENAI-008: always Needs Review, with a DSS 14.7 reason.
 
 ### Stays with the model (5; no rule yet)
 - Web lookups: ARCH-002, ARCH-003
