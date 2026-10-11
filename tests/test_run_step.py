@@ -127,3 +127,13 @@ def test_verify_still_accepts_a_manifest_hash_recorded_before_the_path_fix(tmp_p
     data["steps"]["facts"]["stdout_sha256"] = hashlib.sha256(raw.encode()).hexdigest()
     manifest.write_text(json.dumps(data))
     assert _sh("verify", BUNDLE, "--manifest", manifest, "--checklist", xlsx).returncode == 0
+
+
+def test_plugin_scripts_with_modern_annotations_defer_them():
+    """`X | None` annotations crash on Python <3.10 unless deferred; the plugin supports older system pythons for these scripts."""
+    import re
+    root = REPO_ROOT / "skills"
+    bad = [str(p.relative_to(root)) for p in root.glob("*/scripts/*.py")
+           if re.search(r"\) -> [^\n]*\| None|: [\w\[\], .]*\| None", p.read_text())
+           and "from __future__ import annotations" not in p.read_text()]
+    assert not bad, bad

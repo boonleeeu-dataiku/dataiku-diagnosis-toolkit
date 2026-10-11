@@ -9,6 +9,9 @@ Given (1) a Dataiku DSS diagnosis bundle directory and (2) a checklist spreadshe
 columns (`validation_status`, `evidence_found`, `notes`, `validated_at`, `validated_by`), evaluate every row against the
 bundle's actual contents and write the results back into the spreadsheet, plus add/update a Summary tab.
 
+**Prerequisite:** the scripts need Python >=3.10. If `python3 --version` is older, run them with a newer
+interpreter (e.g. `python3.12`, or the review generator's `.venv/bin/python3`).
+
 ## Reference files (in this skill's `references/` directory)
 
 - `notes-format.md` — the `notes` format and length budget. Read before writing the first `notes` (step 4).
@@ -149,7 +152,8 @@ a result and every result was consumed (no silent mismatches) before saving.
 
 ## 6. Add/update a Summary sheet
 
-Once every item's `validation_status` is filled in, call the `write_summary` tool of the
+If the `write_summary` tool is not available, skip to the manual fallback at the end of this step
+(`references/summary-layout.md`). Otherwise, once every item's `validation_status` is filled in, call the `write_summary` tool of the
 `dataiku-review-generator` MCP server. It recreates the `Summary` sheet as the first tab, so
 re-running is idempotent. It computes the metadata labels, counts, per-section tallies and finding
 rows (ID, Section, Title, Status) from the section sheets and applies one fixed style. You supply

@@ -23,6 +23,8 @@ the checklist's first sheet is `Summary` and its Total equals the checklist's ro
 written after the last edit); with `--deck`, the narrative and the deck file exist. Rows with no rule are not
 judged. Python 3 stdlib plus openpyxl (already a plugin dependency).
 """
+from __future__ import annotations
+
 import argparse
 import hashlib
 import json

@@ -17,6 +17,14 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 - `verdict-rules.md` moved from `skills/dataiku-diagnosis-checklist-review/references/` to `docs/verdict-rules.md`: it is a maintainer spec the model never reads. `tests/test_skill_boundaries.py` still scans it for reader-owned layout terms.
 - Checklist `SKILL.md` (230 to 202 lines): Verdicts is now its own step 2 (later steps renumbered; steps 4, 6 and 7 keep their numbers); removed repeated `notes` format, column lists, fact enumeration, reviewer format and status guidance; the evidence-planning step is one sentence; Deliver is a numbered list.
 
+## [0.38.6] - 2026-10-11
+
+### Fixed
+
+- `run_step.py` crashed on Python <3.10 (`Path | None`); it now has `from __future__ import annotations`.
+- `scripts/start-review-generator.sh` picks a Python >=3.10 (the `mcp` SDK needs it), rebuilds a venv built with an older one, and exits with a clear message when none is found, instead of the server silently not appearing (no `write_summary` tool).
+- Checklist `SKILL.md` states the Python >=3.10 prerequisite and points to the manual Summary fallback first in step 6; README and `CODEX_SETUP.md` say Python 3.10+.
+
 ## [0.38.5] - 2026-10-08
 
 Slimming pass on the skills and tests; no change to any verdict.
