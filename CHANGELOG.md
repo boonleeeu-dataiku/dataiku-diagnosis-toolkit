@@ -10,6 +10,12 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.39.1] - 2026-11-25
+
+### Changed
+
+- Vendored reader is now 0.24.2 (was 0.23.0 at 0.39.0; 0.24.0 and 0.24.1 were synced after that release without a plugin entry). Highlights: `logscan.py` signature triage, `--since/--until/--around/--window` and `--timeline`, wider masking, relative output paths, and no standalone `Traceback` finding in the install log; `facts.py` `top_error_patterns` reuses the scanner's masking; `logscan.py` is experimental and off by default; `SKILL.md` Quick lookup no longer routes to `printenv`, which contradicted "Handling secrets". See `skills/dataiku-diagnosis-reader/CHANGELOG.md`.
+
 ## [0.39.0] - 2026-10-28
 
 ### Added

@@ -9,6 +9,16 @@ adheres to [Semantic Versioning](https://semver.org/). The version tracked here 
 Versioning is scoped to this directory (`dataiku-diagnosis-reader/`) only, since it's the unit
 that gets copied/symlinked into a skills root independently of the rest of this repo.
 
+## [0.24.2] - 2026-11-25
+
+### Changed
+
+- `SKILL.md`: Quick lookup no longer routes to `printenv` (contradicted "Handling secrets"); node type and heap sizes point to `facts.py`, other `DKU_*` values to a targeted `grep`.
+
+### Fixed
+
+- Removed a tracked `scripts/__pycache__/*.pyc` from the package; `.gitignore` now excludes Python bytecode.
+
 ## [0.24.1] - 2026-10-29
 
 ### Changed

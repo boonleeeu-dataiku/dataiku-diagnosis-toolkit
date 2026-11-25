@@ -1,7 +1,7 @@
 ---
 name: "dataiku-diagnosis-reader"
 description: "Navigate and interpret an extracted Dataiku DSS diagnosis.zip support bundle (also: DSS diagnostic export, a folder named dku_diagnosis_*) to answer troubleshooting questions on instance configuration, crashes/OOMs, performance, users, connections, projects, code environments, plugins and logs, without re-deriving the bundle layout. Use whenever the user provides or asks about a Dataiku diagnosis bundle."
-version: 0.24.1
+version: 0.24.2
 ---
 
 # Dataiku DSS diagnosis.zip reader
@@ -59,8 +59,8 @@ as a structural model, not a byte-identical layout guaranteed across every bundl
 
 | Question | Where |
 |---|---|
-| DSS version / node type | `<mirror>/dss-version.json`, `<mirror>/install.ini`, or `diag.txt` → `printenv`'s `DKU_NODE_TYPE` (fastest) |
-| Any general OS question (CPU, memory, disk, env vars, JVM heap/ports) | `diag.txt` (small commands are inlined; `printenv` holds `DKU_*_JAVA_OPTS`/`DKU_*_PORT`); see `references/root-files.md` |
+| DSS version / node type | `scripts/facts.py` (`node`), or `<mirror>/dss-version.json` / `install.ini` (grep exact keys) |
+| Any general OS question (CPU, memory, disk, JVM heap/ports) | `scripts/facts.py` (`host_memory`, `heap_sizes`), else `diag.txt` (small commands are inlined); see `references/root-files.md`. For `DKU_*` env values use `grep '^DKU_.*\(JAVA_OPTS\|PORT\)='` on `diag.txt`, never a whole `printenv` block |
 | Backend crash / OOM | `dmesg.txt` + `<mirror>/run/hs_err_pid*.log` + `cgroups_usage.txt` |
 | Instance config (LDAP/SSO/proxy/concurrency/resources/internal DB) | `<mirror>/config/general-settings.json`; see `references/data-dir-config.md` |
 | Users / connections / projects | `<mirror>/config/users.json`, `connections.json`, `projects/<KEY>/` |
