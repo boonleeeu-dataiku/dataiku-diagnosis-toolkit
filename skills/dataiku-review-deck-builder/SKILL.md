@@ -1,6 +1,6 @@
 ---
 name: "dataiku-review-deck-builder"
-description: "Turn a completed Dataiku DSS platform-review checklist spreadsheet into a branded, customer-facing Platform Review PowerPoint deck. Use when the user has a reviewed/validated checklist (e.g. produced by the dataiku-diagnosis-checklist-review skill) and wants a slide deck to share with the customer."
+description: "Turn a completed Dataiku DSS platform-review checklist spreadsheet (validation_status, notes and a Summary tab already filled in, for example by dataiku-diagnosis-checklist-review) into a branded, customer-facing Platform Review PowerPoint deck. Use whenever the user wants slides, a deck, a presentation or a customer-ready report from a Dataiku review or checklist, or says things like 'make the deck for this review' or 'turn the checklist into a PowerPoint'. If the checklist has not been reviewed yet, run the checklist-review skill first."
 ---
 
 # Dataiku review deck builder
