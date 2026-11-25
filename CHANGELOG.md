@@ -10,6 +10,8 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 ## [Unreleased]
 
+## [0.39.2] - 2026-11-25
+
 ### Changed
 
 - `dataiku-diagnosis-checklist-review`: `SKILL.md` restructured to the numbered workflow (steps 0-7 unchanged); host-specific detail moved to two new references, `host-setup.md` (Python, openpyxl, preflight tiers) and `secrets.md`. Reasons added to the "never" rules. Description sharpened to trigger on review, audit, health-check and compliance phrasings and to say what it does not cover.
