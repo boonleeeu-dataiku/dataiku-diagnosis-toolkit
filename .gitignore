@@ -25,3 +25,6 @@ evals/results/
 
 # v2 deck narratives hold customer findings
 *_narrative.json
+
+# Local output of scripts/start-review-generator.sh (written where PLUGIN_DATA is unset)
+launcher.log
