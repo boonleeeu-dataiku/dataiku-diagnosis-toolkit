@@ -10,6 +10,15 @@ from verdicts import ABSENT, _missing, fact, rule, verdict
 
 INTERNAL_PREFIX = "INTERNAL_"
 MIN_BYO_VERSION = (5, 2)
+MIN_COBUILD_VERSION = (14, 7)  # Cobuild (agent-building tools and their default LLM settings) arrived in DSS 14.7
+
+
+def _dss_version(facts):
+    """(raw product_version, (major, minor) or None when it can't be read)."""
+    node = fact(facts, "node")
+    raw = node.get("product_version", ABSENT) if isinstance(node, dict) else ABSENT
+    match = re.match(r"(\d+)\.(\d+)", raw) if isinstance(raw, str) else None
+    return raw, ((int(match[1]), int(match[2])) if match else None)
 
 
 @rule("GENAI-001", "Internal Code Environments for RAG, Document Extraction, PII Detection")
@@ -93,6 +102,9 @@ def byo_model_versions(facts):
 
 @rule("GENAI-007", "Cobuild Default LLM Configuration")
 def cobuild_defaults(facts):
+    raw, version = _dss_version(facts)
+    if version is not None and version < MIN_COBUILD_VERSION:  # version gate beats feature gate: the setting can't exist yet
+        return verdict("Needs Review", f"DSS {raw} is older than 14.7, which introduced Cobuild, so its default LLM settings can't exist yet (upgrade planning)", product_version=raw)
     g = fact(facts, "genai_settings")
     cobuild = g.get("cobuild_default_llms_set", ABSENT) if isinstance(g, dict) else ABSENT
     if not isinstance(cobuild, dict):
@@ -129,11 +141,9 @@ MIN_ASSISTANT_LOG_VERSION = (14, 7)
 @rule("GENAI-008", "Include AI Assistant Debug Data in Instance Diagnostics")
 def assistant_debug_data(facts):
     """Needs Review whatever the version: the option's state can't be read from the bundle. The reason says whether the DSS version could have it."""
-    node = fact(facts, "node")
-    raw = node.get("product_version", ABSENT) if isinstance(node, dict) else ABSENT
-    match = re.match(r"(\d+)\.(\d+)", raw) if isinstance(raw, str) else None
-    if not match:
+    raw, version = _dss_version(facts)
+    if version is None:
         return verdict("Needs Review", "the DSS version can't be read, so whether the diagnostic could hold AI assistant logs is unknown", product_version=raw)
-    if (int(match[1]), int(match[2])) < MIN_ASSISTANT_LOG_VERSION:
+    if version < MIN_ASSISTANT_LOG_VERSION:
         return verdict("Needs Review", f"DSS {raw} is older than 14.7, which added AI assistant logs to the diagnostic", product_version=raw)
     return verdict("Needs Review", f"DSS {raw} can include AI assistant logs but whether the option was selected can't be read from the bundle", product_version=raw)

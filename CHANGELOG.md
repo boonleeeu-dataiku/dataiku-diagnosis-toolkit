@@ -14,6 +14,7 @@ vendored components (`skills/dataiku-diagnosis-reader/`, `mcp-server-review-gene
 
 - `dataiku-diagnosis-checklist-review`: `SKILL.md` restructured to the numbered workflow (steps 0-7 unchanged); host-specific detail moved to two new references, `host-setup.md` (Python, openpyxl, preflight tiers) and `secrets.md`. Reasons added to the "never" rules. Description sharpened to trigger on review, audit, health-check and compliance phrasings and to say what it does not cover.
 - `dataiku-review-deck-builder`: description sharpened to trigger on deck, slides and presentation phrasings.
+- `GENAI-007` verdict rule: below DSS 14.7 (when Cobuild arrived) the status is Needs Review whatever the settings, and the reason names the DSS version and the upgrade, so the notes carry it. From 14.7 the rule is unchanged. The version parsing is shared with `GENAI-008`. `docs/verdict-rules.md`, `calibrations.md` and `tests/test_rules_genai.py` updated to match.
 
 ## [0.39.1] - 2026-11-25
 

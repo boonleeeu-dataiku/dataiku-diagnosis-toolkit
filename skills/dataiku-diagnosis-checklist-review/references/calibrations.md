@@ -34,7 +34,7 @@ after the rule-decided section give the status and the reasoning.
 - **Version gate beats feature gate.** If the check's stated minimum DSS version is above the bundle's
   `product_version`, mark **Needs Review** (the capability can't exist yet, so Fail would be unfair)
   and name the introducing version in `notes`, even if the feature is also conditional. Upgrade planning is the
-  actionable point. The rules do not apply this gate themselves: when a verdict looks wrong for an old DSS,
+  actionable point. Only GENAI-007 and GENAI-008 apply this gate in their rules: for any other check, when a verdict looks wrong for an old DSS,
   say so in your final summary.
 - **Optional feature off but the checklist asks for acceptance or enablement (GenAI, graphics export):**
   **Needs Review** (ask whether it is intentional), not Fail. Security controls follow their own rules.
@@ -148,7 +148,7 @@ The status comes from the verdict. Quote its `deciding_values` and add only the 
   the model must not infer GPU nodes or compute capability) and add an `Action:` to confirm the GPU node group, NVIDIA compute
   capability and the code environment on the cluster.
 - **GENAI-006:** name the model id when it can't be determined.
-- **GENAI-007:** name the unset default ids.
+- **GENAI-007:** below DSS 14.7 the rule gives Needs Review because Cobuild doesn't exist yet: say the bundle's DSS version and that 14.7 introduced Cobuild, and add an `Action:` to plan the upgrade if Cobuild is wanted. From 14.7, name the unset default ids.
 - **GENAI-008:** the status is always Needs Review. Say the DSS version, and add an `Action:` to confirm the option to include AI
   assistant logs was selected when the diagnostic was generated.
 - **GENAI-009:** the bundle can't verify who may deploy; never infer it from the project owner or group grants. `Action:` check the

@@ -103,7 +103,7 @@ Kubernetes-only check below is **Not Applicable**, even if Kubernetes execution 
 | GENAI-004 AI Services | terms accepted and a feature enabled | never | otherwise Needs Review (optional feature) |
 | GENAI-005 BYO reference and model | both set | active, one missing | Not Applicable: BYO inactive or block missing |
 | GENAI-006 BYO model version | every LLM id ChatGPT 5.2 or later | any id older (`gpt-5` counts as 5.0) | undeterminable id = Needs Review. Not Applicable: BYO inactive |
-| GENAI-007 Cobuild defaults | all three default ids set | never | any unset, or block missing = Needs Review |
+| GENAI-007 Cobuild defaults | all three default ids set | never | DSS older than 14.7 (when Cobuild arrived) = Needs Review whatever the settings, with the version in the reason; otherwise any unset, or block missing = Needs Review |
 | GENAI-008 AI assistant logs | never | never | always Needs Review: the option's state can't be read from a bundle (the reason says whether DSS is older than 14.7) |
 | GENAI-009 Agent Hub | never | never | installed = Needs Review. Not installed, or no plugin configuration = Not Applicable |
 | GENAI-010 Agent Hub service account | never | never | installed = Needs Review. Not installed, or no plugin configuration = Not Applicable |

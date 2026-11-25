@@ -132,6 +132,23 @@ def test_genai007_cobuild_defaults(cobuild, expected):
     assert status("GENAI-007", facts(genai_settings=gen(cobuild_default_llms_set=cobuild))) == expected
 
 
+@pytest.mark.parametrize("version,fragment", [("12.6.0", "older than 14.7"), ("14.4.3", "older than 14.7"), ("14.6.9", "older than 14.7")])
+def test_genai007_below_14_7_is_a_version_gate_even_when_the_defaults_look_set(version, fragment):
+    """Version gate beats feature gate: Cobuild arrived in 14.7, so an older DSS is Needs Review with the version in the reason."""
+    set_all = {"defaultEmbeddingLLMId": True, "defaultLLMId": True, "defaultImageGenerationLLMId": True}
+    for cobuild in ("ABSENT", set_all):
+        doc = facts(node={"nodetype": "design", "product_version": version}, genai_settings=gen(cobuild_default_llms_set=cobuild))
+        out = verdicts.compute(doc, [{"id": "GENAI-007", "title": verdicts.RULES["GENAI-007"][0]}])["verdicts"][0]
+        assert out["status"] == "Needs Review" and fragment in out["reason"] and version in out["reason"]
+
+
+@pytest.mark.parametrize("version", ["14.7.0", "15.0.1", "ABSENT"])
+def test_genai007_from_14_7_or_unreadable_version_falls_through_to_the_settings(version):
+    set_all = {"defaultEmbeddingLLMId": True, "defaultLLMId": True, "defaultImageGenerationLLMId": True}
+    doc = facts(node={"nodetype": "design", "product_version": version}, genai_settings=gen(cobuild_default_llms_set=set_all))
+    assert status("GENAI-007", doc) == "Pass"
+
+
 @pytest.mark.parametrize("plugins,expected", [
     ({"agent_hub_installed": True}, "Needs Review"),
     ({"agent_hub_installed": False}, "Not Applicable"),
